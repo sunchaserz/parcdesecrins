@@ -885,19 +885,19 @@ function populateAutoSuggest(featuresArray) {
 
     // Append the list item to the <ul>
     ul.appendChild(li);
+  });
 
-    // Event delegation: attach click listener to the parent element (ul)
-    ul.addEventListener('click', function(event) {
-      // Check if the clicked element is an <li>
-      if (event.target && event.target.nodeName === 'LI') {
-          // Get the index or content of the clicked list item
-          const clickedItem = event.target;
-          console.log(`You clicked on: ${clickedItem.textContent}`);
+  // Click on any of the auto suggested things
+  ul.addEventListener('click', function(event) {
+    // Check if the clicked element is an <li>
+    if (event.target && event.target.nodeName === 'LI') {
+        // Get the index or content of the clicked list item
+        const clickedItem = event.target;
+        console.log(`You clicked on: ${clickedItem.textContent}`);
 
-          // You can also access custom data attributes like:
-          //console.log(`Item index: ${clickedItem.dataset.index}`);
-      }
-    });
+        // You can also access custom data attributes like:
+        //console.log(`Item index: ${clickedItem.dataset.index}`);
+    }
   });
 
   // Append the <ul> to the autosuggest div
