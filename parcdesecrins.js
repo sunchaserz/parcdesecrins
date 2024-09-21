@@ -679,8 +679,9 @@ map.on("load", async () => {
     }
   }
 
-  // +++ Enable input through search box and autosuggest through maptiler geocoding
-  const locqueryInput = document.getElementById("search");
+  // +++ Enable input through search box and autocomplete through maptiler geocoding
+  const locqueryInput = document.querySelector('input[name="locquery"]');
+  const locqueryValue = locqueryInput.value;
   let debounceTimer; // Timer variable for debouncing
 
   // Event listener for the 'input' event
@@ -697,7 +698,7 @@ map.on("load", async () => {
 
   async function handleUserInput() {
     // docs https://docs.maptiler.com/client-js/geocoding/
-    const results = await maptilersdk.geocoding.forward(document.getElementsByName("locquery")[0].value, {
+    const results = await maptilersdk.geocoding.forward(locqueryValue, {
       proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
       //bbox:ecrinsBounds,  // limit search to ecrins bounds
     });
