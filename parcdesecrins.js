@@ -896,7 +896,7 @@ function populateAutoSuggest(featuresArray) {
         document.getElementById("search").value = clickedItem.textContent;
         getData();
         map.flyTo({
-          center: clickedItem.dataset.center,
+          center: clickedItem.dataset.center.split(","),
         });
         // You can also access custom data attributes like:
         //console.log(`Item index: ${clickedItem.dataset.index}`);
