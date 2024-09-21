@@ -673,9 +673,7 @@ map.on("load", async () => {
     if (results.features[0]) {
       populateAutoSuggest(results.features);
       //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
-      map.flyTo({
-        center: results.features[0].center,
-      });
+
     }
   }
 
@@ -879,6 +877,7 @@ function populateAutoSuggest(featuresArray) {
 
   featuresArray.forEach((feature) => {
     // Create a <li> element for each place_name
+    console.log(feature);
     const li = document.createElement("li");
     li.textContent = feature.place_name;
 
@@ -895,6 +894,9 @@ function populateAutoSuggest(featuresArray) {
         // console.log(`You clicked on: ${clickedItem.textContent}`);
         document.getElementById("search").value = clickedItem.textContent;
         getData();
+        map.flyTo({
+          center: results.features[0].center,
+        });
         // You can also access custom data attributes like:
         //console.log(`Item index: ${clickedItem.dataset.index}`);
     }
