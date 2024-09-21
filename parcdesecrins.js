@@ -679,7 +679,8 @@ map.on("load", async () => {
     }
   }
 
-  // +++ Enable input through search box and autocomplete through maptiler geocoding
+  // ++
+  // ++ Enable input through search box and autocomplete through maptiler geocoding
   const locqueryInput = document.getElementById('search');
   let debounceTimer; // Timer variable for debouncing
 
@@ -708,7 +709,7 @@ map.on("load", async () => {
       //bbox:ecrinsBounds,  // limit search to ecrins bounds
     });
     //ecrinsBounds
-    console.log(results);
+    //console.log(results);
     // map.getSource('search-results').setData(results);
     if (results.features[0]) {
       populateAutoSuggest(results.features);
@@ -718,7 +719,8 @@ map.on("load", async () => {
       });
     }
   }
-  // +++ Enable input through search box
+  // ++ Enable input through search box
+  // ++
 
 
   // // start: click on legend items
@@ -865,7 +867,8 @@ function getRenderedFeatures(point) {
 }, true);
 */
 
-// Function to create list items and append them to the div
+// --
+// -- Helper: populate the autosuggest div with the list of places after user stops typing in the search box
 function populateAutoSuggest(featuresArray) {
   const autosuggestDiv = document.getElementById("autosuggest");
 
@@ -887,3 +890,4 @@ function populateAutoSuggest(featuresArray) {
   // Append the <ul> to the autosuggest div
   autosuggestDiv.appendChild(ul);
 }
+// --
