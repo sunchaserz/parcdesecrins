@@ -686,6 +686,7 @@ map.on("load", async () => {
   // Event listener for the 'input' event
   locqueryInput.addEventListener("input", function () {
 
+    console.log(locqueryInput.value);
     if (locqueryInput.value === '') {
       return; // Exit the function if input is empty
     }
