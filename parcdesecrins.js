@@ -892,7 +892,7 @@ function populateAutoSuggest(featuresArray) {
     if (event.target && event.target.nodeName === 'LI') {
         // Get the index or content of the clicked list item
         const clickedItem = event.target;
-        // console.log(`You clicked on: ${clickedItem.textContent}`);
+        console.log(`You clicked on: ${clickedItem.dataset.center}`);
         document.getElementById("search").value = clickedItem.textContent;
         getData();
         map.flyTo({
