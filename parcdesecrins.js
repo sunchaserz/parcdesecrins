@@ -896,7 +896,7 @@ function populateAutoSuggest(featuresArray) {
           // You can also access custom data attributes like:
           //console.log(`Item index: ${clickedItem.dataset.index}`);
       }
-  });
+    });
   });
 
   // Append the <ul> to the autosuggest div
