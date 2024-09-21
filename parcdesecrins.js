@@ -686,9 +686,9 @@ map.on("load", async () => {
   // Event listener for the 'input' event
   locqueryInput.addEventListener("input", function () {
 
-    console.log(locqueryInput.value);
+    // Exit the function if input is empty
     if (locqueryInput.value === '') {
-      return; // Exit the function if input is empty
+      return;
     }
 
     // Clear the previous timer
