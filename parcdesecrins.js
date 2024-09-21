@@ -35,7 +35,7 @@ const initialData = {
 // Bounding box for Parc des Ecrins to limit geocoding search results
 // sw = 44.488283, 5.784014
 // ne = 45.193431, 6.811180
-const ecrinsBounds = [5.784014, 44.488283, 6.811180, 45.193431];
+const ecrinsBounds = [5.784014, 44.488283, 6.81118, 45.193431];
 
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -660,61 +660,60 @@ map.on("load", async () => {
 
   const mapStyle = map.getStyle();
 
-
   // Enable input through query string
-  if (urlParams.get('q')) {
-
+  if (urlParams.get("q")) {
     // docs https://docs.maptiler.com/client-js/geocoding/
-    const results = await maptilersdk.geocoding.forward(urlParams.get('q'),{
-      proximity: [6.271158,44.825107], // results closer to parc des ecrins get priority
+    const results = await maptilersdk.geocoding.forward(urlParams.get("q"), {
+      proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
       //bbox:ecrinsBounds,  // limit search to ecrins bounds
     });
     //ecrinsBounds
     console.log(results);
     // map.getSource('search-results').setData(results);
-     if (results.features[0]) {
+    if (results.features[0]) {
       populateAutoSuggest(results.features);
-       //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
-       map.flyTo({
+      //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
+      map.flyTo({
         center: results.features[0].center,
       });
-     }
+    }
   }
 
-  // // Enable input through search box
-  // const locqueryInput = document.querySelector('input[name="locquery"]');
+  // +++ Enable input through search box and autosuggest through maptiler geocoding
+  const locqueryInput = document.getElementById("search");
+  let debounceTimer; // Timer variable for debouncing
 
-  // let debounceTimer; // Timer variable for debouncing
+  // Event listener for the 'input' event
+  locqueryInput.addEventListener("input", function () {
+    // Clear the previous timer
+    clearTimeout(debounceTimer);
 
-  // // Event listener for the 'input' event
-  // locqueryInput.addEventListener('input', function() {
-  //     // Clear the previous timer
-  //     clearTimeout(debounceTimer);
+    // Set a new timer with 300ms delay
+    debounceTimer = setTimeout(function () {
+      // Call the function after 300ms
+      handleUserInput();
+    }, 300);
+  });
 
-  //     // Set a new timer with 300ms delay
-  //     debounceTimer = setTimeout(function() {
-  //         // Call the function after 300ms
-  //         handleUserInput();
-  //     }, 300);
-  // });
+  async function handleUserInput() {
+    // docs https://docs.maptiler.com/client-js/geocoding/
+    const results = await maptilersdk.geocoding.forward(document.getElementsByName("locquery")[0].value, {
+      proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
+      //bbox:ecrinsBounds,  // limit search to ecrins bounds
+    });
+    //ecrinsBounds
+    console.log(results);
+    // map.getSource('search-results').setData(results);
+    if (results.features[0]) {
+      populateAutoSuggest(results.features);
+      //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
+      map.flyTo({
+        center: results.features[0].center,
+      });
+    }
+  }
+  // +++ Enable input through search box
 
-  //   async function handleUserInput() {
-  //     // docs https://docs.maptiler.com/client-js/geocoding/
-  //     const results = await maptilersdk.geocoding.forward(document.getElementsByName("locquery")[0].value,{
-  //       proximity: [6.271158,44.825107], // results closer to parc des ecrins get priority
-  //       //bbox:ecrinsBounds,  // limit search to ecrins bounds
-  //     });
-  //     //ecrinsBounds
-  //     console.log(results);
-  //     // map.getSource('search-results').setData(results);
-  //      if (results.features[0]) {
-  //       populateAutoSuggest(results.features);
-  //        //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
-  //        map.flyTo({
-  //         center: results.features[0].center,
-  //       });
-  //      }
-  //   }
 
   // // start: click on legend items
   // document
@@ -732,7 +731,6 @@ map.on("load", async () => {
   //         // filterBy(month);
   //     });
   // // end: click on legend items
-
 }); // END MAP LOAD
 
 // When the user begins typing, hide the suggestions placeholder text
@@ -861,24 +859,23 @@ function getRenderedFeatures(point) {
 }, true);
 */
 
-
 // Function to create list items and append them to the div
 function populateAutoSuggest(featuresArray) {
-  const autosuggestDiv = document.getElementById('autosuggest');
+  const autosuggestDiv = document.getElementById("autosuggest");
 
   // Clear existing content
-  autosuggestDiv.innerHTML = '';
+  autosuggestDiv.innerHTML = "";
 
   // Create a <ul> element to hold the list items
-  const ul = document.createElement('ul');
+  const ul = document.createElement("ul");
 
-  featuresArray.forEach(feature => {
-      // Create a <li> element for each place_name
-      const li = document.createElement('li');
-      li.textContent = feature.place_name;
+  featuresArray.forEach((feature) => {
+    // Create a <li> element for each place_name
+    const li = document.createElement("li");
+    li.textContent = feature.place_name;
 
-      // Append the list item to the <ul>
-      ul.appendChild(li);
+    // Append the list item to the <ul>
+    ul.appendChild(li);
   });
 
   // Append the <ul> to the autosuggest div
