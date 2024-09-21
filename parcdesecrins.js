@@ -681,13 +681,15 @@ map.on("load", async () => {
 
   // +++ Enable input through search box and autocomplete through maptiler geocoding
   const locqueryInput = document.getElementById('search');
-
-
-
   let debounceTimer; // Timer variable for debouncing
 
   // Event listener for the 'input' event
   locqueryInput.addEventListener("input", function () {
+
+    if (locqueryInput.value === '') {
+      return; // Exit the function if input is empty
+    }
+
     // Clear the previous timer
     clearTimeout(debounceTimer);
 
