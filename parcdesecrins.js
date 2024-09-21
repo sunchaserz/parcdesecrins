@@ -877,9 +877,10 @@ function populateAutoSuggest(featuresArray) {
 
   featuresArray.forEach((feature) => {
     // Create a <li> element for each place_name
-    console.log(feature);
+    // console.log(feature);
     const li = document.createElement("li");
     li.textContent = feature.place_name;
+    li.setAttribute('data-center', feature.center);
 
     // Append the list item to the <ul>
     ul.appendChild(li);
