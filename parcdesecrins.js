@@ -85,7 +85,6 @@ map.touchZoomRotate.disableRotation();
 // this is using https://shinyobjectlabs.gitbook.io/fetch-js/
 // This is being triggered by the x-fetch="get_todos" in <body> and then later by the "Search button"
 function getData() {
-  console.log("getData triggered again safespace");
   $fetch.createAction("get_todos", {
     options: {
       method: "get",
@@ -895,6 +894,7 @@ function populateAutoSuggest(featuresArray) {
         const clickedItem = event.target;
         // console.log(`You clicked on: ${clickedItem.textContent}`);
         document.getElementById("search").value = clickedItem.textContent;
+        getData();
         // You can also access custom data attributes like:
         //console.log(`Item index: ${clickedItem.dataset.index}`);
     }
