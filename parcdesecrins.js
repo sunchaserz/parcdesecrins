@@ -227,6 +227,7 @@ $("#search").on("input", function () {
   }
 });
 
+
 // when clicking on CROSS in searchfield or Logo
 $("#clearsearch,#brand").on("click", function () {
   $("#search").val("").trigger("input"); // to trigger above function and add has--value class
