@@ -712,9 +712,9 @@ map.on("load", async () => {
     if (results.features[0]) {
       populateAutoSuggest(results.features);
       //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
-      map.flyTo({
-        center: results.features[0].center,
-      });
+      // map.flyTo({
+      //   center: results.features[0].center,
+      // });
     }
   }
   // ++
@@ -896,7 +896,7 @@ function populateAutoSuggest(featuresArray) {
         document.getElementById("search").value = clickedItem.textContent;
         getData();
         map.flyTo({
-          center: results.features[0].center,
+          center: clickedItem.dataset.center,
         });
         // You can also access custom data attributes like:
         //console.log(`Item index: ${clickedItem.dataset.index}`);
