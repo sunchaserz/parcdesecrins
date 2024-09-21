@@ -680,8 +680,8 @@ map.on("load", async () => {
   }
 
   // +++ Enable input through search box and autocomplete through maptiler geocoding
-  const locqueryInput = document.querySelector('input[name="locquery"]');
-  const locqueryValue = locqueryInput.value;
+  const locqueryInput = document.getElementById('search');
+  const locqueryValue = locqueryInput.innerText;
   let debounceTimer; // Timer variable for debouncing
 
   // Event listener for the 'input' event
