@@ -921,8 +921,8 @@ function createListFromSource() {
   const features = getRenderedFeatures('point-layer');
   if (features.length) {
     //console.log("getRenderedFeatures" + features);
-    //stop listening to the map idle event
-    map.off("idle", createListFromSource);
+    //stop listening to the map render event
+    map.off("render", createListFromSource);
     updateList();
   }
 }
