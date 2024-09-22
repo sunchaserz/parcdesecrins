@@ -1000,10 +1000,10 @@ function fadeDiv(divId) {
   setTimeout(() => {
       fadeDiv.classList.remove('fade-in'); // Fade out
       fadeDiv.classList.add('fade-out');
-  }, 1000); // Duration of fade-in animation
+  }, 2000); // Duration of fade-in animation
 
   // Hide completely after fading out
   setTimeout(() => {
       //fadeDiv.style.display = 'none'; // Hide it completely after fading out
-  }, 1000); // Match this with the total duration (1s fade-in + 1s fade-out)
+  }, 2000); // Match this with the total duration (1s fade-in + 1s fade-out)
 }
