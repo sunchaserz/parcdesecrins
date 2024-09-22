@@ -975,5 +975,5 @@ function countVisibleCards() {
 
 // -- Helper: Update counter
 function updateCounter(count) {
-  $("#totalresults").html("<b>" + count + "</b> results");
+  $("#totalresults").html("<b>" + count + "</b> results within map area");
 }
