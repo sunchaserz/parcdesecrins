@@ -665,7 +665,10 @@ map.on("load", async () => {
   });
 
   //map.on('render', 'point-layer', createListFromSource); // this in case  you want to load map first and then list (im doing different)
-  map.on("moveend", showRefreshListButton);
+  map.on("moveend", function() {
+    showRefreshListButton();
+    countVisibleCards();
+});
 
   const mapStyle = map.getStyle();
 
@@ -956,7 +959,7 @@ function updateList() {
   document.getElementById("loading-animation").style.display = "none";
   document.getElementById("reload").classList.add('hidden');
   console.log("loading OFF");
-  countVisibleCards();
+
 
 }
 // --
@@ -1002,6 +1005,10 @@ function fadeDiv(divId, count) {
   // Start fade-out after the fade-in animation is complete
   setTimeout(() => {
       fadeDiv.classList.remove('fade-in-out'); // Fade out
-      //$("#totalresults").html("<b>" + count + "</b> results within map area");
   }, 1000); // Duration of fade-in animation
+
+  // wait for 1 second before updating the counter
+  setTimeout(() => {
+    $("#totalresults").html("<b>" + count + "</b> results within map area");
+}, 1000); // Duration of fade-in animation
 }
