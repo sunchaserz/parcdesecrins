@@ -932,9 +932,11 @@ function createListFromSource() {
 function getRenderedFeatures(point) {
   //if the point is null, it is searched within the bounding box of the map view
   console.log("getRenderedFeatures point " + point);
-  const features = map.queryRenderedFeatures(point, {
-    layers: ['point-layer']
-  });
+  const features = map.queryRenderedFeatures({ layers: ['point-layer'] });
+
+  // const features = map.queryRenderedFeatures(point, {
+  //   layers: ['point-layer']
+  // });
   console.log("getRenderedFeatures features " + features);
   return features;
 }
