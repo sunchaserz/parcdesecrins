@@ -663,7 +663,7 @@ map.on("load", async () => {
     map.getCanvas().style.cursor = "";
   });
 
-  map.on('render', createListFromSource); // this in case  you want to load map first and then list (im doing different)
+  map.on('load', 'point-layer', createListFromSource); // this in case  you want to load map first and then list (im doing different)
   map.on("moveend", showRefreshListButton);
 
   const mapStyle = map.getStyle();
