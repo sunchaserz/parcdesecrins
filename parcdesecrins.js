@@ -505,7 +505,6 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 // WAIT UNTIL ALL LAYERS HAVE LOADED
 map.on("render", function () {
 
-  console.log("map RENDERING");
 
   if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
     createListFromSource();
@@ -928,13 +927,28 @@ function createListFromSource() {
 }
 // --
 
-// -- Helper: Update the list
+// -- Helper: Update the list: For now - just set the ones in view VISIBLE (needs to be refactored)
 function updateList() {
   const features = getRenderedFeatures('point-layer');
   const listItems = features.map(item => {
     return `${item.properties.id}`;
   });
-  console.log("these features will become visible " + listItems);
+
+  // Select all divs that have the data-id attribute
+  const allCards = document.querySelectorAll('#cards .uui-blogsection01_item');
+
+  // Loop through each div and set visibility based on the ID match
+  allCards.forEach(div => {
+    const dataId = div.getAttribute('data-id'); // Get the data-id attribute value
+
+    // Check if this div's data-id is in the listItems array
+    if (listItems.includes(dataId)) {
+      div.style.display = 'block'; // Make the div visible
+    } else {
+      div.style.display = 'none';  // Hide the div if not in the list
+    }
+  });
+
 }
 // --
 
