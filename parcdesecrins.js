@@ -931,6 +931,7 @@ function createListFromSource() {
 // -- Helper: Get all features within the map view
 function getRenderedFeatures(point) {
   //if the point is null, it is searched within the bounding box of the map view
+  console.log("getRenderedFeatures point " + point);
   const features = map.queryRenderedFeatures(point, {
     layers: ['point-layer']
   });
