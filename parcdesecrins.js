@@ -505,8 +505,7 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 map.on("idle", function () {
 
   if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
-    console.log("Map is fully loaded cause " + map.getLayer("point-layer") + " and " + map.isSourceLoaded("earthquakes"));
-    console.log("Points-layer is fully loaded!");
+    console.log("Points-layer is fully loaded and map is idle!");
     document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
     createListFromSource();
     // Perform any actions now that the points-layer is fully loaded
@@ -919,9 +918,9 @@ function populateAutoSuggest(featuresArray) {
 
 // -- Helper: Create the list from what we see on the map
 function createListFromSource() {
-  const features = getRenderedFeatures();
+  const features = getRenderedFeatures(['point-layer']);
   if (features.length) {
-    console.log("getRenderedFeatures" + features);
+    //console.log("getRenderedFeatures" + features);
     //stop listening to the map idle event
     map.off("idle", createListFromSource);
     updateList();
@@ -931,7 +930,7 @@ function createListFromSource() {
 
 // -- Helper: Update the list
 function updateList() {
-  const features = getRenderedFeatures();
+  const features = getRenderedFeatures(['point-layer']);
   const listItems = features.map(item => {
     return `${item.id}`;
   });
@@ -940,9 +939,9 @@ function updateList() {
 // --
 
 // -- Helper: Get all features within the map view
-function getRenderedFeatures(point) {
+function getRenderedFeatures(layers) {
   //if the point is null, it is searched within the bounding box of the map view
-  const features = map.queryRenderedFeatures({ layers: ["point-layer"] });
+  const features = map.queryRenderedFeatures({ layers: `${layer}` });
   console.log("getRenderedFeatures features " + features);
   return features;
 }
