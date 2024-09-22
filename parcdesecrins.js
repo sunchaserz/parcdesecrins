@@ -1002,6 +1002,6 @@ function fadeDiv(divId) {
 
   // Hide completely after fading out
   setTimeout(() => {
-      fadeDiv.style.display = 'none'; // Hide it completely after fading out
+      //fadeDiv.style.display = 'none'; // Hide it completely after fading out
   }, 4000); // Match this with the total duration (1s fade-in + 1s fade-out)
 }
