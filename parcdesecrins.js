@@ -898,6 +898,9 @@ function populateAutoSuggest(featuresArray) {
         map.flyTo({
           center: clickedItem.dataset.center.split(","),
         });
+        // Clear the autosuggest div
+        autosuggestDiv.innerHTML = "";
+
         // You can also access custom data attributes like:
         //console.log(`Item index: ${clickedItem.dataset.index}`);
     }
