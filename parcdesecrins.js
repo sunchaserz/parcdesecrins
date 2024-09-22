@@ -943,9 +943,9 @@ function updateList() {
 
     // Check if this div's data-id is in the listItems array
     if (listItems.includes(dataId)) {
-      div.style.display = 'block'; // Make the div visible
+      div.classList.remove('hidden'); // Make the div visible
     } else {
-      div.style.display = 'none';  // Hide the div if not in the list
+      div.classList.add('hidden'); // Make the div visible
     }
   });
   countVisibleCards();
