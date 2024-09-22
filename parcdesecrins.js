@@ -930,7 +930,7 @@ function createListFromSource() {
   document.getElementById("loading-animation").style.display = "block";
   document.getElementById("reload").classList.remove('hidden');
   console.log("loading ON");
-  const features = getRenderedFeatures('point-layer');
+  const features = getRenderedFeaturesInView('point-layer');
 
   if (features.length) {
     // ONLY now we are certain that point-layer is completely rendered and we can stop listening to map render event
@@ -970,7 +970,7 @@ function updateList() {
 // --
 
 // -- Helper: Get all features within the map view
-function getRenderedFeatures(layer) {
+function getRenderedFeaturesInView(layer) {
 
   //if the point is null, it is searched within the bounding box of the map view
   const features = map.queryRenderedFeatures({ layers: [layer] });
