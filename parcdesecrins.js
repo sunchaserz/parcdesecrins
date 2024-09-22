@@ -505,6 +505,8 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 // WAIT UNTIL ALL LAYERS HAVE LOADED
 map.on("render", function () {
 
+  console.log("map RENDERING");
+
   if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
     createListFromSource();
   }
