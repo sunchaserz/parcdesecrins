@@ -472,25 +472,25 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 
   // /* start: if you want circles in stead of icons
 
-  map.addLayer({
-    id: "point-layer",
-    type: "symbol",
-    source: "earthquakes",
-    filter: ["!", ["has", "point_count"]],
-    layout: {
-      "icon-image": [
-        "case",
-        ["==", ["get", "icon"], "restaurantz"],
-        "restaurantz",
-        ["==", ["get", "icon"], "walk"],
-        "walk",
-        "walk", // default cause 'case'
-      ],
-      "icon-size": iconSize,
-      "icon-allow-overlap": true,
-      "icon-ignore-placement": true, // icon will not push away underlaying village names.
-    },
-  });
+  // map.addLayer({
+  //   id: "point-layer",
+  //   type: "symbol",
+  //   source: "earthquakes",
+  //   filter: ["!", ["has", "point_count"]],
+  //   layout: {
+  //     "icon-image": [
+  //       "case",
+  //       ["==", ["get", "icon"], "restaurantz"],
+  //       "restaurantz",
+  //       ["==", ["get", "icon"], "walk"],
+  //       "walk",
+  //       "walk", // default cause 'case'
+  //     ],
+  //     "icon-size": iconSize,
+  //     "icon-allow-overlap": true,
+  //     "icon-ignore-placement": true, // icon will not push away underlaying village names.
+  //   },
+  // });
   // end: if you want circles */
 
   const features = map.queryRenderedFeatures({ layers: ['point-layer'] });
