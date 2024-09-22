@@ -985,10 +985,7 @@ function countVisibleCards() {
 function updateCounter(count) {
   fadeDiv('warning-updated');
 
-  // wait for 1 second before updating the counter
-  setTimeout(() => {
-    $("#totalresults").html("<b>" + count + "</b> results within map area");
-}, 500); // Duration of fade-in animation
+
 
 
 }
@@ -1007,5 +1004,8 @@ function fadeDiv(divId) {
       fadeDiv.classList.remove('fade-in-out'); // Fade out
   }, 1000); // Duration of fade-in animation
 
-
+  // wait for 1 second before updating the counter
+  setTimeout(() => {
+    $("#totalresults").html("<b>" + count + "</b> results within map area");
+}, 500); // Duration of fade-in animation
 }
