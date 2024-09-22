@@ -1000,7 +1000,7 @@ function fadeDiv(divId) {
   // Start fade-out after the fade-in animation is complete
   setTimeout(() => {
       fadeDiv.classList.remove('fade-in-out'); // Fade out
-  }, 4000); // Duration of fade-in animation
+  }, 2000); // Duration of fade-in animation
 
 
 }
