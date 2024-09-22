@@ -494,11 +494,19 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
   // end: if you want circles */
 
 
+   // Wait until the point layer source is loaded
+   map.on('sourcedata', function(e) {
+    // Check if the event is related to your source and is fully loaded
+    if (e.sourceId === 'earthquakes' && e.isSourceLoaded) {
+        //console.log('Point layer is fully loaded!');
+        document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
+        createListFromSource();
+    }
+  });
 
-  document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
 
   // When all features (points) are loaded, create a list of all features on the left side
-  createListFromSource();
+  //createListFromSource();
 }
 // END : Important function that loads all markers and adds layers accordlingly
 
@@ -663,7 +671,7 @@ map.on("load", async () => {
     map.getCanvas().style.cursor = "";
   });
 
-  map.on('render', 'point-layer', createListFromSource); // this in case  you want to load map first and then list (im doing different)
+  //map.on('render', 'point-layer', createListFromSource); // this in case  you want to load map first and then list (im doing different)
   map.on("moveend", showRefreshListButton);
 
   const mapStyle = map.getStyle();
