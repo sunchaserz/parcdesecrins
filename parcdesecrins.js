@@ -590,7 +590,7 @@ map.on("load", async () => {
   // the location of the feature, with
   // description HTML from its properties.
   map.on("click", "point-layer", function (e) {
-    console.log("clickrerere" + e.point);
+    console.log("clickrerere" + JSON.stringify(e.point, null, 2));
     const features = getRenderedFeatures(e.point);
 
     if (features.length) {
