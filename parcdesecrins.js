@@ -503,7 +503,7 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 
 // WAIT UNTIL ALL LAYERS HAVE LOADED
 map.on("idle", function () {
-  console.log("Map is fully loaded!");
+  console.log("Map is fully loaded cause " + map.getLayer("points-layer") + " and " + map.isSourceLoaded("earthquakes"));
   if (map.getLayer("points-layer") && map.isSourceLoaded("earthquakes")) {
     console.log("Points-layer is fully loaded!");
     document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
