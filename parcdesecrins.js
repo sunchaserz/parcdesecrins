@@ -917,6 +917,10 @@ function populateAutoSuggest(featuresArray) {
 
 // -- Helper: Create the list from what we see on the map
 function createListFromSource() {
+
+  // show loading anim
+  document.getElementById("loading-animation").style.display = "block";
+
   const features = getRenderedFeatures('point-layer');
 
   if (features.length) {
@@ -948,6 +952,7 @@ function updateList() {
       div.classList.add('hidden'); // Make the div visible
     }
   });
+  document.getElementById("loading-animation").style.display = "none";
   countVisibleCards();
 
 }
