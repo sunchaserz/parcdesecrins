@@ -932,7 +932,7 @@ function createListFromSource() {
 function updateList() {
   const features = getRenderedFeatures('point-layer');
   const listItems = features.map(item => {
-    return `${item.id}`;
+    return `${item.properties.id}`;
   });
   console.log("updateList features " + listItems);
 }
