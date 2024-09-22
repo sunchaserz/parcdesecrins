@@ -503,10 +503,11 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 
 // CRUX
 map.on("load", async () => {
-  console.log("map on load");
+
   const bounds = map.getBounds();
   console.log("bounds" + JSON.stringify(bounds));
 
+  createListFromSource();
   // const rw = await map.loadImage(googleBucketUrl + '/map/restaurant+walk.png');
   // map.addImage('restaurant+walk', rw);
 
@@ -908,5 +909,28 @@ function populateAutoSuggest(featuresArray) {
 
   // Append the <ul> to the autosuggest div
   autosuggestDiv.appendChild(ul);
+}
+// --
+
+
+// -- Helper: Create the list from what we see on the map
+function createListFromSource() {
+  const features = getRenderedFeatures();
+  if (features.length) {
+    console.log("getRenderedFeatures" + features);
+    //stop listening to the map render event
+    map.off('render', createListFromSource);
+    //updateList();
+  }
+}
+// --
+
+// -- Helper: Get all features within the map view
+function getRenderedFeatures(point) {
+  //if the point is null, it is searched within the bounding box of the map view
+  const features = map.queryRenderedFeatures(point, {
+    layers: ['points']
+  });
+  return features;
 }
 // --
