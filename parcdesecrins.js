@@ -494,6 +494,9 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
   // end: if you want circles */
 
   document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
+
+  // When all features (points) are loaded, create a list of all features on the left side
+  createListFromSource();
 }
 // END : Important function that loads all markers and adds layers accordlingly
 
@@ -507,7 +510,7 @@ map.on("load", async () => {
   const bounds = map.getBounds();
   console.log("bounds" + JSON.stringify(bounds));
 
-  createListFromSource();
+
   // const rw = await map.loadImage(googleBucketUrl + '/map/restaurant+walk.png');
   // map.addImage('restaurant+walk', rw);
 
@@ -929,7 +932,7 @@ function createListFromSource() {
 function getRenderedFeatures(point) {
   //if the point is null, it is searched within the bounding box of the map view
   const features = map.queryRenderedFeatures(point, {
-    layers: ['points']
+    layers: ['point-layer']
   });
   return features;
 }
