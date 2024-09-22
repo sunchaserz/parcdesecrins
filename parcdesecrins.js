@@ -498,7 +498,7 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
    map.on('sourcedata', function(e) {
     // Check if the event is related to your source and is fully loaded
     if (e.sourceId === 'earthquakes' && e.isSourceLoaded) {
-        //console.log('Point layer is fully loaded!');
+        console.log('Point layer is fully loaded!');
         document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
         createListFromSource();
     }
