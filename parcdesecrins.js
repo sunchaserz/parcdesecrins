@@ -181,6 +181,7 @@ function getData() {
 
             // PUT THE DATA INTO THE MAP
             loadCustomMarkersAndLayers(dataGeoJson);
+            document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
           } else {
             // 200 but no results
             console.log("We have " + data.length + " results!");
@@ -506,7 +507,7 @@ map.on("render", function () {
 
   if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
     console.log("Points-layer is fully loaded and map is idle!");
-    document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
+
     createListFromSource();
     // Perform any actions now that the points-layer is fully loaded
   }
