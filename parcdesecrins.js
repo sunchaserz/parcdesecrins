@@ -939,10 +939,10 @@ function updateList() {
 // --
 
 // -- Helper: Get all features within the map view
-function getRenderedFeatures(layers) {
-  console.log(`getRenderedFeatures` + layers);
+function getRenderedFeatures(layer) {
+  console.log(`getRenderedFeatures` + layer);
   //if the point is null, it is searched within the bounding box of the map view
-  const features = map.queryRenderedFeatures({ layers: `${layers}` });
+  const features = map.queryRenderedFeatures({ layers: layer });
   console.log("getRenderedFeatures features " + features);
   return features;
 }
