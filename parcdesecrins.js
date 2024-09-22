@@ -589,8 +589,7 @@ map.on("load", async () => {
   map.on("click", "point-layer", function (e) {
     const features = getRenderedFeatures(e.point);
 
-    const featuresList = map.queryRenderedFeatures({ layers: ['point-layer'] });
-    console.log("features that I found in point layer" + JSON.stringify(featuresList));
+
 
     if (features.length) {
       const element = features[0];
@@ -664,7 +663,7 @@ map.on("load", async () => {
     map.getCanvas().style.cursor = "";
   });
 
-  //map.on('render', createListFromSource); // this in case  you want to load map first and then list (im doing different)
+  map.on('render', createListFromSource); // this in case  you want to load map first and then list (im doing different)
   map.on("moveend", showRefreshListButton);
 
   const mapStyle = map.getStyle();
