@@ -948,6 +948,7 @@ function updateList() {
       div.style.display = 'none';  // Hide the div if not in the list
     }
   });
+  countVisibleCards
 
 }
 // --
@@ -961,3 +962,18 @@ function getRenderedFeatures(layer) {
   return features;
 }
 // --
+
+
+// -- Helper: Count visible cards and update counter
+function countVisibleCards() {
+  const visibleCards = document.querySelectorAll('#cards .uui-blogsection01_item:not(.hidden)');
+  const count = visibleCards.length;
+
+  updateCounter(count);
+}
+// --
+
+// -- Helper: Update counter
+function updateCounter(count) {
+  $("#totalresults").html("<b>" + count + "</b> results");
+}
