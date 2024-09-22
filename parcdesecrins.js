@@ -492,16 +492,6 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
   });
   // end: if you want circles */
 
-  // WAIT UNTIL ALL LAYERS HAVE LOADED
-  map.on("idle", function () {
-    if (map.getLayer("points-layer") && map.isSourceLoaded("points-source")) {
-      console.log("Points-layer is fully loaded!");
-      document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
-      createListFromSource();
-      // Perform any actions now that the points-layer is fully loaded
-    }
-  });
-
   // When all features (points) are loaded, create a list of all features on the left side
   //createListFromSource();
 }
@@ -510,6 +500,16 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 ///////////////////////////////////////////////////// END: HELPERS
 ////////////////////////////////////////
 /////////////////////////////
+
+// WAIT UNTIL ALL LAYERS HAVE LOADED
+map.on("idle", function () {
+  if (map.getLayer("points-layer") && map.isSourceLoaded("earthquakes")) {
+    console.log("Points-layer is fully loaded!");
+    document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
+    createListFromSource();
+    // Perform any actions now that the points-layer is fully loaded
+  }
+});
 
 // CRUX
 map.on("load", async () => {
