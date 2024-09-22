@@ -669,7 +669,7 @@ map.on("load", async () => {
     showRefreshListButton();
     if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
       createListFromSource();
-      countVisibleCards();
+
     }
 
 });
@@ -963,7 +963,7 @@ function updateList() {
   document.getElementById("loading-animation").style.display = "none";
   document.getElementById("reload").classList.add('hidden');
   console.log("loading OFF");
-
+  countVisibleCards();
 
 }
 // --
