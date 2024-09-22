@@ -948,7 +948,7 @@ function updateList() {
       div.style.display = 'none';  // Hide the div if not in the list
     }
   });
-  countVisibleCards
+  countVisibleCards();
 
 }
 // --
