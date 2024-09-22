@@ -493,6 +493,9 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
   });
   // end: if you want circles */
 
+  const features = map.queryRenderedFeatures({ layers: ['point-layer'] });
+  console.log("features that I found in point layer" + JSON.stringify(features));
+
   document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
 
   // When all features (points) are loaded, create a list of all features on the left side
