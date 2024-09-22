@@ -506,10 +506,7 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 map.on("render", function () {
 
   if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
-    console.log("Points-layer is fully loaded and map is idle!");
-
     createListFromSource();
-    // Perform any actions now that the points-layer is fully loaded
   }
 });
 
@@ -920,9 +917,9 @@ function populateAutoSuggest(featuresArray) {
 // -- Helper: Create the list from what we see on the map
 function createListFromSource() {
   const features = getRenderedFeatures('point-layer');
+
   if (features.length) {
-    //console.log("getRenderedFeatures" + features);
-    console.log('stop listening to the map render event');
+    // ONLY now we are certain that point-layer is completely rendered and we can stop listening to map render event
     map.off("render", createListFromSource);
     updateList();
   }
@@ -935,16 +932,16 @@ function updateList() {
   const listItems = features.map(item => {
     return `${item.properties.id}`;
   });
-  console.log("updateList features " + listItems);
+  console.log("these features will become visible " + listItems);
 }
 // --
 
 // -- Helper: Get all features within the map view
 function getRenderedFeatures(layer) {
-  console.log(`getRenderedFeatures` + layer);
+
   //if the point is null, it is searched within the bounding box of the map view
   const features = map.queryRenderedFeatures({ layers: [layer] });
-  console.log("getRenderedFeatures features " + features);
+
   return features;
 }
 // --
