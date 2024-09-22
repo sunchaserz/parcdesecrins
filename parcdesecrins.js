@@ -952,7 +952,7 @@ function updateList() {
       div.classList.add('hidden'); // Make the div visible
     }
   });
-  document.getElementById("loading-animation").style.display = "none";
+  // document.getElementById("loading-animation").style.display = "none";
   countVisibleCards();
 
 }
