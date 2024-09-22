@@ -920,7 +920,7 @@ function createListFromSource() {
 
   // show loading anim
   document.getElementById("loading-animation").style.display = "block";
-
+  console.log("loading ON");
   const features = getRenderedFeatures('point-layer');
 
   if (features.length) {
@@ -952,7 +952,8 @@ function updateList() {
       div.classList.add('hidden'); // Make the div visible
     }
   });
-  // document.getElementById("loading-animation").style.display = "none";
+  document.getElementById("loading-animation").style.display = "none";
+  console.log("loading OFF");
   countVisibleCards();
 
 }
