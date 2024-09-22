@@ -920,7 +920,7 @@ function createListFromSource() {
 
   // show loading anim
   document.getElementById("loading-animation").style.display = "block";
-  document.getElementById("reloading").classList.remove('hidden');
+  document.getElementById("reload").classList.remove('hidden');
   console.log("loading ON");
   const features = getRenderedFeatures('point-layer');
 
@@ -954,7 +954,7 @@ function updateList() {
     }
   });
   document.getElementById("loading-animation").style.display = "none";
-  document.getElementById("reloading").classList.add('hidden');
+  document.getElementById("reload").classList.add('hidden');
   console.log("loading OFF");
   countVisibleCards();
 
