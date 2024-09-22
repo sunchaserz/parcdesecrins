@@ -506,9 +506,9 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 map.on("render", function () {
 
 
-  if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
-    createListFromSource();
-  }
+  // if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
+  //   createListFromSource();
+  // }
 });
 
 // CRUX
@@ -667,7 +667,11 @@ map.on("load", async () => {
   //map.on('render', 'point-layer', createListFromSource); // this in case  you want to load map first and then list (im doing different)
   map.on("moveend", function() {
     showRefreshListButton();
-    countVisibleCards();
+    if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
+      createListFromSource();
+      countVisibleCards();
+    }
+
 });
 
   const mapStyle = map.getStyle();
