@@ -918,7 +918,7 @@ function populateAutoSuggest(featuresArray) {
 
 // -- Helper: Create the list from what we see on the map
 function createListFromSource() {
-  const features = getRenderedFeatures(['point-layer']);
+  const features = getRenderedFeatures('point-layer');
   if (features.length) {
     //console.log("getRenderedFeatures" + features);
     //stop listening to the map idle event
@@ -930,7 +930,7 @@ function createListFromSource() {
 
 // -- Helper: Update the list
 function updateList() {
-  const features = getRenderedFeatures(['point-layer']);
+  const features = getRenderedFeatures('point-layer');
   const listItems = features.map(item => {
     return `${item.id}`;
   });
