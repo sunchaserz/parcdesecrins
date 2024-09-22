@@ -994,14 +994,13 @@ function fadeDiv(divId) {
   const fadeDiv = document.getElementById(divId);
 
   // Show the div with fade-in effect
-  fadeDiv.classList.add('fade-in');
-  fadeDiv.classList.remove('fade-out'); // Ensure fade-out class is removed
+  fadeDiv.classList.add('fade-in-out');
+
 
   // Start fade-out after the fade-in animation is complete
   setTimeout(() => {
-      fadeDiv.classList.remove('fade-in'); // Fade out
-      fadeDiv.classList.add('fade-out');
-  }, 1000); // Duration of fade-in animation
+      fadeDiv.classList.remove('fade-in-out'); // Fade out
+  }, 4000); // Duration of fade-in animation
 
 
 }
