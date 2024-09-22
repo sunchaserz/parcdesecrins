@@ -983,7 +983,7 @@ function countVisibleCards() {
 
 // -- Helper: Update counter
 function updateCounter(count) {
-  fadeDiv('warning-updated');
+  fadeDiv('warning-updated', count);
 
 
 
@@ -992,7 +992,7 @@ function updateCounter(count) {
 // --
 
 // -- Helper: Fade div for warning pill
-function fadeDiv(divId) {
+function fadeDiv(divId, count) {
   const fadeDiv = document.getElementById(divId);
 
   // Show the div with fade-in effect
