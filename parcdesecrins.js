@@ -935,6 +935,7 @@ function getRenderedFeatures(point) {
   const features = map.queryRenderedFeatures(point, {
     layers: ['point-layer']
   });
+  console.log("getRenderedFeatures features " + features);
   return features;
 }
 // --
