@@ -1007,5 +1007,5 @@ function fadeDiv(divId, count) {
   // wait for 1 second before updating the counter
   setTimeout(() => {
     $("#totalresults").html("<b>" + count + "</b> results within map area");
-}, 100); // Duration of fade-in animation
+}, 1000); // Duration of fade-in animation
 }
