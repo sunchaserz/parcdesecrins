@@ -226,7 +226,6 @@ $("#search").on("input", function () {
   }
 });
 
-
 // when clicking on CROSS in searchfield or Logo
 $("#clearsearch,#brand").on("click", function () {
   $("#search").val("").trigger("input"); // to trigger above function and add has--value class
@@ -493,17 +492,15 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
   });
   // end: if you want circles */
 
-
-   // Wait until the point layer source is loaded
-   map.on('sourcedata', function(e) {
-    // Check if the event is related to your source and is fully loaded
-    if (e.sourceId === 'earthquakes' && e.isSourceLoaded) {
-        console.log('Point layer is fully loaded!');
-        document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
-        createListFromSource();
+  // WAIT UNTIL ALL LAYERS HAVE LOADED
+  map.on("idle", function () {
+    if (map.getLayer("points-layer") && map.isSourceLoaded("points-source")) {
+      console.log("Points-layer is fully loaded!");
+      document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
+      createListFromSource();
+      // Perform any actions now that the points-layer is fully loaded
     }
   });
-
 
   // When all features (points) are loaded, create a list of all features on the left side
   //createListFromSource();
@@ -516,10 +513,8 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 
 // CRUX
 map.on("load", async () => {
-
   const bounds = map.getBounds();
   console.log("bounds" + JSON.stringify(bounds));
-
 
   // const rw = await map.loadImage(googleBucketUrl + '/map/restaurant+walk.png');
   // map.addImage('restaurant+walk', rw);
@@ -596,8 +591,6 @@ map.on("load", async () => {
   // description HTML from its properties.
   map.on("click", "point-layer", function (e) {
     const features = getRenderedFeatures(e.point);
-
-
 
     if (features.length) {
       const element = features[0];
@@ -689,20 +682,17 @@ map.on("load", async () => {
     if (results.features[0]) {
       populateAutoSuggest(results.features);
       //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
-
     }
   }
 
-
   // ++ Enable input through search box and autocomplete through maptiler geocoding
-  const locqueryInput = document.getElementById('search');
+  const locqueryInput = document.getElementById("search");
   let debounceTimer; // Timer variable for debouncing
 
   // Event listener for the 'input' event
   locqueryInput.addEventListener("input", function () {
-
     // Exit the function if input is empty
-    if (locqueryInput.value === '') {
+    if (locqueryInput.value === "") {
       return;
     }
 
@@ -734,7 +724,6 @@ map.on("load", async () => {
     }
   }
   // ++
-
 
   // // start: click on legend items
   // document
@@ -880,7 +869,6 @@ function getRenderedFeatures(point) {
 }, true);
 */
 
-
 // -- Helper: populate the autosuggest div with the list of places after user stops typing in the search box
 function populateAutoSuggest(featuresArray) {
   const autosuggestDiv = document.getElementById("autosuggest");
@@ -896,29 +884,29 @@ function populateAutoSuggest(featuresArray) {
     // console.log(feature);
     const li = document.createElement("li");
     li.textContent = feature.place_name;
-    li.setAttribute('data-center', feature.center);
+    li.setAttribute("data-center", feature.center);
 
     // Append the list item to the <ul>
     ul.appendChild(li);
   });
 
   // Click on any of the auto suggested things
-  ul.addEventListener('click', function(event) {
+  ul.addEventListener("click", function (event) {
     // Check if the clicked element is an <li>
-    if (event.target && event.target.nodeName === 'LI') {
-        // Get the index or content of the clicked list item
-        const clickedItem = event.target;
-        console.log(`You clicked on: ${clickedItem.dataset.center}`);
-        document.getElementById("search").value = clickedItem.textContent;
-        getData();
-        map.flyTo({
-          center: clickedItem.dataset.center.split(","),
-        });
-        // Clear the autosuggest div
-        autosuggestDiv.innerHTML = "";
+    if (event.target && event.target.nodeName === "LI") {
+      // Get the index or content of the clicked list item
+      const clickedItem = event.target;
+      console.log(`You clicked on: ${clickedItem.dataset.center}`);
+      document.getElementById("search").value = clickedItem.textContent;
+      getData();
+      map.flyTo({
+        center: clickedItem.dataset.center.split(","),
+      });
+      // Clear the autosuggest div
+      autosuggestDiv.innerHTML = "";
 
-        // You can also access custom data attributes like:
-        //console.log(`Item index: ${clickedItem.dataset.index}`);
+      // You can also access custom data attributes like:
+      //console.log(`Item index: ${clickedItem.dataset.index}`);
     }
   });
 
@@ -927,14 +915,13 @@ function populateAutoSuggest(featuresArray) {
 }
 // --
 
-
 // -- Helper: Create the list from what we see on the map
 function createListFromSource() {
   const features = getRenderedFeatures();
   if (features.length) {
     console.log("getRenderedFeatures" + features);
     //stop listening to the map render event
-    map.off('render', createListFromSource);
+    map.off("render", createListFromSource);
     //updateList();
   }
 }
@@ -944,7 +931,7 @@ function createListFromSource() {
 function getRenderedFeatures(point) {
   //if the point is null, it is searched within the bounding box of the map view
   console.log("getRenderedFeatures point " + point);
-  const features = map.queryRenderedFeatures({ layers: ['point-layer'] });
+  const features = map.queryRenderedFeatures({ layers: ["point-layer"] });
 
   // const features = map.queryRenderedFeatures(point, {
   //   layers: ['point-layer']
