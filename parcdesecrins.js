@@ -504,8 +504,6 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 
 // WAIT UNTIL ALL LAYERS HAVE LOADED
 map.on("render", function () {
-
-
   // if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
   //   createListFromSource();
   // }
@@ -666,14 +664,12 @@ map.on("load", async () => {
   });
 
   //map.on('render', 'point-layer', createListFromSource); // this in case  you want to load map first and then list (im doing different)
-  map.on("moveend", function() {
+  map.on("moveend", function () {
     showRefreshListButton();
     if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
       createListFromSource();
-
     }
-
-});
+  });
 
   const mapStyle = map.getStyle();
 
@@ -718,6 +714,7 @@ map.on("load", async () => {
     // docs https://docs.maptiler.com/client-js/geocoding/
     const results = await maptilersdk.geocoding.forward(locqueryInput.value, {
       proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
+      types: ["poi", "address", "place"],
       //bbox:ecrinsBounds,  // limit search to ecrins bounds
     });
     //ecrinsBounds
@@ -925,12 +922,11 @@ function populateAutoSuggest(featuresArray) {
 
 // -- Helper: Create the list from what we see on the map
 function createListFromSource() {
-
   // show loading anim
   document.getElementById("loading-animation").style.display = "block";
-  document.getElementById("reload").classList.remove('hidden');
+  document.getElementById("reload").classList.remove("hidden");
   console.log("loading ON");
-  const features = getRenderedFeaturesInView('point-layer');
+  const features = getRenderedFeaturesInView("point-layer");
 
   if (features.length) {
     // ONLY now we are certain that point-layer is completely rendered and we can stop listening to map render event
@@ -942,36 +938,34 @@ function createListFromSource() {
 
 // -- Helper: Update the list: For now - just set the ones in view VISIBLE (needs to be refactored)
 function updateList() {
-  const features = getRenderedFeatures('point-layer');
-  const listItems = features.map(item => {
+  const features = getRenderedFeatures("point-layer");
+  const listItems = features.map((item) => {
     return `${item.properties.id}`;
   });
 
   // Select all divs that have the data-id attribute
-  const allCards = document.querySelectorAll('#cards .uui-blogsection01_item');
+  const allCards = document.querySelectorAll("#cards .uui-blogsection01_item");
 
   // Loop through each div and set visibility based on the ID match
-  allCards.forEach(div => {
-    const dataId = div.getAttribute('data-id'); // Get the data-id attribute value
+  allCards.forEach((div) => {
+    const dataId = div.getAttribute("data-id"); // Get the data-id attribute value
 
     // Check if this div's data-id is in the listItems array
     if (listItems.includes(dataId)) {
-      div.classList.remove('hidden'); // Make the div visible
+      div.classList.remove("hidden"); // Make the div visible
     } else {
-      div.classList.add('hidden'); // Make the div visible
+      div.classList.add("hidden"); // Make the div visible
     }
   });
   document.getElementById("loading-animation").style.display = "none";
-  document.getElementById("reload").classList.add('hidden');
+  document.getElementById("reload").classList.add("hidden");
   console.log("loading OFF");
   countVisibleCards();
-
 }
 // --
 
 // -- Helper: Get all features within the map view
 function getRenderedFeaturesInView(layer) {
-
   //if the point is null, it is searched within the bounding box of the map view
   const features = map.queryRenderedFeatures({ layers: [layer] });
 
@@ -979,10 +973,9 @@ function getRenderedFeaturesInView(layer) {
 }
 // --
 
-
 // -- Helper: Count visible cards and update counter
 function countVisibleCards() {
-  const visibleCards = document.querySelectorAll('#cards .uui-blogsection01_item:not(.hidden)');
+  const visibleCards = document.querySelectorAll("#cards .uui-blogsection01_item:not(.hidden)");
   const count = visibleCards.length;
 
   updateCounter(count);
@@ -991,11 +984,7 @@ function countVisibleCards() {
 
 // -- Helper: Update counter
 function updateCounter(count) {
-  fadeDiv('warning-updated', count);
-
-
-
-
+  fadeDiv("warning-updated", count);
 }
 // --
 
@@ -1004,16 +993,15 @@ function fadeDiv(divId, count) {
   const fadeDiv = document.getElementById(divId);
 
   // Show the div with fade-in effect
-  fadeDiv.classList.add('fade-in-out');
-
+  fadeDiv.classList.add("fade-in-out");
 
   // Start fade-out after the fade-in animation is complete
   setTimeout(() => {
-      fadeDiv.classList.remove('fade-in-out'); // Fade out
+    fadeDiv.classList.remove("fade-in-out"); // Fade out
   }, 2000); // Duration of fade-in animation
 
   // wait for 1 second before updating the counter
   setTimeout(() => {
     $("#totalresults").html("<b>" + count + "</b> results within map area");
-}, 1000); // Duration of fade-in animation
+  }, 1000); // Duration of fade-in animation
 }
