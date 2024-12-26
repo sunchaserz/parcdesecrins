@@ -733,7 +733,7 @@ map.on("load", async () => {
       //   "address",
       //   "road",
       // ],
-      //bbox:ecrinsBounds,  // limit search to ecrins bounds
+      bbox: ecrinsBounds, // limit search to ecrins bounds
     });
     //ecrinsBounds
     console.log(results);
