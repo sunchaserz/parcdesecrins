@@ -726,7 +726,7 @@ map.on("load", async () => {
     const apiKey = "AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc";
     const query = locqueryInput.value;
 
-    // Define the Ecrins bounds (as a LatLngBounds object)
+    // Define the Ecrins bounds as LatLngBoundsLiteral
     const ecrinsBounds = {
       northeast: { lat: 45.11, lng: 6.78 }, // Approximate upper-right corner
       southwest: { lat: 44.4, lng: 5.65 }, // Approximate lower-left corner
@@ -738,22 +738,22 @@ map.on("load", async () => {
     }
 
     try {
-      // Load the Google Maps API script dynamically if not already loaded
-      if (!window.google) {
-        const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-        script.async = true;
-        document.head.appendChild(script);
-
-        await new Promise((resolve) => (script.onload = resolve));
+      // Dynamically load Google Maps API if not already loaded
+      if (!window.google || !google.maps || !google.maps.places) {
+        await loadGoogleMapsAPI(apiKey);
       }
 
-      // Create a map and bounds object (required for PlacesService)
-      const map = new google.maps.Map(document.createElement("div")); // Placeholder map
-      const bounds = new google.maps.LatLngBounds(new google.maps.LatLng(ecrinsBounds.southwest), new google.maps.LatLng(ecrinsBounds.northeast));
+      // Import the Places library
+      const { PlacesService } = await google.maps.importLibrary("places");
 
-      // Create a PlacesService instance
-      const service = new google.maps.places.PlacesService(map);
+      // Create a LatLngBounds object
+      const bounds = new google.maps.LatLngBounds(ecrinsBounds.southwest, ecrinsBounds.northeast);
+
+      // Create a temporary map object (required for PlacesService)
+      const map = new google.maps.Map(document.createElement("div")); // Invisible placeholder map
+
+      // Initialize PlacesService
+      const service = new PlacesService(map);
 
       // Prepare the request object
       const request = {
@@ -761,39 +761,70 @@ map.on("load", async () => {
         bounds,
       };
 
-      // Perform a text search
-      service.textSearch(request, (results, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-          // Filter results to ensure they fall within the Ecrins bounds
-          const filteredResults = results.filter((result) => {
-            const location = result.geometry.location;
-            return (
-              location.lat() >= ecrinsBounds.southwest.lat &&
-              location.lat() <= ecrinsBounds.northeast.lat &&
-              location.lng() >= ecrinsBounds.southwest.lng &&
-              location.lng() <= ecrinsBounds.northeast.lng
-            );
-          });
+      // Perform a text search using the PlacesService
+      const results = await performTextSearch(service, request);
 
+      if (results.length > 0) {
+        // Filter results to ensure they fall within the Ecrins bounds
+        const filteredResults = results.filter((result) => {
+          const location = result.geometry.location;
+          return (
+            location.lat() >= ecrinsBounds.southwest.lat &&
+            location.lat() <= ecrinsBounds.northeast.lat &&
+            location.lng() >= ecrinsBounds.southwest.lng &&
+            location.lng() <= ecrinsBounds.northeast.lng
+          );
+        });
+
+        if (filteredResults.length > 0) {
           console.log("Filtered results:", filteredResults);
-
-          if (filteredResults.length > 0) {
-            populateAutoSuggest(filteredResults);
-
-            // Uncomment to use map functionality
-            // map.fitBounds(bounds);
-            // map.panTo(filteredResults[0].geometry.location);
-          } else {
-            console.log("No results found within the specified bounds.");
-          }
+          populateAutoSuggest(filteredResults);
         } else {
-          console.error("Places search failed:", status);
+          console.log("No results found within the specified bounds.");
         }
-      });
+      } else {
+        console.log("No results found for the query.");
+      }
     } catch (error) {
       console.error("Error during Places request:", error);
     }
   }
+
+  // Helper function to dynamically load the Google Maps API
+  async function loadGoogleMapsAPI(apiKey) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src*="maps.googleapis.com"]`)) {
+        resolve(); // Already loaded
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("Failed to load Google Maps API"));
+      document.head.appendChild(script);
+    });
+  }
+
+  // Helper function to perform a text search
+  async function performTextSearch(service, request) {
+    return new Promise((resolve, reject) => {
+      service.textSearch(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          resolve(results);
+        } else {
+          reject(new Error(`Places search failed: ${status}`));
+        }
+      });
+    });
+  }
+
+  // Mock function to handle the filtered results (replace with your implementation)
+  function populateAutoSuggest(results) {
+    // Example: Display the filtered results in the console
+    console.table(results.map((r) => ({ name: r.name, location: r.geometry.location })));
+  }
+  // END : GOOGLE VERSION
 
   // MAPTILER VERSION
   // async function handleUserInput() {
