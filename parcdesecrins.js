@@ -908,7 +908,7 @@ function populateAutoSuggest(featuresArray) {
     const li = document.createElement("li");
     //li.textContent = feature.place_name + (properties?.categories?.length > 0):// + feature.properties.categories[0];
     li.textContent = `${feature.place_name} (${
-      feature.properties?.categories?.length > 0 ? `has ${feature.properties.categories[0]} items` : "is empty or missing"
+      feature.properties?.categories?.length > 0 ? `<span class="geoloctag">${feature.properties.categories[0]}</span>` : ""
     }.`;
 
     li.setAttribute("data-center", feature.center);
