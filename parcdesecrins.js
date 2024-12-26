@@ -726,58 +726,72 @@ map.on("load", async () => {
     const apiKey = "AIzaSyAj1hQ3_KtYcm49YZBKqbCfSzz0jIKkHN8";
     const query = locqueryInput.value;
 
-    // Replace with the bounding box (if needed) for Parc des Écrins
+    // Define the Ecrins bounds (as a LatLngBounds object)
     const ecrinsBounds = {
       northeast: { lat: 45.11, lng: 6.78 }, // Approximate upper-right corner
       southwest: { lat: 44.4, lng: 5.65 }, // Approximate lower-left corner
     };
 
     if (!query.trim()) {
-      console.warn("No input provided for geocoding");
+      console.warn("No input provided for Places search");
       return;
     }
 
     try {
-      // Construct the geocoding API request URL
-      const endpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`;
+      // Load the Google Maps API script dynamically if not already loaded
+      if (!window.google) {
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+        script.async = true;
+        document.head.appendChild(script);
 
-      const response = await fetch(endpoint);
-      const data = await response.json();
-
-      console.log("Geocoding response:", data);
-
-      if (data.status === "OK" && data.results.length > 0) {
-        const filteredResults = data.results.filter((result) => {
-          // Filter results within the Ecrins bounds (if bounding box filtering is required)
-          const location = result.geometry.location;
-          return (
-            location.lat >= ecrinsBounds.southwest.lat &&
-            location.lat <= ecrinsBounds.northeast.lat &&
-            location.lng >= ecrinsBounds.southwest.lng &&
-            location.lng <= ecrinsBounds.northeast.lng
-          );
-        });
-
-        console.log("Filtered results:", filteredResults);
-
-        if (filteredResults.length > 0) {
-          populateAutoSuggest(filteredResults);
-
-          // Uncomment the following lines if using a map library:
-          // Map fitBounds or flyTo could be used here
-          // const firstResult = filteredResults[0];
-          // map.flyTo({
-          //   center: [firstResult.geometry.location.lng, firstResult.geometry.location.lat],
-          //   zoom: 14,
-          // });
-        } else {
-          console.log("No results found within the specified bounds.");
-        }
-      } else {
-        console.error("Geocoding failed:", data.status);
+        await new Promise((resolve) => (script.onload = resolve));
       }
+
+      // Create a map and bounds object (required for PlacesService)
+      const map = new google.maps.Map(document.createElement("div")); // Placeholder map
+      const bounds = new google.maps.LatLngBounds(new google.maps.LatLng(ecrinsBounds.southwest), new google.maps.LatLng(ecrinsBounds.northeast));
+
+      // Create a PlacesService instance
+      const service = new google.maps.places.PlacesService(map);
+
+      // Prepare the request object
+      const request = {
+        query,
+        bounds,
+      };
+
+      // Perform a text search
+      service.textSearch(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+          // Filter results to ensure they fall within the Ecrins bounds
+          const filteredResults = results.filter((result) => {
+            const location = result.geometry.location;
+            return (
+              location.lat() >= ecrinsBounds.southwest.lat &&
+              location.lat() <= ecrinsBounds.northeast.lat &&
+              location.lng() >= ecrinsBounds.southwest.lng &&
+              location.lng() <= ecrinsBounds.northeast.lng
+            );
+          });
+
+          console.log("Filtered results:", filteredResults);
+
+          if (filteredResults.length > 0) {
+            populateAutoSuggest(filteredResults);
+
+            // Uncomment to use map functionality
+            // map.fitBounds(bounds);
+            // map.panTo(filteredResults[0].geometry.location);
+          } else {
+            console.log("No results found within the specified bounds.");
+          }
+        } else {
+          console.error("Places search failed:", status);
+        }
+      });
     } catch (error) {
-      console.error("Error during geocoding request:", error);
+      console.error("Error during Places request:", error);
     }
   }
 
