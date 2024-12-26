@@ -760,6 +760,9 @@ map.on("load", async () => {
       // Prepare the request object
       const request = {
         textQuery: "Auris",
+        fields: ["displayName", "location", "businessStatus"],
+        // locationBias: ecrinsBounds, // Use the Ecrins bounds
+        locationBias: "rectangle:45.11,6.78|44.4,5.65",
       };
 
       // const request = {
