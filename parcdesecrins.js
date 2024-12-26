@@ -1011,15 +1011,15 @@ function populateAutoSuggest(results) {
 }
 
 // Example usage:
-document.getElementById("search").addEventListener("input", async function (event) {
-  const query = event.target.value;
-  if (query.trim()) {
-    const results = await geocode(query);
-    populateAutoSuggest(results);
-  } else {
-    document.getElementById("autosuggest").innerHTML = "";
-  }
-});
+// document.getElementById("search").addEventListener("input", async function (event) {
+//   const query = event.target.value;
+//   if (query.trim()) {
+//     const results = await geocode(query);
+//     populateAutoSuggest(results);
+//   } else {
+//     document.getElementById("autosuggest").innerHTML = "";
+//   }
+// });
 
 // -- Helper: Create the list from what we see on the map
 function createListFromSource() {
