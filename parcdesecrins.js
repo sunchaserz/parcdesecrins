@@ -748,7 +748,7 @@ map.on("load", async () => {
       // const { places } = await google.maps.importLibrary("places");
 
       // Create a LatLngBounds object
-      const bounds = new google.maps.LatLngBounds(ecrinsBounds.southwest, ecrinsBounds.northeast);
+      //const bounds = new google.maps.LatLngBounds(ecrinsBounds.southwest, ecrinsBounds.northeast);
 
       // Create a temporary map object (required for PlacesService)
       const map = new google.maps.Map(document.createElement("div")); // Invisible placeholder map
@@ -759,7 +759,7 @@ map.on("load", async () => {
       // Prepare the request object
       const request = {
         query,
-        bounds,
+        //bounds,
       };
       const { places } = await google.maps.places.Place.searchByText(request);
 
