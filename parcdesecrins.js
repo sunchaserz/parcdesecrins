@@ -911,7 +911,6 @@ function populateAutoSuggest(featuresArray) {
       feature.properties?.categories?.length > 0 ? `has ${feature.properties.categories[0]} items` : "is empty or missing"
     }.`;
 
-    console.log(message);
     li.setAttribute("data-center", feature.center);
 
     // Append the list item to the <ul>
