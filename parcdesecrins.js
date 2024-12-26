@@ -782,13 +782,14 @@ map.on("load", async () => {
       if (places.length > 0) {
         // Filter results to ensure they fall within the Ecrins bounds
         const filteredResults = places.filter((place) => {
-          const location = place.geometry.location;
-          return (
-            location.lat() >= ecrinsBounds.southwest.lat &&
-            location.lat() <= ecrinsBounds.northeast.lat &&
-            location.lng() >= ecrinsBounds.southwest.lng &&
-            location.lng() <= ecrinsBounds.northeast.lng
-          );
+          console.log("Place:", place);
+          // const location = place.geometry.location;
+          // return (
+          //   location.lat() >= ecrinsBounds.southwest.lat &&
+          //   location.lat() <= ecrinsBounds.northeast.lat &&
+          //   location.lng() >= ecrinsBounds.southwest.lng &&
+          //   location.lng() <= ecrinsBounds.northeast.lng
+          // );
         });
 
         if (filteredResults.length > 0) {
