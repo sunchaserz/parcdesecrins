@@ -744,6 +744,8 @@ map.on("load", async () => {
       const response = await fetch(endpoint);
       const data = await response.json();
 
+      console.log("Geocoding response:", data);
+
       if (data.status === "OK" && data.results.length > 0) {
         const filteredResults = data.results.filter((result) => {
           // Filter results within the Ecrins bounds (if bounding box filtering is required)
