@@ -715,7 +715,6 @@ map.on("load", async () => {
     const results = await maptilersdk.geocoding.forward(locqueryInput.value, {
       proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
       types: [
-        "poi",
         "continental_marine",
         "country",
         "major_landform",
@@ -732,6 +731,7 @@ map.on("load", async () => {
         "postal_code",
         "address",
         "road",
+        "poi",
       ],
       bbox: ecrinsBounds, // limit search to ecrins bounds
     });
@@ -907,7 +907,9 @@ function populateAutoSuggest(featuresArray) {
     // console.log(feature);
     const li = document.createElement("li");
     //li.textContent = feature.place_name + (properties?.categories?.length > 0):// + feature.properties.categories[0];
-    li.innerHTML = `${feature.place_name} ${
+    li.innerHTML = `${feature.place_name} <img src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.4.1/icons/${
+      feature.place_type[0]
+    }.svg" alt="${feature.place_type[0]}" class="svelte-ltkwvy"> ${
       feature.properties?.categories?.length > 0 ? `<span class="geoloctag">${feature.properties.categories[0]}</span>` : ""
     }`;
 
