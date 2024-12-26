@@ -907,9 +907,9 @@ function populateAutoSuggest(featuresArray) {
     // console.log(feature);
     const li = document.createElement("li");
     //li.textContent = feature.place_name + (properties?.categories?.length > 0):// + feature.properties.categories[0];
-    li.innerHTML = `${
-      feature.place_name
-    } <img src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.4.1/icons/park.svg" alt="park" class="svelte-ltkwvy"> ${
+    li.innerHTML = `${feature.place_name} <img src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.4.1/icons/${
+      feature.place_type_name
+    }.svg" alt="${feature.place_type_name}" class="svelte-ltkwvy"> ${
       feature.properties?.categories?.length > 0 ? `<span class="geoloctag">${feature.properties.categories[0]}</span>` : ""
     }`;
 
