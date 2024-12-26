@@ -723,7 +723,7 @@ map.on("load", async () => {
 
   // GOOGLE VERSION
   async function handleUserInput() {
-    const apiKey = "AIzaSyAj1hQ3_KtYcm49YZBKqbCfSzz0jIKkHN8";
+    const apiKey = "AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc";
     const query = locqueryInput.value;
 
     // Define the Ecrins bounds (as a LatLngBounds object)
