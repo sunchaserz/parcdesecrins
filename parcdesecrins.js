@@ -893,7 +893,77 @@ function getRenderedFeatures(point) {
 */
 
 // -- Helper: populate the autosuggest div with the list of places after user stops typing in the search box
-function populateAutoSuggest(featuresArray) {
+// function populateAutoSuggest(featuresArray) {
+//   const autosuggestDiv = document.getElementById("autosuggest");
+
+//   // Clear existing content
+//   autosuggestDiv.innerHTML = "";
+
+//   // Create a <ul> element to hold the list items
+//   const ul = document.createElement("ul");
+
+//   featuresArray.forEach((feature) => {
+//     // Create a <li> element for each place_name
+//     // console.log(feature);
+//     const li = document.createElement("li");
+//     //li.textContent = feature.place_name + (properties?.categories?.length > 0):// + feature.properties.categories[0];
+//     li.innerHTML = `${feature.place_name} <img src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.4.1/icons/${
+//       feature.place_type[0]
+//     }.svg" alt="${feature.place_type[0]}" class="svelte-ltkwvy"> ${
+//       feature.properties?.categories?.length > 0 ? `<span class="geoloctag">${feature.properties.categories[0]}</span>` : ""
+//     }`;
+
+//     li.setAttribute("data-center", feature.center);
+
+//     // Append the list item to the <ul>
+//     ul.appendChild(li);
+//   });
+
+//   // Click on any of the auto suggested things
+//   ul.addEventListener("click", function (event) {
+//     // Check if the clicked element is an <li>
+//     if (event.target && event.target.nodeName === "LI") {
+//       // Get the index or content of the clicked list item
+//       const clickedItem = event.target;
+//       console.log(`You clicked on: ${clickedItem.dataset.center}`);
+//       document.getElementById("search").value = clickedItem.textContent;
+//       getData();
+//       map.flyTo({
+//         center: clickedItem.dataset.center.split(","),
+//       });
+//       // Clear the autosuggest div
+//       autosuggestDiv.innerHTML = "";
+
+//       // You can also access custom data attributes like:
+//       //console.log(`Item index: ${clickedItem.dataset.index}`);
+//     }
+//   });
+
+//   // Append the <ul> to the autosuggest div
+//   autosuggestDiv.appendChild(ul);
+// }
+// --
+
+async function geocode(address) {
+  const apiKey = "AIzaSyAj1hQ3_KtYcm49YZBKqbCfSzz0jIKkHN8";
+  const endpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+
+  try {
+    const response = await fetch(endpoint);
+    const data = await response.json();
+    if (data.status === "OK") {
+      return data.results; // Return geocoded results
+    } else {
+      console.error("Geocoding error:", data.status);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching geocoding data:", error);
+    return [];
+  }
+}
+
+function populateAutoSuggest(results) {
   const autosuggestDiv = document.getElementById("autosuggest");
 
   // Clear existing content
@@ -902,47 +972,54 @@ function populateAutoSuggest(featuresArray) {
   // Create a <ul> element to hold the list items
   const ul = document.createElement("ul");
 
-  featuresArray.forEach((feature) => {
-    // Create a <li> element for each place_name
-    // console.log(feature);
+  results.forEach((result) => {
     const li = document.createElement("li");
-    //li.textContent = feature.place_name + (properties?.categories?.length > 0):// + feature.properties.categories[0];
-    li.innerHTML = `${feature.place_name} <img src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.4.1/icons/${
-      feature.place_type[0]
-    }.svg" alt="${feature.place_type[0]}" class="svelte-ltkwvy"> ${
-      feature.properties?.categories?.length > 0 ? `<span class="geoloctag">${feature.properties.categories[0]}</span>` : ""
-    }`;
+    const address = result.formatted_address;
+    const location = result.geometry.location;
 
-    li.setAttribute("data-center", feature.center);
+    li.innerHTML = `${address}`;
+    li.setAttribute("data-lat", location.lat);
+    li.setAttribute("data-lng", location.lng);
 
     // Append the list item to the <ul>
     ul.appendChild(li);
   });
 
-  // Click on any of the auto suggested things
+  // Click on any of the auto-suggested items
   ul.addEventListener("click", function (event) {
-    // Check if the clicked element is an <li>
     if (event.target && event.target.nodeName === "LI") {
-      // Get the index or content of the clicked list item
       const clickedItem = event.target;
-      console.log(`You clicked on: ${clickedItem.dataset.center}`);
+      const lat = clickedItem.getAttribute("data-lat");
+      const lng = clickedItem.getAttribute("data-lng");
+
+      console.log(`You clicked on: ${clickedItem.textContent}`);
       document.getElementById("search").value = clickedItem.textContent;
-      getData();
+
+      // Use map.flyTo if you're using a map library, like Mapbox or Google Maps
       map.flyTo({
-        center: clickedItem.dataset.center.split(","),
+        center: [lng, lat],
+        zoom: 14, // Adjust zoom level as needed
       });
+
       // Clear the autosuggest div
       autosuggestDiv.innerHTML = "";
-
-      // You can also access custom data attributes like:
-      //console.log(`Item index: ${clickedItem.dataset.index}`);
     }
   });
 
   // Append the <ul> to the autosuggest div
   autosuggestDiv.appendChild(ul);
 }
-// --
+
+// Example usage:
+document.getElementById("search").addEventListener("input", async function (event) {
+  const query = event.target.value;
+  if (query.trim()) {
+    const results = await geocode(query);
+    populateAutoSuggest(results);
+  } else {
+    document.getElementById("autosuggest").innerHTML = "";
+  }
+});
 
 // -- Helper: Create the list from what we see on the map
 function createListFromSource() {
