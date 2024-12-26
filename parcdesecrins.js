@@ -714,25 +714,25 @@ map.on("load", async () => {
     // docs https://docs.maptiler.com/client-js/geocoding/
     const results = await maptilersdk.geocoding.forward(locqueryInput.value, {
       proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
-      // types: [
-      //   "continental_marine",
-      //   "country",
-      //   "major_landform",
-      //   "region",
-      //   "subregion",
-      //   "county",
-      //   "joint_municipality",
-      //   "joint_submunicipality",
-      //   "municipality",
-      //   "municipal_district",
-      //   "locality",
-      //   "neighbourhood",
-      //   "place",
-      //   "postal_code",
-      //   "address",
-      //   "road",
-      //   "poi",
-      // ],
+      types: [
+        "continental_marine",
+        "country",
+        "major_landform",
+        "region",
+        "subregion",
+        "county",
+        "joint_municipality",
+        "joint_submunicipality",
+        "municipality",
+        "municipal_district",
+        "locality",
+        "neighbourhood",
+        "place",
+        "postal_code",
+        "address",
+        "road",
+        "poi",
+      ],
       //bbox:ecrinsBounds,  // limit search to ecrins bounds
     });
     //ecrinsBounds
@@ -907,7 +907,9 @@ function populateAutoSuggest(featuresArray) {
     // console.log(feature);
     const li = document.createElement("li");
     //li.textContent = feature.place_name + (properties?.categories?.length > 0):// + feature.properties.categories[0];
-    li.innerHTML = `${feature.place_name} ${
+    li.innerHTML = `${
+      feature.place_name
+    } <img src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.4.1/icons/park.svg" alt="park" class="svelte-ltkwvy"> ${
       feature.properties?.categories?.length > 0 ? `<span class="geoloctag">${feature.properties.categories[0]}</span>` : ""
     }`;
 
