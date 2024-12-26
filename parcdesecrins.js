@@ -759,18 +759,18 @@ map.on("load", async () => {
       const { Place } = await google.maps.importLibrary("places");
       // Prepare the request object
       const request = {
-        query,
+        textQuery: query,
         //bounds,
       };
-      const { results } = Place.searchByText(request);
+      const { places } = await Place.searchByText(request);
 
       // Perform a text search using the PlacesService
-      console.log("Places:", results);
+      console.log("Places:", places);
 
-      if (results.length > 0) {
+      if (places.length > 0) {
         // Filter results to ensure they fall within the Ecrins bounds
-        const filteredResults = results.filter((result) => {
-          const location = result.geometry.location;
+        const filteredResults = places.filter((place) => {
+          const location = place.geometry.location;
           return (
             location.lat() >= ecrinsBounds.southwest.lat &&
             location.lat() <= ecrinsBounds.northeast.lat &&
