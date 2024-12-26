@@ -763,7 +763,8 @@ map.on("load", async () => {
       };
 
       // Perform a text search using the PlacesService
-      const results = await performTextSearch(service, request);
+      // const results = await performTextSearch(service, request);
+      const { results } = await PlacesService.searchByText(request);
 
       if (results.length > 0) {
         // Filter results to ensure they fall within the Ecrins bounds
