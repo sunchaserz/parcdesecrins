@@ -715,6 +715,7 @@ map.on("load", async () => {
     const results = await maptilersdk.geocoding.forward(locqueryInput.value, {
       proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
       types: [
+        "poi",
         "continental_marine",
         "country",
         "major_landform",
@@ -731,7 +732,6 @@ map.on("load", async () => {
         "postal_code",
         "address",
         "road",
-        "poi",
       ],
       //bbox:ecrinsBounds,  // limit search to ecrins bounds
     });
