@@ -720,42 +720,101 @@ map.on("load", async () => {
     }, 300);
   });
 
+  // GOOGLE VERSION
   async function handleUserInput() {
-    // docs https://docs.maptiler.com/client-js/geocoding/
-    const results = await maptilersdk.geocoding.forward(locqueryInput.value, {
-      proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
-      types: [
-        "continental_marine",
-        "country",
-        "major_landform",
-        "region",
-        "subregion",
-        "county",
-        "joint_municipality",
-        "joint_submunicipality",
-        "municipality",
-        "municipal_district",
-        "locality",
-        "neighbourhood",
-        "place",
-        "postal_code",
-        "address",
-        "road",
-        "poi",
-      ],
-      bbox: ecrinsBounds, // limit search to ecrins bounds
-    });
-    //ecrinsBounds
-    console.log(results);
-    // map.getSource('search-results').setData(results);
-    if (results.features[0]) {
-      populateAutoSuggest(results.features);
-      //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
-      // map.flyTo({
-      //   center: results.features[0].center,
-      // });
+    const apiKey = "AIzaSyAj1hQ3_KtYcm49YZBKqbCfSzz0jIKkHN8";
+    const query = locqueryInput.value;
+
+    // Replace with the bounding box (if needed) for Parc des Écrins
+    const ecrinsBounds = {
+      northeast: { lat: 44.94, lng: 6.42 }, // Approximate upper-right corner
+      southwest: { lat: 44.71, lng: 6.14 }, // Approximate lower-left corner
+    };
+
+    if (!query.trim()) {
+      console.warn("No input provided for geocoding");
+      return;
+    }
+
+    try {
+      // Construct the geocoding API request URL
+      const endpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`;
+
+      const response = await fetch(endpoint);
+      const data = await response.json();
+
+      if (data.status === "OK" && data.results.length > 0) {
+        const filteredResults = data.results.filter((result) => {
+          // Filter results within the Ecrins bounds (if bounding box filtering is required)
+          const location = result.geometry.location;
+          return (
+            location.lat >= ecrinsBounds.southwest.lat &&
+            location.lat <= ecrinsBounds.northeast.lat &&
+            location.lng >= ecrinsBounds.southwest.lng &&
+            location.lng <= ecrinsBounds.northeast.lng
+          );
+        });
+
+        console.log("Filtered results:", filteredResults);
+
+        if (filteredResults.length > 0) {
+          populateAutoSuggest(filteredResults);
+
+          // Uncomment the following lines if using a map library:
+          // Map fitBounds or flyTo could be used here
+          // const firstResult = filteredResults[0];
+          // map.flyTo({
+          //   center: [firstResult.geometry.location.lng, firstResult.geometry.location.lat],
+          //   zoom: 14,
+          // });
+        } else {
+          console.log("No results found within the specified bounds.");
+        }
+      } else {
+        console.error("Geocoding failed:", data.status);
+      }
+    } catch (error) {
+      console.error("Error during geocoding request:", error);
     }
   }
+
+  // MAPTILER VERSION
+  // async function handleUserInput() {
+  //   // docs https://docs.maptiler.com/client-js/geocoding/
+  //   const results = await maptilersdk.geocoding.forward(locqueryInput.value, {
+  //     proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
+  //     types: [
+  //       "continental_marine",
+  //       "country",
+  //       "major_landform",
+  //       "region",
+  //       "subregion",
+  //       "county",
+  //       "joint_municipality",
+  //       "joint_submunicipality",
+  //       "municipality",
+  //       "municipal_district",
+  //       "locality",
+  //       "neighbourhood",
+  //       "place",
+  //       "postal_code",
+  //       "address",
+  //       "road",
+  //       "poi",
+  //     ],
+  //     bbox: ecrinsBounds, // limit search to ecrins bounds
+  //   });
+  //   //ecrinsBounds
+  //   console.log(results);
+  //   // map.getSource('search-results').setData(results);
+  //   if (results.features[0]) {
+  //     populateAutoSuggest(results.features);
+  //     //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
+  //     // map.flyTo({
+  //     //   center: results.features[0].center,
+  //     // });
+  //   }
+  // }
   // ++
 
   // // start: click on legend items
