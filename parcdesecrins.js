@@ -723,7 +723,7 @@ map.on("load", async () => {
 
   // GOOGLE VERSION
   async function handleUserInput() {
-    const apiKey = "AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc";
+    // const apiKey = "AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc";
     const query = locqueryInput.value;
 
     // Define the Ecrins bounds as LatLngBoundsLiteral
@@ -745,7 +745,7 @@ map.on("load", async () => {
       }
 
       // Import the Places library
-      const { places } = await google.maps.importLibrary("places");
+      // const { places } = await google.maps.importLibrary("places");
 
       // Create a LatLngBounds object
       const bounds = new google.maps.LatLngBounds(ecrinsBounds.southwest, ecrinsBounds.northeast);
@@ -754,40 +754,40 @@ map.on("load", async () => {
       const map = new google.maps.Map(document.createElement("div")); // Invisible placeholder map
 
       // Initialize PlacesService
-      const service = new google.maps.places.PlacesService(map);
+      // const service = new google.maps.places.PlacesService(map);
 
       // Prepare the request object
       const request = {
         query,
         bounds,
       };
+      const { places } = await google.maps.places.Place.searchByText(request);
 
       // Perform a text search using the PlacesService
-      service.textSearch(request, (results, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-          // Filter results to ensure they fall within the Ecrins bounds
-          const filteredResults = results.filter((result) => {
-            const location = result.geometry.location;
-            return (
-              location.lat() >= ecrinsBounds.southwest.lat &&
-              location.lat() <= ecrinsBounds.northeast.lat &&
-              location.lng() >= ecrinsBounds.southwest.lng &&
-              location.lng() <= ecrinsBounds.northeast.lng
-            );
-          });
 
-          if (filteredResults.length > 0) {
-            console.log("Filtered results:", filteredResults);
-            populateAutoSuggest(filteredResults); // Assuming this function updates the UI
-          } else {
-            console.log("No results found within the specified bounds.");
-          }
+      if (places.length > 0) {
+        // Filter results to ensure they fall within the Ecrins bounds
+        const filteredResults = results.filter((places) => {
+          const location = places.geometry.location;
+          return (
+            location.lat() >= ecrinsBounds.southwest.lat &&
+            location.lat() <= ecrinsBounds.northeast.lat &&
+            location.lng() >= ecrinsBounds.southwest.lng &&
+            location.lng() <= ecrinsBounds.northeast.lng
+          );
+        });
+
+        if (filteredResults.length > 0) {
+          console.log("Filtered results:", filteredResults);
+          populateAutoSuggest(filteredResults); // Assuming this function updates the UI
         } else {
-          console.log("No results found for the query.");
+          console.log("No results found within the specified bounds.");
         }
-      });
+      } else {
+        console.log("No results found for the query.");
+      }
     } catch (error) {
-      console.error("Error during Places request:", error);
+      console.error("An error occurred while performing the Places search:", error);
     }
   }
   // end GOOGLE MAPS VERSION
