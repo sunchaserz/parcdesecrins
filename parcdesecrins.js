@@ -673,7 +673,7 @@ map.on("load", async () => {
 
   const mapStyle = map.getStyle();
 
-  // GOOGLE WAY
+  // // Enable input through query string GOOGLE WAY
   document.getElementById("search").addEventListener("input", async function (event) {
     const query = event.target.value;
     if (query.trim()) {
@@ -683,7 +683,8 @@ map.on("load", async () => {
       document.getElementById("autosuggest").innerHTML = "";
     }
   });
-  // Enable input through query string
+
+  // Enable input through query string MAPTILER WAY
   // if (urlParams.get("q")) {
   //   // docs https://docs.maptiler.com/client-js/geocoding/
   //   const results = await maptilersdk.geocoding.forward(urlParams.get("q"), {
@@ -727,8 +728,8 @@ map.on("load", async () => {
 
     // Replace with the bounding box (if needed) for Parc des Écrins
     const ecrinsBounds = {
-      northeast: { lat: 44.94, lng: 6.42 }, // Approximate upper-right corner
-      southwest: { lat: 44.71, lng: 6.14 }, // Approximate lower-left corner
+      northeast: { lat: 45.11, lng: 6.78 }, // Approximate upper-right corner
+      southwest: { lat: 44.4, lng: 5.65 }, // Approximate lower-left corner
     };
 
     if (!query.trim()) {
