@@ -906,7 +906,12 @@ function populateAutoSuggest(featuresArray) {
     // Create a <li> element for each place_name
     // console.log(feature);
     const li = document.createElement("li");
-    li.textContent = feature.place_name; // + feature.properties.categories[0];
+    //li.textContent = feature.place_name + (properties?.categories?.length > 0):// + feature.properties.categories[0];
+    li.textContent = `${feature.place_name} (${
+      properties?.categories?.length > 0 ? `has ${properties.categories[0]} items` : "is empty or missing"
+    }.`;
+
+    console.log(message);
     li.setAttribute("data-center", feature.center);
 
     // Append the list item to the <ul>
