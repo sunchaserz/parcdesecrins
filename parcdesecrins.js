@@ -740,6 +740,7 @@ map.on("load", async () => {
     try {
       // Dynamically load Google Maps API if not already loaded
       if (!window.google || !google.maps || !google.maps.places) {
+        console.warn("Google Maps API not loaded. Loading...");
         await loadGoogleMapsAPI(apiKey);
       }
 
@@ -792,6 +793,7 @@ map.on("load", async () => {
 
   // Helper function to dynamically load the Google Maps API
   async function loadGoogleMapsAPI(apiKey) {
+    console.warn("Loading Google Maps API...");
     return new Promise((resolve, reject) => {
       if (document.querySelector(`script[src*="maps.googleapis.com"]`)) {
         resolve(); // Already loaded
