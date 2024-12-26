@@ -739,10 +739,10 @@ map.on("load", async () => {
 
     try {
       // Dynamically load Google Maps API if not already loaded
-      if (!window.google || !google.maps || !google.maps.places) {
-        console.warn("Google Maps API not loaded. Loading...");
-        await loadGoogleMapsAPI(apiKey);
-      }
+      // if (!window.google || !google.maps || !google.maps.places) {
+      //   console.warn("Google Maps API not loaded. Loading...");
+      //   await loadGoogleMapsAPI(apiKey);
+      // }
 
       // Import the Places library
       // const { places } = await google.maps.importLibrary("places");
