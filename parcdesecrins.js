@@ -751,7 +751,7 @@ map.on("load", async () => {
       //const bounds = new google.maps.LatLngBounds(ecrinsBounds.southwest, ecrinsBounds.northeast);
 
       // Create a temporary map object (required for PlacesService)
-      const map = new google.maps.Map(document.createElement("div")); // Invisible placeholder map
+      //const map = new google.maps.Map(document.createElement("div")); // Invisible placeholder map
 
       // Initialize PlacesService
       // const service = new google.maps.places.PlacesService(map);
@@ -764,6 +764,7 @@ map.on("load", async () => {
       const { places } = await google.maps.places.Place.searchByText(request);
 
       // Perform a text search using the PlacesService
+      console.log("Places:", places);
 
       if (places.length > 0) {
         // Filter results to ensure they fall within the Ecrins bounds
@@ -793,34 +794,34 @@ map.on("load", async () => {
   // end GOOGLE MAPS VERSION
 
   // Helper function to dynamically load the Google Maps API
-  async function loadGoogleMapsAPI(apiKey) {
-    console.warn("Loading Google Maps API...");
-    return new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src*="maps.googleapis.com"]`)) {
-        resolve(); // Already loaded
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-      script.async = true;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error("Failed to load Google Maps API"));
-      document.head.appendChild(script);
-    });
-  }
+  // async function loadGoogleMapsAPI(apiKey) {
+  //   console.warn("Loading Google Maps API...");
+  //   return new Promise((resolve, reject) => {
+  //     if (document.querySelector(`script[src*="maps.googleapis.com"]`)) {
+  //       resolve(); // Already loaded
+  //       return;
+  //     }
+  //     const script = document.createElement("script");
+  //     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+  //     script.async = true;
+  //     script.onload = resolve;
+  //     script.onerror = () => reject(new Error("Failed to load Google Maps API"));
+  //     document.head.appendChild(script);
+  //   });
+  // }
 
-  // Helper function to perform a text search
-  async function performTextSearch(service, request) {
-    return new Promise((resolve, reject) => {
-      service.textSearch(request, (results, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-          resolve(results);
-        } else {
-          reject(new Error(`Places search failed: ${status}`));
-        }
-      });
-    });
-  }
+  // // Helper function to perform a text search
+  // async function performTextSearch(service, request) {
+  //   return new Promise((resolve, reject) => {
+  //     service.textSearch(request, (results, status) => {
+  //       if (status === google.maps.places.PlacesServiceStatus.OK) {
+  //         resolve(results);
+  //       } else {
+  //         reject(new Error(`Places search failed: ${status}`));
+  //       }
+  //     });
+  //   });
+  // }
 
   // Mock function to handle the filtered results (replace with your implementation)
   function populateAutoSuggest(results) {
