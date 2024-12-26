@@ -714,25 +714,25 @@ map.on("load", async () => {
     // docs https://docs.maptiler.com/client-js/geocoding/
     const results = await maptilersdk.geocoding.forward(locqueryInput.value, {
       proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
-      // types: [
-      //   //"poi",
-      //   "continental_marine",
-      //   "country",
-      //   //"major_landform",
-      //   "region",
-      //   "subregion",
-      //   "county",
-      //   "joint_municipality",
-      //   "joint_submunicipality",
-      //   "municipality",
-      //   "municipal_district",
-      //   "locality",
-      //   "neighbourhood",
-      //   "place",
-      //   "postal_code",
-      //   "address",
-      //   "road",
-      // ],
+      types: [
+        "poi",
+        "continental_marine",
+        "country",
+        "major_landform",
+        "region",
+        "subregion",
+        "county",
+        "joint_municipality",
+        "joint_submunicipality",
+        "municipality",
+        "municipal_district",
+        "locality",
+        "neighbourhood",
+        "place",
+        "postal_code",
+        "address",
+        "road",
+      ],
       bbox: ecrinsBounds, // limit search to ecrins bounds
     });
     //ecrinsBounds
