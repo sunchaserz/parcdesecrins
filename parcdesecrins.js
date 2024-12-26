@@ -673,21 +673,31 @@ map.on("load", async () => {
 
   const mapStyle = map.getStyle();
 
-  // Enable input through query string
-  if (urlParams.get("q")) {
-    // docs https://docs.maptiler.com/client-js/geocoding/
-    const results = await maptilersdk.geocoding.forward(urlParams.get("q"), {
-      proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
-      //bbox:ecrinsBounds,  // limit search to ecrins bounds
-    });
-    //ecrinsBounds
-    console.log(results);
-    // map.getSource('search-results').setData(results);
-    if (results.features[0]) {
-      populateAutoSuggest(results.features);
-      //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
+  // GOOGLE WAY
+  document.getElementById("search").addEventListener("input", async function (event) {
+    const query = event.target.value;
+    if (query.trim()) {
+      const results = await geocode(query);
+      populateAutoSuggest(results);
+    } else {
+      document.getElementById("autosuggest").innerHTML = "";
     }
-  }
+  });
+  // Enable input through query string
+  // if (urlParams.get("q")) {
+  //   // docs https://docs.maptiler.com/client-js/geocoding/
+  //   const results = await maptilersdk.geocoding.forward(urlParams.get("q"), {
+  //     proximity: [6.271158, 44.825107], // results closer to parc des ecrins get priority
+  //     //bbox:ecrinsBounds,  // limit search to ecrins bounds
+  //   });
+  //   //ecrinsBounds
+  //   console.log(results);
+  //   // map.getSource('search-results').setData(results);
+  //   if (results.features[0]) {
+  //     populateAutoSuggest(results.features);
+  //     //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
+  //   }
+  // }
 
   // ++ Enable input through search box and autocomplete through maptiler geocoding
   const locqueryInput = document.getElementById("search");
@@ -1009,17 +1019,6 @@ function populateAutoSuggest(results) {
   // Append the <ul> to the autosuggest div
   autosuggestDiv.appendChild(ul);
 }
-
-// Example usage:
-// document.getElementById("search").addEventListener("input", async function (event) {
-//   const query = event.target.value;
-//   if (query.trim()) {
-//     const results = await geocode(query);
-//     populateAutoSuggest(results);
-//   } else {
-//     document.getElementById("autosuggest").innerHTML = "";
-//   }
-// });
 
 // -- Helper: Create the list from what we see on the map
 function createListFromSource() {
