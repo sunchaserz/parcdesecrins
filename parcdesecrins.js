@@ -718,7 +718,7 @@ map.on("load", async () => {
       //bbox:ecrinsBounds,  // limit search to ecrins bounds
     });
     //ecrinsBounds
-    //console.log(results);
+    console.log(results);
     // map.getSource('search-results').setData(results);
     if (results.features[0]) {
       populateAutoSuggest(results.features);
