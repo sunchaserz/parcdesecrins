@@ -415,6 +415,78 @@ function getUniqueIcons(dataGeoJson) {
   return customMarkerArr;
 } // END: get unique icons from geodata
 
+// Google autocomplete
+async function handleUserInput() {
+  const { AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
+  const query = locqueryInput.value;
+
+  if (!query.trim()) {
+    console.warn("No input provided for Geocoding");
+    return;
+  }
+
+  // Add an initial request body.
+  let request = {
+    input: query,
+    language: "en-US",
+    region: "fr",
+  };
+
+  // Create a session token.
+  const token = new AutocompleteSessionToken();
+  // Add the token to the request.
+  request.sessionToken = token;
+
+  // Fetch autocomplete suggestions.
+  const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+
+  // Collect all predictions into an array.
+  let predictions = [];
+
+  for (let suggestion of suggestions) {
+    const placePrediction = suggestion.placePrediction;
+
+    // Fetch fields for each prediction.
+    let place = await placePrediction.toPlace();
+    place.route = ""; // Ensure route is initialized if empty
+    await place.fetchFields({
+      fields: ["displayName", "addressComponents", "location"],
+    });
+
+    // Extract the address components
+    const addressComponents = place.addressComponents;
+
+    if (!addressComponents) {
+      console.log("No address components available.");
+      return null;
+    }
+
+    // Helper function to get a specific component
+    const getAddressComponent = (type) => {
+      const component = addressComponents.find((comp) => comp.types.includes(type));
+      return component ? component.longText : ""; // Use longText to match your data
+    };
+
+    console.log("Place:", place.addressComponents);
+
+    // Add the display name and formatted address to the predictions array
+    predictions.push({
+      displayName: place.displayName,
+      location: {
+        lat: place.location?.lat(),
+        lng: place.location?.lng(),
+      },
+      formattedAddress: [getAddressComponent("route"), getAddressComponent("locality"), getAddressComponent("country")]
+        .filter((component) => component && component.trim() !== "") // Filter out empty components ""
+        .join(", "),
+    });
+  }
+
+  // Pass all predictions to the populateAutoSuggest function.
+
+  populateAutoSuggest(predictions);
+}
+
 // ++ Enable input through search box and autocomplete through maptiler geocoding
 function enableSearch() {
   document.getElementById("email-form").style.visibility = "visible"; // show searchbox when googlemaps api is loaded for autocomplete
@@ -815,78 +887,6 @@ map.on("load", async () => {
   //   }
   // }
   // // end GOOGLE MAPS VERSION
-
-  // Google autocmplete
-  async function handleUserInput() {
-    const { AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
-    const query = locqueryInput.value;
-
-    if (!query.trim()) {
-      console.warn("No input provided for Geocoding");
-      return;
-    }
-
-    // Add an initial request body.
-    let request = {
-      input: query,
-      language: "en-US",
-      region: "fr",
-    };
-
-    // Create a session token.
-    const token = new AutocompleteSessionToken();
-    // Add the token to the request.
-    request.sessionToken = token;
-
-    // Fetch autocomplete suggestions.
-    const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
-
-    // Collect all predictions into an array.
-    let predictions = [];
-
-    for (let suggestion of suggestions) {
-      const placePrediction = suggestion.placePrediction;
-
-      // Fetch fields for each prediction.
-      let place = await placePrediction.toPlace();
-      place.route = ""; // Ensure route is initialized if empty
-      await place.fetchFields({
-        fields: ["displayName", "addressComponents", "location"],
-      });
-
-      // Extract the address components
-      const addressComponents = place.addressComponents;
-
-      if (!addressComponents) {
-        console.log("No address components available.");
-        return null;
-      }
-
-      // Helper function to get a specific component
-      const getAddressComponent = (type) => {
-        const component = addressComponents.find((comp) => comp.types.includes(type));
-        return component ? component.longText : ""; // Use longText to match your data
-      };
-
-      console.log("Place:", place.addressComponents);
-
-      // Add the display name and formatted address to the predictions array
-      predictions.push({
-        displayName: place.displayName,
-        location: {
-          lat: place.location?.lat(),
-          lng: place.location?.lng(),
-        },
-        formattedAddress: [getAddressComponent("route"), getAddressComponent("locality"), getAddressComponent("country")]
-          .filter((component) => component && component.trim() !== "") // Filter out empty components ""
-          .join(", "),
-      });
-    }
-
-    // Pass all predictions to the populateAutoSuggest function.
-
-    populateAutoSuggest(predictions);
-  }
 
   // // Example of the populateAutoSuggest function
   // function populateAutoSuggest(predictions) {
