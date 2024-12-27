@@ -810,42 +810,91 @@ map.on("load", async () => {
   // }
   // // end GOOGLE MAPS VERSION
 
-  // GOOGLE VERSION FOR REGULAR THINGS
+  // Google autocmplete
   async function handleUserInput() {
-    const query = locqueryInput.value;
+    // @ts-ignore
+    const { Place, AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
+    // Add an initial request body.
+    let request = {
+      input: "Briancon",
+      locationRestriction: {
+        west: 45.11,
+        north: 6.78,
+        east: 44.4,
+        south: 5.65,
+      },
+      origin: { lat: 44.843511, lng: 6.277411 },
+      includedPrimaryTypes: ["restaurant"],
+      language: "en-US",
+      region: "us",
+    };
+    // Create a session token.
+    const token = new AutocompleteSessionToken();
 
-    if (!query.trim()) {
-      console.warn("No input provided for Geocoding");
-      return;
+    // Add the token to the request.
+    // @ts-ignore
+    request.sessionToken = token;
+
+    // Fetch autocomplete suggestions.
+    const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+
+    let results;
+    for (let suggestion of suggestions) {
+      const placePrediction = suggestion.placePrediction;
+      // Create a new list element.
+      const listItem = document.createElement("li");
+
+      listItem.appendChild(document.createTextNode(placePrediction.text.toString()));
+      results.appendChild(listItem);
     }
+    populateAutoSuggest(results);
 
-    try {
-      const autocomplete = new google.maps.places.Autocomplete(locqueryInput, {
-        types: ["geocode"], // Limit results to geographical locations
-        componentRestrictions: { country: "fr" }, // Restrict to France
-      });
+    let place = suggestions[0].placePrediction.toPlace(); // Get first predicted place.
 
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        console.log(place); // Place details
-        if (place.geometry) {
-          console.log(`Selected location: ${place.formatted_address}`);
-        } else {
-          console.log("No geometry found for this place.");
-        }
-      });
+    await place.fetchFields({
+      fields: ["displayName", "formattedAddress"],
+    });
 
-      // geocoder.geocode({ address: query }, function (results, status) {
-      //   if (status == "OK") {
-      //     console.log(results);
-      //   } else {
-      //     alert("Geocode was not successful for the following reason: " + status);
-      //   }
-      // });
-    } catch (error) {
-      console.error("An error occurred while performing the Geocoder search:", error);
-    }
+    placeInfo.textContent = "First predicted place: " + place.displayName + ": " + place.formattedAddress;
+    console.log(placeInfo.textContent);
   }
+
+  // GOOGLE VERSION FOR REGULAR THINGS
+  // async function handleUserInput() {
+  //   const query = locqueryInput.value;
+
+  //   if (!query.trim()) {
+  //     console.warn("No input provided for Geocoding");
+  //     return;
+  //   }
+
+  //   try {
+  //     const autocomplete = new google.maps.places.Autocomplete(locqueryInput, {
+  //       types: ["geocode"], // Limit results to geographical locations
+  //       componentRestrictions: { country: "fr" }, // Restrict to France
+  //     });
+
+  //     autocomplete.addListener("place_changed", () => {
+  //       const place = autocomplete.getPlace();
+  //       console.log(place); // Place details
+  //       if (place.geometry) {
+  //         console.log(`Selected location: ${place.formatted_address}`);
+  //       } else {
+  //         console.log("No geometry found for this place.");
+  //       }
+  //     });
+
+  //     // geocoder.geocode({ address: query }, function (results, status) {
+  //     //   if (status == "OK") {
+  //     //     console.log(results);
+  //     //   } else {
+  //     //     alert("Geocode was not successful for the following reason: " + status);
+  //     //   }
+  //     // });
+  //   } catch (error) {
+  //     console.error("An error occurred while performing the Geocoder search:", error);
+  //   }
+  // }
   // end GOOGLE MAPS VERSION
 
   // Helper function to dynamically load the Google Maps API
