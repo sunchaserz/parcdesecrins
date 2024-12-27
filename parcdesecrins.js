@@ -823,7 +823,7 @@ map.on("load", async () => {
     // Add an initial request body.
     let request = {
       input: query,
-      includedPrimaryTypes: ["geocode", "restaurants"], // can add restaurants here etc
+      includedPrimaryTypes: ["locality"], // https://developers.google.com/maps/documentation/places/web-service/place-types
       language: "en-US",
       region: "fr",
     };
