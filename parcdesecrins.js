@@ -23,9 +23,8 @@
 const alphiBaseUrl = "https://live.api-server.io/run/v1/66ade5323b53b139de1ea229";
 const googleBucketUrl = "https://storage.googleapis.com/parc_des_ecrins";
 
-// Google Maps Geocoder
-var geocoder;
-geocoder = new google.maps.Geocoder();
+// Google geocoder init
+let geocoder;
 
 //const alphiBaseUrl = "https://live.api-server.io/run/v1/644836c7eaebea1ea38e66c9";
 const btnDefaultValue = "Search";
@@ -87,7 +86,7 @@ map.touchZoomRotate.disableRotation();
 
 // See webflow </body> init when google maps api is loaded
 function loadGoogleMapsAPI() {
-  const geocoder = new google.maps.Geocoder();
+  geocoder = new google.maps.Geocoder();
 
   const script = document.createElement("script");
   script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc&callback=mapsApiLoaded&v=weekly";
