@@ -841,12 +841,16 @@ map.on("load", async () => {
       // Fetch fields for each prediction.
       let place = await placePrediction.toPlace();
       await place.fetchFields({
-        fields: ["displayName", "formattedAddress"],
+        fields: ["displayName", "formattedAddress", "geometry"],
       });
 
       // Add the display name and formatted address to the predictions array.
       predictions.push({
         displayName: place.displayName,
+        location: {
+          lat: place.geometry?.location.lat(),
+          lng: place.geometry?.location.lng(),
+        },
         formattedAddress: place.formattedAddress,
       });
     }
@@ -1131,7 +1135,7 @@ function getRenderedFeatures(point) {
 */
 
 // -- Helper: populate the autosuggest div with the list of places after user stops typing in the search box
-function populateAutoSuggest(featuresArray) {
+function populateAutoSuggest(predictions) {
   const autosuggestDiv = document.getElementById("autosuggest");
 
   // Clear existing content
@@ -1140,40 +1144,47 @@ function populateAutoSuggest(featuresArray) {
   // Create a <ul> element to hold the list items
   const ul = document.createElement("ul");
 
-  featuresArray.forEach((feature) => {
-    // Create a <li> element for each place_name
-    // console.log(feature);
+  predictions.forEach((prediction) => {
+    // Create a <li> element for each place
     const li = document.createElement("li");
-    //li.textContent = feature.place_name + (properties?.categories?.length > 0):// + feature.properties.categories[0];
-    li.innerHTML = `${feature.place_name} <img src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.4.1/icons/${
-      feature.place_type[0]
-    }.svg" alt="${feature.place_type[0]}" class="svelte-ltkwvy"> ${
-      feature.properties?.categories?.length > 0 ? `<span class="geoloctag">${feature.properties.categories[0]}</span>` : ""
-    }`;
+    li.innerHTML = `
+      <span class="place-name">${prediction.displayName}</span>
+      <span class="place-address">${prediction.formattedAddress}</span>
+      <span class="place-coords">(Lat: ${prediction.location.lat}, Lng: ${prediction.location.lng})</span>
+    `;
 
-    li.setAttribute("data-center", feature.center);
+    // Add a data attribute to store the latitude and longitude
+    li.setAttribute("data-center", `${prediction.location.lat},${prediction.location.lng}`);
 
     // Append the list item to the <ul>
     ul.appendChild(li);
   });
 
-  // Click on any of the auto suggested things
+  // Add event listener for clicks on the suggested items
   ul.addEventListener("click", function (event) {
     // Check if the clicked element is an <li>
-    if (event.target && event.target.nodeName === "LI") {
-      // Get the index or content of the clicked list item
-      const clickedItem = event.target;
-      console.log(`You clicked on: ${clickedItem.dataset.center}`);
+    let clickedItem = event.target;
+    if (clickedItem.nodeName !== "LI") {
+      // If the clicked element is not the <li> but a child (like span), find the parent <li>
+      clickedItem = clickedItem.closest("li");
+    }
+
+    if (clickedItem) {
+      // Get the lat/lng from the data-center attribute
+      const [lat, lng] = clickedItem.dataset.center.split(",");
+
+      console.log(`You clicked on: ${clickedItem.textContent}`);
+      console.log(`Coordinates: Lat: ${lat}, Lng: ${lng}`);
+
+      // Example usage: Set search input or fly the map to the location
       document.getElementById("search").value = clickedItem.textContent;
-      getData();
       map.flyTo({
-        center: clickedItem.dataset.center.split(","),
+        center: [parseFloat(lng), parseFloat(lat)],
+        zoom: 12,
       });
+
       // Clear the autosuggest div
       autosuggestDiv.innerHTML = "";
-
-      // You can also access custom data attributes like:
-      //console.log(`Item index: ${clickedItem.dataset.index}`);
     }
   });
 
