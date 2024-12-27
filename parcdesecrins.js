@@ -86,8 +86,18 @@ map.keyboard.disable();
 map.touchZoomRotate.disableRotation();
 
 // See webflow </body> init when google maps api is loaded
-function mapsApiLoaded() {
+function loadGoogleMapsAPI() {
   const geocoder = new google.maps.Geocoder();
+
+  const script = document.createElement("script");
+  script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc&callback=mapsApiLoaded&v=weekly";
+  script.defer = true;
+  document.head.appendChild(script);
+
+  window.mapsApiLoaded = () => {
+    console.log("Google Maps API loaded successfully - show Search input");
+    // Initialize your map or other functionality here
+  };
 }
 
 // Here we get the data from Alphi.dev API
@@ -190,6 +200,7 @@ function getData() {
 
             // PUT THE DATA INTO THE MAP
             loadCustomMarkersAndLayers(dataGeoJson);
+            loadGoogleMapsAPI(); // load google maps api for geocoding search requests
             document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
           } else {
             // 200 but no results
