@@ -929,6 +929,7 @@ map.on("load", async () => {
 
   // Mock function to handle the filtered results (replace with your implementation)
   function populateAutoSuggest(results) {
+    console.log("Populating AutoSuggest with results:", results);
     // Example: Display the filtered results in the console
     console.table(results.map((r) => ({ name: r.name, location: r.geometry.location })));
   }
