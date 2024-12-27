@@ -847,7 +847,7 @@ map.on("load", async () => {
       let place = await placePrediction.toPlace();
       place.route = ""; // in case its empty
       await place.fetchFields({
-        fields: ["displayName", "address_components", "location"],
+        fields: ["displayName", "addressComponents", "location"],
       });
 
       // Extract the address components
