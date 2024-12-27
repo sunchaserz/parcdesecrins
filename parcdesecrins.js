@@ -847,8 +847,22 @@ map.on("load", async () => {
       let place = await placePrediction.toPlace();
       place.route = ""; // in case its empty
       await place.fetchFields({
-        fields: ["displayName", "route", "locality", "country", "location"],
+        fields: ["displayName", "address_components", "location"],
       });
+
+      // Extract the address components
+      const addressComponents = place.addressComponents;
+
+      if (!addressComponents) {
+        console.log("No address components available.");
+        return null;
+      }
+
+      // Helper function to get a specific component
+      const getAddressComponent = (type) => {
+        const component = addressComponents.find((comp) => comp.types.includes(type));
+        return component ? component.long_name : null;
+      };
 
       console.log("Place:", place.addressComponents);
       // Add the display name and formatted address to the predictions array.
@@ -858,7 +872,7 @@ map.on("load", async () => {
           lat: place.location?.lat(),
           lng: place.location?.lng(),
         },
-        formattedAddress: place.route + ", " + place.locality + ", " + place.country,
+        formattedAddress: getAddressComponent("route") + ", " + getAddressComponent("locality") + ", " + getAddressComponent("country"),
       });
     }
 
