@@ -846,7 +846,7 @@ map.on("load", async () => {
       // Fetch fields for each prediction.
       let place = await placePrediction.toPlace();
       await place.fetchFields({
-        fields: ["displayName", "formattedAddress", "location"],
+        fields: ["displayName", "adrFormatAddress", "location"],
       });
 
       // Add the display name and formatted address to the predictions array.
@@ -856,7 +856,7 @@ map.on("load", async () => {
           lat: place.location?.lat(),
           lng: place.location?.lng(),
         },
-        formattedAddress: place.formattedAddress,
+        formattedAddress: place.adrFormatAddress,
       });
     }
 
@@ -1153,7 +1153,7 @@ function populateAutoSuggest(predictions) {
     // Create a <li> element for each place
     const li = document.createElement("li");
     li.innerHTML = `
-      ${prediction.displayName} <span class="op80">${prediction.formattedAddress}</span>
+      ${prediction.displayName} <span class="grey">${prediction.formattedAddress}</span>
     `;
     //<span class="place-coords">(Lat: ${prediction.location.lat}, Lng: ${prediction.location.lng})</span>
 
