@@ -859,10 +859,9 @@ map.on("load", async () => {
       // Helper function to get a specific component
       const getAddressComponent = (type) => {
         const component = addressComponents.find((comp) => comp.types.includes(type));
-        // Check if component.longText exists and is not "null"
-        return component && component.longText && component.longText !== "null" ? component.longText : null;
+        // Ensure `longText` is not the string "null"
+        return component && component.longText && component.longText.toLowerCase() !== "null" ? component.longText : null;
       };
-
       console.log("Place:", place.addressComponents);
 
       // Add the display name and formatted address to the predictions array
