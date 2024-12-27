@@ -813,12 +813,12 @@ map.on("load", async () => {
   // Google autocmplete
   async function handleUserInput() {
     // @ts-ignore
-    const { Place, AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
+    const { AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
 
     // Add an initial request body.
     let request = {
       input: "Briancon",
-      includedPrimaryTypes: ["restaurant"],
+      includedPrimaryTypes: ["geocode"], // can add restaurants here etc
       language: "en-US",
       region: "fr",
     };
