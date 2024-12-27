@@ -94,7 +94,7 @@ function loadGoogleMapsAPI() {
   window.mapsApiLoaded = () => {
     console.log("Google Maps API loaded successfully - show Search input");
     geocoder = new google.maps.Geocoder();
-    document.getElementById("email-form").style.visibility = "visible"; // show searchbox when googlemaps api is loaded for autocomplete
+    enableSearch();
   };
 }
 
@@ -412,6 +412,30 @@ function getUniqueIcons(dataGeoJson) {
   return customMarkerArr;
 } // END: get unique icons from geodata
 
+// ++ Enable input through search box and autocomplete through maptiler geocoding
+function enableSearch() {
+  document.getElementById("email-form").style.visibility = "visible"; // show searchbox when googlemaps api is loaded for autocomplete
+  const locqueryInput = document.getElementById("search");
+  let debounceTimer; // Timer variable for debouncing
+
+  // Event listener for the 'input' event
+  locqueryInput.addEventListener("input", function () {
+    // Exit the function if input is empty
+    if (locqueryInput.value === "") {
+      return;
+    }
+
+    // Clear the previous timer
+    clearTimeout(debounceTimer);
+
+    // Set a new timer with 300ms delay
+    debounceTimer = setTimeout(function () {
+      // Call the function after 300ms
+      handleUserInput();
+    }, 300);
+  });
+}
+
 // START : Important function that loads all markers and adds layers accordlingly
 async function loadCustomMarkersAndLayers(dataGeoJson) {
   const customMarkers = getUniqueIcons(dataGeoJson);
@@ -717,27 +741,6 @@ map.on("load", async () => {
   //     //map.fitBounds(results.features[0].bbox, {maxZoom: 19})
   //   }
   // }
-
-  // ++ Enable input through search box and autocomplete through maptiler geocoding
-  const locqueryInput = document.getElementById("search");
-  let debounceTimer; // Timer variable for debouncing
-
-  // Event listener for the 'input' event
-  locqueryInput.addEventListener("input", function () {
-    // Exit the function if input is empty
-    if (locqueryInput.value === "") {
-      return;
-    }
-
-    // Clear the previous timer
-    clearTimeout(debounceTimer);
-
-    // Set a new timer with 300ms delay
-    debounceTimer = setTimeout(function () {
-      // Call the function after 300ms
-      handleUserInput();
-    }, 300);
-  });
 
   // GOOGLE VERSION FOR PLACES / BUSINESSES
   // async function handleUserInput() {
