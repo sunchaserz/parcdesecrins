@@ -846,9 +846,10 @@ map.on("load", async () => {
       // Fetch fields for each prediction.
       let place = await placePrediction.toPlace();
       await place.fetchFields({
-        fields: ["displayName", "adrFormatAddress", "location"],
+        fields: ["displayName", "addressComponents", "location"],
       });
 
+      console.log("Place:", place.addressComponents);
       // Add the display name and formatted address to the predictions array.
       predictions.push({
         displayName: place.displayName,
@@ -856,7 +857,7 @@ map.on("load", async () => {
           lat: place.location?.lat(),
           lng: place.location?.lng(),
         },
-        formattedAddress: place.adrFormatAddress,
+        formattedAddress: place.addressComponents,
       });
     }
 
