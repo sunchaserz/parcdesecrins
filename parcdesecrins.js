@@ -814,23 +814,17 @@ map.on("load", async () => {
   async function handleUserInput() {
     // @ts-ignore
     const { Place, AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
+
     // Add an initial request body.
     let request = {
       input: "Briancon",
-      // locationRestriction: {
-      //   west: 45.11,
-      //   north: 6.78,
-      //   east: 44.4,
-      //   south: 5.65,
-      // },
-      // origin: { lat: 44.843511, lng: 6.277411 },
       includedPrimaryTypes: ["restaurant"],
       language: "en-US",
       region: "fr",
     };
+
     // Create a session token.
     const token = new AutocompleteSessionToken();
-
     // Add the token to the request.
     // @ts-ignore
     request.sessionToken = token;
@@ -838,28 +832,43 @@ map.on("load", async () => {
     // Fetch autocomplete suggestions.
     const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
 
-    console.log(suggestions);
+    // Collect all predictions into an array.
+    let predictions = [];
 
-    let results;
     for (let suggestion of suggestions) {
       const placePrediction = suggestion.placePrediction;
-      // Create a new list element.
-      const listItem = document.createElement("li");
 
-      listItem.appendChild(document.createTextNode(placePrediction.text.toString()));
-      results.appendChild(listItem);
+      // Fetch fields for each prediction.
+      let place = await placePrediction.toPlace();
+      await place.fetchFields({
+        fields: ["displayName", "formattedAddress"],
+      });
+
+      // Add the display name and formatted address to the predictions array.
+      predictions.push({
+        displayName: place.displayName,
+        formattedAddress: place.formattedAddress,
+      });
     }
-    populateAutoSuggest(results);
 
-    let place = suggestions[0].placePrediction.toPlace(); // Get first predicted place.
+    // Pass all predictions to the populateAutoSuggest function.
+    populateAutoSuggest(predictions);
 
-    await place.fetchFields({
-      fields: ["displayName", "formattedAddress"],
-    });
-
-    placeInfo.textContent = "First predicted place: " + place.displayName + ": " + place.formattedAddress;
-    console.log(placeInfo.textContent);
+    console.log("Predictions:", predictions);
   }
+
+  // // Example of the populateAutoSuggest function
+  // function populateAutoSuggest(predictions) {
+  //   // Assuming predictions is an array of objects { displayName, formattedAddress }
+  //   const resultsContainer = document.getElementById("autosuggest"); // Replace with your actual container ID
+  //   resultsContainer.innerHTML = ""; // Clear previous suggestions
+
+  //   predictions.forEach((prediction) => {
+  //     const listItem = document.createElement("li");
+  //     listItem.textContent = `${prediction.displayName}: ${prediction.formattedAddress}`;
+  //     resultsContainer.appendChild(listItem);
+  //   });
+  // }
 
   // GOOGLE VERSION FOR REGULAR THINGS
   // async function handleUserInput() {
@@ -930,11 +939,11 @@ map.on("load", async () => {
   // }
 
   // Mock function to handle the filtered results (replace with your implementation)
-  function populateAutoSuggest(results) {
-    console.log("Populating AutoSuggest with results:", results);
-    // Example: Display the filtered results in the console
-    console.table(results.map((r) => ({ name: r.name, location: r.geometry.location })));
-  }
+  // function populateAutoSuggest(results) {
+  //   console.log("Populating AutoSuggest with results:", results);
+  //   // Example: Display the filtered results in the console
+  //   console.table(results.map((r) => ({ name: r.name, location: r.geometry.location })));
+  // }
   // END : GOOGLE VERSION
 
   // MAPTILER VERSION
@@ -1121,55 +1130,55 @@ function getRenderedFeatures(point) {
 */
 
 // -- Helper: populate the autosuggest div with the list of places after user stops typing in the search box
-// function populateAutoSuggest(featuresArray) {
-//   const autosuggestDiv = document.getElementById("autosuggest");
+function populateAutoSuggest(featuresArray) {
+  const autosuggestDiv = document.getElementById("autosuggest");
 
-//   // Clear existing content
-//   autosuggestDiv.innerHTML = "";
+  // Clear existing content
+  autosuggestDiv.innerHTML = "";
 
-//   // Create a <ul> element to hold the list items
-//   const ul = document.createElement("ul");
+  // Create a <ul> element to hold the list items
+  const ul = document.createElement("ul");
 
-//   featuresArray.forEach((feature) => {
-//     // Create a <li> element for each place_name
-//     // console.log(feature);
-//     const li = document.createElement("li");
-//     //li.textContent = feature.place_name + (properties?.categories?.length > 0):// + feature.properties.categories[0];
-//     li.innerHTML = `${feature.place_name} <img src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.4.1/icons/${
-//       feature.place_type[0]
-//     }.svg" alt="${feature.place_type[0]}" class="svelte-ltkwvy"> ${
-//       feature.properties?.categories?.length > 0 ? `<span class="geoloctag">${feature.properties.categories[0]}</span>` : ""
-//     }`;
+  featuresArray.forEach((feature) => {
+    // Create a <li> element for each place_name
+    // console.log(feature);
+    const li = document.createElement("li");
+    //li.textContent = feature.place_name + (properties?.categories?.length > 0):// + feature.properties.categories[0];
+    li.innerHTML = `${feature.place_name} <img src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.4.1/icons/${
+      feature.place_type[0]
+    }.svg" alt="${feature.place_type[0]}" class="svelte-ltkwvy"> ${
+      feature.properties?.categories?.length > 0 ? `<span class="geoloctag">${feature.properties.categories[0]}</span>` : ""
+    }`;
 
-//     li.setAttribute("data-center", feature.center);
+    li.setAttribute("data-center", feature.center);
 
-//     // Append the list item to the <ul>
-//     ul.appendChild(li);
-//   });
+    // Append the list item to the <ul>
+    ul.appendChild(li);
+  });
 
-//   // Click on any of the auto suggested things
-//   ul.addEventListener("click", function (event) {
-//     // Check if the clicked element is an <li>
-//     if (event.target && event.target.nodeName === "LI") {
-//       // Get the index or content of the clicked list item
-//       const clickedItem = event.target;
-//       console.log(`You clicked on: ${clickedItem.dataset.center}`);
-//       document.getElementById("search").value = clickedItem.textContent;
-//       getData();
-//       map.flyTo({
-//         center: clickedItem.dataset.center.split(","),
-//       });
-//       // Clear the autosuggest div
-//       autosuggestDiv.innerHTML = "";
+  // Click on any of the auto suggested things
+  ul.addEventListener("click", function (event) {
+    // Check if the clicked element is an <li>
+    if (event.target && event.target.nodeName === "LI") {
+      // Get the index or content of the clicked list item
+      const clickedItem = event.target;
+      console.log(`You clicked on: ${clickedItem.dataset.center}`);
+      document.getElementById("search").value = clickedItem.textContent;
+      getData();
+      map.flyTo({
+        center: clickedItem.dataset.center.split(","),
+      });
+      // Clear the autosuggest div
+      autosuggestDiv.innerHTML = "";
 
-//       // You can also access custom data attributes like:
-//       //console.log(`Item index: ${clickedItem.dataset.index}`);
-//     }
-//   });
+      // You can also access custom data attributes like:
+      //console.log(`Item index: ${clickedItem.dataset.index}`);
+    }
+  });
 
-//   // Append the <ul> to the autosuggest div
-//   autosuggestDiv.appendChild(ul);
-// }
+  // Append the <ul> to the autosuggest div
+  autosuggestDiv.appendChild(ul);
+}
 // --
 
 async function geocode(address) {
@@ -1191,52 +1200,52 @@ async function geocode(address) {
   }
 }
 
-function populateAutoSuggest(results) {
-  const autosuggestDiv = document.getElementById("autosuggest");
+// function populateAutoSuggest(results) {
+//   const autosuggestDiv = document.getElementById("autosuggest");
 
-  // Clear existing content
-  autosuggestDiv.innerHTML = "";
+//   // Clear existing content
+//   autosuggestDiv.innerHTML = "";
 
-  // Create a <ul> element to hold the list items
-  const ul = document.createElement("ul");
+//   // Create a <ul> element to hold the list items
+//   const ul = document.createElement("ul");
 
-  results.forEach((result) => {
-    const li = document.createElement("li");
-    const address = result.formatted_address;
-    const location = result.geometry.location;
+//   results.forEach((result) => {
+//     const li = document.createElement("li");
+//     const address = result.formatted_address;
+//     const location = result.geometry.location;
 
-    li.innerHTML = `${address}`;
-    li.setAttribute("data-lat", location.lat);
-    li.setAttribute("data-lng", location.lng);
+//     li.innerHTML = `${address}`;
+//     li.setAttribute("data-lat", location.lat);
+//     li.setAttribute("data-lng", location.lng);
 
-    // Append the list item to the <ul>
-    ul.appendChild(li);
-  });
+//     // Append the list item to the <ul>
+//     ul.appendChild(li);
+//   });
 
-  // Click on any of the auto-suggested items
-  ul.addEventListener("click", function (event) {
-    if (event.target && event.target.nodeName === "LI") {
-      const clickedItem = event.target;
-      const lat = clickedItem.getAttribute("data-lat");
-      const lng = clickedItem.getAttribute("data-lng");
+//   // Click on any of the auto-suggested items
+//   ul.addEventListener("click", function (event) {
+//     if (event.target && event.target.nodeName === "LI") {
+//       const clickedItem = event.target;
+//       const lat = clickedItem.getAttribute("data-lat");
+//       const lng = clickedItem.getAttribute("data-lng");
 
-      console.log(`You clicked on: ${clickedItem.textContent}`);
-      document.getElementById("search").value = clickedItem.textContent;
+//       console.log(`You clicked on: ${clickedItem.textContent}`);
+//       document.getElementById("search").value = clickedItem.textContent;
 
-      // Use map.flyTo if you're using a map library, like Mapbox or Google Maps
-      map.flyTo({
-        center: [lng, lat],
-        zoom: 14, // Adjust zoom level as needed
-      });
+//       // Use map.flyTo if you're using a map library, like Mapbox or Google Maps
+//       map.flyTo({
+//         center: [lng, lat],
+//         zoom: 14, // Adjust zoom level as needed
+//       });
 
-      // Clear the autosuggest div
-      autosuggestDiv.innerHTML = "";
-    }
-  });
+//       // Clear the autosuggest div
+//       autosuggestDiv.innerHTML = "";
+//     }
+//   });
 
-  // Append the <ul> to the autosuggest div
-  autosuggestDiv.appendChild(ul);
-}
+//   // Append the <ul> to the autosuggest div
+//   autosuggestDiv.appendChild(ul);
+// }
 
 // -- Helper: Create the list from what we see on the map
 function createListFromSource() {
