@@ -414,6 +414,7 @@ function getUniqueIcons(dataGeoJson) {
 
 // ++ Enable input through search box and autocomplete through maptiler geocoding
 function enableSearch() {
+  console.log("enable search");
   document.getElementById("email-form").style.visibility = "visible"; // show searchbox when googlemaps api is loaded for autocomplete
   const locqueryInput = document.getElementById("search");
   let debounceTimer; // Timer variable for debouncing
