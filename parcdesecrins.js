@@ -86,8 +86,6 @@ map.touchZoomRotate.disableRotation();
 
 // See webflow </body> init when google maps api is loaded
 function loadGoogleMapsAPI() {
-  geocoder = new google.maps.Geocoder();
-
   const script = document.createElement("script");
   script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc&callback=mapsApiLoaded&v=weekly";
   script.defer = true;
@@ -95,6 +93,8 @@ function loadGoogleMapsAPI() {
 
   window.mapsApiLoaded = () => {
     console.log("Google Maps API loaded successfully - show Search input");
+    geocoder = new google.maps.Geocoder();
+    wait;
     // Initialize your map or other functionality here
   };
 }
