@@ -860,7 +860,7 @@ map.on("load", async () => {
 
       // Helper function to get a specific component
       const getAddressComponent = (type) => {
-        const component = addressComponents.find((comp) => comp.types.includes(type));
+        const component = place.addressComponents.find((comp) => comp.types.includes(type));
         return component ? component.long_name : null;
       };
 
