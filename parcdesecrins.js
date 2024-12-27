@@ -23,6 +23,10 @@
 const alphiBaseUrl = "https://live.api-server.io/run/v1/66ade5323b53b139de1ea229";
 const googleBucketUrl = "https://storage.googleapis.com/parc_des_ecrins";
 
+// Google Maps Geocoder
+var geocoder;
+geocoder = new google.maps.Geocoder();
+
 //const alphiBaseUrl = "https://live.api-server.io/run/v1/644836c7eaebea1ea38e66c9";
 const btnDefaultValue = "Search";
 let searchterm = ""; // not necessary cause alphi.dev api also has default
@@ -721,91 +725,96 @@ map.on("load", async () => {
     }, 300);
   });
 
-  // GOOGLE VERSION
+  // GOOGLE VERSION FOR PLACES / BUSINESSES
+  // async function handleUserInput() {
+  //   // const apiKey = "AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc";
+  //   const query = locqueryInput.value;
+
+  //   // Define the Ecrins bounds as LatLngBoundsLiteral
+  //   const ecrinsBounds = {
+  //     northeast: { lat: 45.11, lng: 6.78 }, // Approximate upper-right corner
+  //     southwest: { lat: 44.4, lng: 5.65 }, // Approximate lower-left corner
+  //   };
+
+  //   if (!query.trim()) {
+  //     console.warn("No input provided for Places search");
+  //     return;
+  //   }
+
+  //   try {
+  //     const { Place } = await google.maps.importLibrary("places");
+  //     // Prepare the request object
+  //     const request = {
+  //       textQuery: "Auris",
+  //       fields: ["displayName", "location", "businessStatus"],
+  //       // locationBias: ecrinsBounds, // Use the Ecrins bounds
+  //       // locationBias: {rectangle:45.11,6.78|44.4,5.65},
+  //     };
+
+  //     // const request = {
+  //     //   textQuery: "Tacos in Mountain View",
+  //     //   fields: ["displayName", "location", "businessStatus"],
+  //     //   includedType: "restaurant",
+  //     //   locationBias: { lat: 37.4161493, lng: -122.0812166 },
+  //     //   isOpenNow: true,
+  //     //   language: "en-US",
+  //     //   maxResultCount: 8,
+  //     //   minRating: 3.2,
+  //     //   region: "us",
+  //     //   useStrictTypeFiltering: false,
+  //     // };
+  //     const { places } = await Place.searchByText(request);
+
+  //     // Perform a text search using the PlacesService
+  //     console.log("Places:", places);
+
+  //     if (places.length > 0) {
+  //       // Filter results to ensure they fall within the Ecrins bounds
+  //       const filteredResults = places.filter((place) => {
+  //         console.log("Place:", place);
+  //         // const location = place.geometry.location;
+  //         // return (
+  //         //   location.lat() >= ecrinsBounds.southwest.lat &&
+  //         //   location.lat() <= ecrinsBounds.northeast.lat &&
+  //         //   location.lng() >= ecrinsBounds.southwest.lng &&
+  //         //   location.lng() <= ecrinsBounds.northeast.lng
+  //         // );
+  //       });
+
+  //       if (filteredResults.length > 0) {
+  //         console.log("Filtered results:", filteredResults);
+  //         populateAutoSuggest(filteredResults); // Assuming this function updates the UI
+  //       } else {
+  //         console.log("No results found within the specified bounds.");
+  //       }
+  //     } else {
+  //       console.log("No results found for the query.");
+  //     }
+  //   } catch (error) {
+  //     console.error("An error occurred while performing the Places search:", error);
+  //   }
+  // }
+  // // end GOOGLE MAPS VERSION
+
+  // GOOGLE VERSION FOR REGULAR THINGS
   async function handleUserInput() {
-    // const apiKey = "AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc";
     const query = locqueryInput.value;
 
-    // Define the Ecrins bounds as LatLngBoundsLiteral
-    const ecrinsBounds = {
-      northeast: { lat: 45.11, lng: 6.78 }, // Approximate upper-right corner
-      southwest: { lat: 44.4, lng: 5.65 }, // Approximate lower-left corner
-    };
-
     if (!query.trim()) {
-      console.warn("No input provided for Places search");
+      console.warn("No input provided for Geocoding");
       return;
     }
 
     try {
-      // Dynamically load Google Maps API if not already loaded
-      // if (!window.google || !google.maps || !google.maps.places) {
-      //   console.warn("Google Maps API not loaded. Loading...");
-      //   await loadGoogleMapsAPI(apiKey);
-      // }
-
-      // Import the Places library
-      // const { places } = await google.maps.importLibrary("places");
-
-      // Create a LatLngBounds object
-      //const bounds = new google.maps.LatLngBounds(ecrinsBounds.southwest, ecrinsBounds.northeast);
-
-      // Create a temporary map object (required for PlacesService)
-      //const map = new google.maps.Map(document.createElement("div")); // Invisible placeholder map
-
-      // Initialize PlacesService
-      // const service = new google.maps.places.PlacesService(map);
-
-      const { Place } = await google.maps.importLibrary("places");
-      // Prepare the request object
-      const request = {
-        textQuery: "Auris",
-        fields: ["displayName", "location", "businessStatus"],
-        // locationBias: ecrinsBounds, // Use the Ecrins bounds
-        // locationBias: {rectangle:45.11,6.78|44.4,5.65},
-      };
-
-      // const request = {
-      //   textQuery: "Tacos in Mountain View",
-      //   fields: ["displayName", "location", "businessStatus"],
-      //   includedType: "restaurant",
-      //   locationBias: { lat: 37.4161493, lng: -122.0812166 },
-      //   isOpenNow: true,
-      //   language: "en-US",
-      //   maxResultCount: 8,
-      //   minRating: 3.2,
-      //   region: "us",
-      //   useStrictTypeFiltering: false,
-      // };
-      const { places } = await Place.searchByText(request);
-
-      // Perform a text search using the PlacesService
-      console.log("Places:", places);
-
-      if (places.length > 0) {
-        // Filter results to ensure they fall within the Ecrins bounds
-        const filteredResults = places.filter((place) => {
-          console.log("Place:", place);
-          // const location = place.geometry.location;
-          // return (
-          //   location.lat() >= ecrinsBounds.southwest.lat &&
-          //   location.lat() <= ecrinsBounds.northeast.lat &&
-          //   location.lng() >= ecrinsBounds.southwest.lng &&
-          //   location.lng() <= ecrinsBounds.northeast.lng
-          // );
-        });
-
-        if (filteredResults.length > 0) {
-          console.log("Filtered results:", filteredResults);
-          populateAutoSuggest(filteredResults); // Assuming this function updates the UI
+      geocoder.geocode({ address: query }, function (results, status) {
+        if (status == "OK") {
+          console.log(results);
         } else {
-          console.log("No results found within the specified bounds.");
+          alert("Geocode was not successful for the following reason: " + status);
         }
-      } else {
-        console.log("No results found for the query.");
-      }
+      });
     } catch (error) {
-      console.error("An error occurred while performing the Places search:", error);
+      console.error("An error occurred while performing the Geocoder search:", error);
     }
   }
   // end GOOGLE MAPS VERSION
