@@ -1153,7 +1153,7 @@ function populateAutoSuggest(predictions) {
     // Create a <li> element for each place
     const li = document.createElement("li");
     li.innerHTML = `
-      <span class="place-address">${prediction.formattedAddress}</span>
+      ${prediction.displayName} <span class="op80">${prediction.formattedAddress}</span>
     `;
     //<span class="place-coords">(Lat: ${prediction.location.lat}, Lng: ${prediction.location.lng})</span>
 
