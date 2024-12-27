@@ -817,16 +817,16 @@ map.on("load", async () => {
     // Add an initial request body.
     let request = {
       input: "Briancon",
-      locationRestriction: {
-        west: 45.11,
-        north: 6.78,
-        east: 44.4,
-        south: 5.65,
-      },
-      origin: { lat: 44.843511, lng: 6.277411 },
+      // locationRestriction: {
+      //   west: 45.11,
+      //   north: 6.78,
+      //   east: 44.4,
+      //   south: 5.65,
+      // },
+      // origin: { lat: 44.843511, lng: 6.277411 },
       includedPrimaryTypes: ["restaurant"],
       language: "en-US",
-      region: "us",
+      region: "fr",
     };
     // Create a session token.
     const token = new AutocompleteSessionToken();
