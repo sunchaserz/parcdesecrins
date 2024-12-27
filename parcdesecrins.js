@@ -841,15 +841,15 @@ map.on("load", async () => {
       // Fetch fields for each prediction.
       let place = await placePrediction.toPlace();
       await place.fetchFields({
-        fields: ["displayName", "formattedAddress", "geometry"],
+        fields: ["displayName", "formattedAddress", "location"],
       });
 
       // Add the display name and formatted address to the predictions array.
       predictions.push({
         displayName: place.displayName,
         location: {
-          lat: place.geometry?.location.lat(),
-          lng: place.geometry?.location.lng(),
+          lat: place.location?.lat(),
+          lng: place.location?.lng(),
         },
         formattedAddress: place.formattedAddress,
       });
