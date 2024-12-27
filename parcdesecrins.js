@@ -823,7 +823,6 @@ map.on("load", async () => {
     // Add an initial request body.
     let request = {
       input: query,
-      //includedPrimaryTypes: ["postal_town"], // https://developers.google.com/maps/documentation/places/web-service/place-types
       language: "en-US",
       region: "fr",
     };
@@ -831,7 +830,6 @@ map.on("load", async () => {
     // Create a session token.
     const token = new AutocompleteSessionToken();
     // Add the token to the request.
-    // @ts-ignore
     request.sessionToken = token;
 
     // Fetch autocomplete suggestions.
@@ -845,7 +843,7 @@ map.on("load", async () => {
 
       // Fetch fields for each prediction.
       let place = await placePrediction.toPlace();
-      place.route = ""; // in case its empty
+      place.route = ""; // Ensure route is initialized if empty
       await place.fetchFields({
         fields: ["displayName", "addressComponents", "location"],
       });
@@ -861,26 +859,30 @@ map.on("load", async () => {
       // Helper function to get a specific component
       const getAddressComponent = (type) => {
         const component = addressComponents.find((comp) => comp.types.includes(type));
-        return component ? component.long_name : null;
+        return component ? component.longText : null; // Use longText to match your data
       };
 
       console.log("Place:", place.addressComponents);
-      // Add the display name and formatted address to the predictions array.
+
+      // Add the display name and formatted address to the predictions array
       predictions.push({
         displayName: place.displayName,
         location: {
           lat: place.location?.lat(),
           lng: place.location?.lng(),
         },
-        formattedAddress: getAddressComponent("route") + ", " + getAddressComponent("locality") + ", " + getAddressComponent("country"),
+        formattedAddress:
+          (getAddressComponent("route") || "Unknown route") +
+          ", " +
+          (getAddressComponent("locality") || "Unknown locality") +
+          ", " +
+          (getAddressComponent("country") || "Unknown country"),
       });
     }
 
     // Pass all predictions to the populateAutoSuggest function.
     console.log("Predictions:", predictions);
     populateAutoSuggest(predictions);
-
-    console.log("Predictions:", predictions);
   }
 
   // // Example of the populateAutoSuggest function
