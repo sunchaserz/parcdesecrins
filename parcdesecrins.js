@@ -859,9 +859,9 @@ map.on("load", async () => {
       // Helper function to get a specific component
       const getAddressComponent = (type) => {
         const component = addressComponents.find((comp) => comp.types.includes(type));
-        // Ensure `longText` is not the string "null"
-        return component && component.longText && component.longText.toLowerCase() !== "null" ? component.longText : null;
+        return component ? component.longText : ""; // Use longText to match your data
       };
+
       console.log("Place:", place.addressComponents);
 
       // Add the display name and formatted address to the predictions array
@@ -871,8 +871,9 @@ map.on("load", async () => {
           lat: place.location?.lat(),
           lng: place.location?.lng(),
         },
-        formattedAddress:
-          (getAddressComponent("route") + ", " || "") + (getAddressComponent("locality") + ", " || "") + (getAddressComponent("country") || ""),
+        formattedAddress: [getAddressComponent("route"), getAddressComponent("locality"), getAddressComponent("country")]
+          .filter((component) => component && component.trim() !== "")
+          .join(", "),
       });
     }
 
