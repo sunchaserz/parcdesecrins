@@ -846,11 +846,9 @@ map.on("load", async () => {
       // Fetch fields for each prediction.
       let place = await placePrediction.toPlace();
       place.route = ""; // in case its empty
-      await place
-        .fetchFields({
-          fields: ["displayName", "addressComponents", "location"],
-        })
-        .toJSON();
+      await place.fetchFields({
+        fields: ["displayName", "addressComponents", "location"],
+      });
 
       // Extract the address components
       const addressComponents = place.addressComponents;
