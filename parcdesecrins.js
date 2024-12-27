@@ -35,9 +35,6 @@ const initialData = {
   listings: [],
 };
 
-// Search invisible until results + google maps api is loaded for autocomplete
-document.getElementById("email-form").style.visibility = "hidden";
-
 // Bounding box for Parc des Ecrins to limit geocoding search results
 // sw = 44.488283, 5.784014
 // ne = 45.193431, 6.811180
