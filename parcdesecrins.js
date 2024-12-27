@@ -692,15 +692,15 @@ map.on("load", async () => {
   const mapStyle = map.getStyle();
 
   // // Enable input through query string GOOGLE WAY
-  document.getElementById("search").addEventListener("input", async function (event) {
-    const query = event.target.value;
-    if (query.trim()) {
-      const results = await geocode(query);
-      populateAutoSuggest(results);
-    } else {
-      document.getElementById("autosuggest").innerHTML = "";
-    }
-  });
+  // document.getElementById("search").addEventListener("input", async function (event) {
+  //   const query = event.target.value;
+  //   if (query.trim()) {
+  //     const results = await geocode(query);
+  //     populateAutoSuggest(results);
+  //   } else {
+  //     document.getElementById("autosuggest").innerHTML = "";
+  //   }
+  // });
 
   // Enable input through query string MAPTILER WAY
   // if (urlParams.get("q")) {
