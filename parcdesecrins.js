@@ -859,7 +859,7 @@ map.on("load", async () => {
       // Helper function to get a specific component
       const getAddressComponent = (type) => {
         const component = addressComponents.find((comp) => comp.types.includes(type));
-        return component ? component.longText : null; // Use longText to match your data
+        return component ? component.longText : ""; // Use longText to match your data
       };
 
       console.log("Place:", place.addressComponents);
