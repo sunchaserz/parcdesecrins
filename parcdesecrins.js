@@ -1165,6 +1165,19 @@ function populateAutoSuggest(predictions) {
     ul.appendChild(li);
   });
 
+  // Add Google logo
+  // Create the image element
+  const img = document.createElement("img");
+
+  // Set the attributes for the image
+  img.className = "powered-by-google";
+  img.src = "https://storage.googleapis.com/geo-devrel-public-buckets/powered_by_google_on_white.png";
+  img.alt = "Powered by Google";
+
+  // Optionally, append the image to a specific element in the DOM
+  // Replace 'targetElementId' with the ID of the element you want to append to
+  ul.appendChild(img);
+
   // Add event listener for clicks on the suggested items
   ul.addEventListener("click", function (event) {
     // Check if the clicked element is an <li>
