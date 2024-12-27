@@ -845,8 +845,9 @@ map.on("load", async () => {
 
       // Fetch fields for each prediction.
       let place = await placePrediction.toPlace();
+      place.route = ""; // in case its empty
       await place.fetchFields({
-        fields: ["displayName", "addressComponents", "location"],
+        fields: ["displayName", "route", "locality", "country", "location"],
       });
 
       console.log("Place:", place.addressComponents);
@@ -857,7 +858,7 @@ map.on("load", async () => {
           lat: place.location?.lat(),
           lng: place.location?.lng(),
         },
-        formattedAddress: place.addressComponents,
+        formattedAddress: place.route + ", " + place.locality + ", " + place.country,
       });
     }
 
