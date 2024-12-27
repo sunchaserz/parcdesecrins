@@ -812,12 +812,17 @@ map.on("load", async () => {
 
   // Google autocmplete
   async function handleUserInput() {
-    // @ts-ignore
     const { AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
+    const query = locqueryInput.value;
+
+    if (!query.trim()) {
+      console.warn("No input provided for Geocoding");
+      return;
+    }
 
     // Add an initial request body.
     let request = {
-      input: "Briancon",
+      input: query,
       includedPrimaryTypes: ["geocode"], // can add restaurants here etc
       language: "en-US",
       region: "fr",
