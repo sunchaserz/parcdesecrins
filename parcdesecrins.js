@@ -872,11 +872,7 @@ map.on("load", async () => {
           lng: place.location?.lng(),
         },
         formattedAddress:
-          (getAddressComponent("route") || "Unknown route") +
-          ", " +
-          (getAddressComponent("locality") || "Unknown locality") +
-          ", " +
-          (getAddressComponent("country") || "Unknown country"),
+          (getAddressComponent("route") || "") + ", " + (getAddressComponent("locality") || "") + ", " + (getAddressComponent("country") || ""),
       });
     }
 
