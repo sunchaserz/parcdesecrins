@@ -838,6 +838,8 @@ map.on("load", async () => {
     // Fetch autocomplete suggestions.
     const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
 
+    console.log(suggestions);
+
     let results;
     for (let suggestion of suggestions) {
       const placePrediction = suggestion.placePrediction;
