@@ -85,6 +85,11 @@ map.keyboard.disable();
 // disable map rotation using touch rotation gesture
 map.touchZoomRotate.disableRotation();
 
+// See webflow </body> init when google maps api is loaded
+function mapsApiLoaded() {
+  const geocoder = new google.maps.Geocoder();
+}
+
 // Here we get the data from Alphi.dev API
 // this is using https://shinyobjectlabs.gitbook.io/fetch-js/
 // This is being triggered by the x-fetch="get_todos" in <body> and then later by the "Search button"
