@@ -29,6 +29,7 @@ let geocoder;
 //const alphiBaseUrl = "https://live.api-server.io/run/v1/644836c7eaebea1ea38e66c9";
 const btnDefaultValue = "Search";
 let searchterm = ""; // not necessary cause alphi.dev api also has default
+const locqueryInput = document.getElementById("search");
 
 // initial data for the Cards component
 const initialData = {
@@ -487,7 +488,7 @@ async function handleUserInput() {
 // ++ Enable input through search box and autocomplete through maptiler geocoding
 function enableSearch() {
   document.getElementById("email-form").style.visibility = "visible"; // show searchbox when googlemaps api is loaded for autocomplete
-  const locqueryInput = document.getElementById("search");
+
   let debounceTimer; // Timer variable for debouncing
 
   // Event listener for the 'input' event
