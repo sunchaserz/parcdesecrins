@@ -823,7 +823,7 @@ map.on("load", async () => {
     // Add an initial request body.
     let request = {
       input: query,
-      includedPrimaryTypes: ["geocode"], // can add restaurants here etc
+      includedPrimaryTypes: ["geocode", "restaurants"], // can add restaurants here etc
       language: "en-US",
       region: "fr",
     };
