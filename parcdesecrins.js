@@ -94,7 +94,7 @@ function loadGoogleMapsAPI() {
   window.mapsApiLoaded = () => {
     console.log("Google Maps API loaded successfully - show Search input");
     geocoder = new google.maps.Geocoder();
-    enableSearch();
+    // enableSearch();
   };
 }
 
