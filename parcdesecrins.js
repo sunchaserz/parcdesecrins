@@ -820,13 +820,28 @@ map.on("load", async () => {
     }
 
     try {
-      geocoder.geocode({ address: query }, function (results, status) {
-        if (status == "OK") {
-          console.log(results);
+      const autocomplete = new google.maps.places.Autocomplete(locqueryInput, {
+        types: ["geocode"], // Limit results to geographical locations
+        componentRestrictions: { country: "fr" }, // Restrict to France
+      });
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        console.log(place); // Place details
+        if (place.geometry) {
+          console.log(`Selected location: ${place.formatted_address}`);
         } else {
-          alert("Geocode was not successful for the following reason: " + status);
+          console.log("No geometry found for this place.");
         }
       });
+
+      // geocoder.geocode({ address: query }, function (results, status) {
+      //   if (status == "OK") {
+      //     console.log(results);
+      //   } else {
+      //     alert("Geocode was not successful for the following reason: " + status);
+      //   }
+      // });
     } catch (error) {
       console.error("An error occurred while performing the Geocoder search:", error);
     }
