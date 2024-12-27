@@ -94,7 +94,6 @@ function loadGoogleMapsAPI() {
   window.mapsApiLoaded = () => {
     console.log("Google Maps API loaded successfully - show Search input");
     geocoder = new google.maps.Geocoder();
-    // Initialize your map or other functionality here
   };
 }
 
@@ -872,13 +871,13 @@ map.on("load", async () => {
           lng: place.location?.lng(),
         },
         formattedAddress: [getAddressComponent("route"), getAddressComponent("locality"), getAddressComponent("country")]
-          .filter((component) => component && component.trim() !== "")
+          .filter((component) => component && component.trim() !== "") // Filter out empty components ""
           .join(", "),
       });
     }
 
     // Pass all predictions to the populateAutoSuggest function.
-    console.log("Predictions:", predictions);
+
     populateAutoSuggest(predictions);
   }
 
@@ -1225,24 +1224,24 @@ function populateAutoSuggest(predictions) {
 }
 // --
 
-async function geocode(address) {
-  const apiKey = "AIzaSyAj1hQ3_KtYcm49YZBKqbCfSzz0jIKkHN8";
-  const endpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+// async function geocode(address) {
+//   const apiKey = "AIzaSyAj1hQ3_KtYcm49YZBKqbCfSzz0jIKkHN8";
+//   const endpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
-  try {
-    const response = await fetch(endpoint);
-    const data = await response.json();
-    if (data.status === "OK") {
-      return data.results; // Return geocoded results
-    } else {
-      console.error("Geocoding error:", data.status);
-      return [];
-    }
-  } catch (error) {
-    console.error("Error fetching geocoding data:", error);
-    return [];
-  }
-}
+//   try {
+//     const response = await fetch(endpoint);
+//     const data = await response.json();
+//     if (data.status === "OK") {
+//       return data.results; // Return geocoded results
+//     } else {
+//       console.error("Geocoding error:", data.status);
+//       return [];
+//     }
+//   } catch (error) {
+//     console.error("Error fetching geocoding data:", error);
+//     return [];
+//   }
+// }
 
 // function populateAutoSuggest(results) {
 //   const autosuggestDiv = document.getElementById("autosuggest");
