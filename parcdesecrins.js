@@ -852,6 +852,7 @@ map.on("load", async () => {
     }
 
     // Pass all predictions to the populateAutoSuggest function.
+    console.log("Predictions:", predictions);
     populateAutoSuggest(predictions);
 
     console.log("Predictions:", predictions);
