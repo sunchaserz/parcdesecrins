@@ -610,6 +610,7 @@ document.querySelector(".list-toggle").addEventListener("click", function () {
 
 // Main Execution
 document.addEventListener("DOMContentLoaded", (event) => {
+  console.log("DOM fully loaded and parsed");
   const map = initializeMap();
   map.on("load", () => {
     map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
