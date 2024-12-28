@@ -130,8 +130,9 @@ function handleSuccessfulDataFetch(data) {
     console.log("We have " + data.length + " results!");
     updateResultsDisplay(data);
     $app.components.cards.store.listings = data;
-    activateList(data);
     console.log("Data fetched successfully");
+    activateList(data);
+
     showResultsUI();
 
     setupTagClickHandlers();
