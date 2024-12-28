@@ -653,7 +653,7 @@ function waitForElement(selector) {
 }
 
 // Main Execution
-(async function main() {
+async function main() {
   await initializeCardsComponent();
   map = initializeMap();
 
@@ -689,4 +689,9 @@ function waitForElement(selector) {
     });
     map.on("moveend", handleMapMoveEnd);
   });
-})();
+}
+
+// Call main explicitly
+main().catch((error) => {
+  console.error("Error during initialization:", error);
+});
