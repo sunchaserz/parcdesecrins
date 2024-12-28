@@ -146,8 +146,8 @@ function updateResultsDisplay(data) {
   let result_text = data.length == 1 ? "result" : "results";
   let result_searchterm =
     document.getElementById("search").value.toLowerCase() == "" ? "" : ' for <b>"' + document.getElementById("search").value.toLowerCase() + '"</b>';
-  console.log("Data fetched successfully");
   $("#totalresults").html("<b>" + data.length + "</b> " + result_text + result_searchterm);
+  console.log("Data fetched successfully");
 }
 
 function showResultsUI() {
