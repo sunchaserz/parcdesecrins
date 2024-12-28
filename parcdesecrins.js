@@ -129,8 +129,9 @@ function handleSuccessfulDataFetch(data) {
   if (data.length > 0) {
     console.log("We have " + data.length + " results!");
     updateResultsDisplay(data);
-    $app.components.cards.store.listings = data;
     console.log("Data fetched successfully");
+    $app.components.cards.store.listings = data;
+
     activateList(data);
 
     showResultsUI();
