@@ -609,39 +609,36 @@ document.querySelector(".list-toggle").addEventListener("click", function () {
 });
 
 // Main Execution
-document.addEventListener("DOMContentLoaded", (event) => {
-  console.log("DOM fully loaded and parsed");
-  const map = initializeMap();
-  map.on("load", () => {
-    map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
+map = initializeMap();
+map.on("load", () => {
+  map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
+    if (error) throw error;
+    map.addImage("restaurant+walk", image);
+
+    map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk-active.png", (error, image) => {
       if (error) throw error;
-      map.addImage("restaurant+walk", image);
+      map.addImage("restaurant+walk-active", image);
 
-      map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk-active.png", (error, image) => {
+      map.loadImage(GOOGLE_BUCKET_URL + "/map/r-cluster.png", (error, image) => {
         if (error) throw error;
-        map.addImage("restaurant+walk-active", image);
+        map.addImage("r-cluster", image);
 
-        map.loadImage(GOOGLE_BUCKET_URL + "/map/r-cluster.png", (error, image) => {
+        map.loadImage(GOOGLE_BUCKET_URL + "/map/w-cluster.png", (error, image) => {
           if (error) throw error;
-          map.addImage("r-cluster", image);
-
-          map.loadImage(GOOGLE_BUCKET_URL + "/map/w-cluster.png", (error, image) => {
-            if (error) throw error;
-            map.addImage("w-cluster", image);
-            getData();
-          });
+          map.addImage("w-cluster", image);
+          getData();
         });
       });
     });
-
-    map.on("click", "point-layer", handlePointLayerClick);
-    map.on("click", "cluster-layer", handleClusterLayerClick);
-    map.on("mouseenter", "point-layer", () => {
-      map.getCanvas().style.cursor = "pointer";
-    });
-    map.on("mouseleave", "point-layer", () => {
-      map.getCanvas().style.cursor = "";
-    });
-    map.on("moveend", handleMapMoveEnd);
   });
+
+  map.on("click", "point-layer", handlePointLayerClick);
+  map.on("click", "cluster-layer", handleClusterLayerClick);
+  map.on("mouseenter", "point-layer", () => {
+    map.getCanvas().style.cursor = "pointer";
+  });
+  map.on("mouseleave", "point-layer", () => {
+    map.getCanvas().style.cursor = "";
+  });
+  map.on("moveend", handleMapMoveEnd);
 });
