@@ -130,7 +130,7 @@ function handleSuccessfulDataFetch(data) {
     console.log("We have " + data.length + " results!");
     updateResultsDisplay(data);
     console.log("before");
-    console.log("Webflow object:", window.Webflow);
+
     console.log("Data before assignment:", data);
     const names = data.map((item) => item.name);
     console.log(names);
