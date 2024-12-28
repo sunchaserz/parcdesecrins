@@ -128,8 +128,6 @@ var $app = (function (f) {
       try {
         return o(e, t, n, r);
       } catch (c) {
-        console.log("Value before accessing [0]:", someVariable);
-        console.log("Full object:", someParentObject);
         console.error(c);
       }
     },
