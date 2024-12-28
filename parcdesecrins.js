@@ -1,221 +1,238 @@
-// Constants and Configuration
-const CONFIG = {
-  map: {
-    apiKey: "fsCLuIQWGPlRskWhImQz",
-    initialZoom: 10.5,
-    initialCenter: [6.079625696485338, 45.05582527284327],
-    styleId: "b80bd75b-379c-45e4-9006-643ba8aa190e",
-    iconSize: 0.6,
-    ecrinsBounds: [5.784014, 44.488283, 6.81118, 45.193431],
-  },
-  api: {
-    alphiBaseUrl: "https://live.api-server.io/run/v1/66ade5323b53b139de1ea229",
-    googleBucketUrl: "https://storage.googleapis.com/parc_des_ecrins",
-    googleMapsKey: "AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc",
-  },
-};
+/**
+ * PARC DES ECRINS
+ * Optimized by <THE ALLIANCE>
+ *
+ * Main functionality includes fetching data, rendering the map, and managing interactions.
+ */
 
-// Map Service
-class MapService {
-  constructor() {
-    this.map = null;
-    this.geocoder = null;
-    this.filterForPointLayer = ["any"];
-    this.filterForClusterLayer = ["all", ["has", "point_count"]];
-  }
+// Constants
+const alphiBaseUrl = "https://live.api-server.io/run/v1/66ade5323b53b139de1ea229";
+const googleBucketUrl = "https://storage.googleapis.com/parc_des_ecrins";
+const ecrinsBounds = [5.784014, 44.488283, 6.81118, 45.193431];
+const btnDefaultValue = "Search";
+const iconSize = 0.6;
 
-  async initialize() {
-    this.map = new maptilersdk.Map({
-      container: "map",
-      zoom: CONFIG.map.initialZoom,
-      center: CONFIG.map.initialCenter,
-      fullscreenControl: "top-right",
-      style: CONFIG.map.styleId,
-      antialias: true,
-      navigationControl: false,
-    }).addControl(
-      new maptilersdk.MaptilerNavigationControl({
-        showCompass: false,
-      })
-    );
+// Google geocoder
+let geocoder;
 
-    this.disableMapRotation();
-    this.setupEventListeners();
-    await this.loadInitialMarkers();
-  }
+// Initialize cards component
+$app.createComponent("cards", { listings: [] }).mount("#cards");
 
-  disableMapRotation() {
-    this.map.dragRotate.disable();
-    this.map.keyboard.disable();
-    this.map.touchZoomRotate.disableRotation();
-  }
+// Initialize map
+document.getElementById("map").style.visibility = "hidden";
 
-  setupEventListeners() {
-    this.map.on("click", "point-layer", this.handlePointClick.bind(this));
-    this.map.on("click", "cluster-layer", this.handleClusterClick.bind(this));
-    this.map.on("mouseenter", "point-layer", () => (this.map.getCanvas().style.cursor = "pointer"));
-    this.map.on("mouseleave", "point-layer", () => (this.map.getCanvas().style.cursor = ""));
-    this.map.on("moveend", this.handleMoveEnd.bind(this));
-  }
+const map = new maptilersdk.Map({
+  container: "map",
+  zoom: 10.5,
+  center: [6.079625696485338, 45.05582527284327],
+  fullscreenControl: "top-right",
+  style: "b80bd75b-379c-45e4-9006-643ba8aa190e",
+  antialias: true,
+  navigationControl: false,
+}).addControl(new maptilersdk.MaptilerNavigationControl({ showCompass: false }));
 
-  async loadInitialMarkers() {
-    await this.loadClusterImages();
-    await this.getData();
-  }
+// Disable unnecessary map controls
+["dragRotate", "keyboard", "touchZoomRotate"].forEach((control) => map[control]?.disableRotation?.());
 
-  async loadClusterImages() {
-    const images = [
-      { name: "restaurant+walk", path: `${CONFIG.api.googleBucketUrl}/map/restaurant+walk.png` },
-      { name: "restaurant+walk-active", path: `${CONFIG.api.googleBucketUrl}/map/restaurant+walk-active.png` },
-      { name: "r-cluster", path: `${CONFIG.api.googleBucketUrl}/map/r-cluster.png` },
-      { name: "w-cluster", path: `${CONFIG.api.googleBucketUrl}/map/w-cluster.png` },
-    ];
+// Load Google Maps API
+function loadGoogleMapsAPI() {
+  const script = document.createElement("script");
+  script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc&callback=mapsApiLoaded&v=weekly";
+  script.defer = true;
+  document.head.appendChild(script);
 
-    for (const image of images) {
-      await this.loadMapImage(image.name, image.path);
-    }
-  }
-
-  async loadMapImage(name, path) {
-    return new Promise((resolve, reject) => {
-      this.map.loadImage(path, (error, image) => {
-        if (error) reject(error);
-        this.map.addImage(name, image);
-        resolve();
-      });
-    });
-  }
+  window.mapsApiLoaded = () => {
+    geocoder = new google.maps.Geocoder();
+    enableSearch();
+  };
 }
 
-// Data Service
-class DataService {
-  constructor() {
-    this.initialData = { listings: [] };
-  }
+// Fetch data from API and handle results
+function getData() {
+  $fetch.createAction("get_todos", {
+    options: {
+      method: "get",
+      url: alphiBaseUrl,
+      headers: [{ key: "Content-Type", value: "application/json" }],
+    },
+    integrations: {
+      authentication: console.log("Triggered: " + document.getElementById("search").value),
+    },
+    events: {
+      onTrigger: { callback: console.log("Triggered fetch for: " + document.getElementById("search").value) },
+      onRequestInit: {
+        callback: async (options) => {
+          document.getElementById("loading-animation").style.display = "block";
+          document.getElementById("btnSearch").value = document.getElementById("btnSearch").dataset.wait;
 
-  async fetchData(searchTerm = "") {
-    const url = searchTerm ? `${CONFIG.api.alphiBaseUrl}?endpoint=home&name=${searchTerm.toLowerCase()}` : CONFIG.api.alphiBaseUrl;
+          const searchValue = document.getElementById("search").value;
+          if (searchValue) {
+            options.url = `${alphiBaseUrl}?endpoint=home&name=${searchValue.toLowerCase()}`;
+          }
+          return options;
+        },
+      },
+      onSuccess: {
+        callback: async (_, data) => {
+          document.getElementById("btnSearch").value = btnDefaultValue;
 
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      return this.processData(data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      return [];
-    }
-  }
+          if (data.length > 0) {
+            updateUIWithData(data);
+            const dataGeoJson = convertToGeoJson(data);
+            loadCustomMarkersAndLayers(dataGeoJson);
+            loadGoogleMapsAPI();
+            document.getElementById("map").style.visibility = "visible";
+          } else {
+            handleNoResults();
+          }
+        },
+      },
+      onError: {
+        callback: (response) => {
+          console.error("Error:", response);
+          document.getElementById("btnSearch").value = btnDefaultValue;
+        },
+      },
+    },
+  });
+}
 
-  processData(data) {
-    return data.map((item) => ({
-      ...item,
-      geoJson: this.convertToGeoJson(item),
-    }));
-  }
+// Update UI components with fetched data
+function updateUIWithData(data) {
+  $app.components.cards.store.listings = data;
+  document.getElementById("no-results").style.display = "none";
+  document.getElementById("cards").style.display = "block";
+  document.getElementById("toolbar").style.display = "block";
 
-  convertToGeoJson(item) {
-    return {
+  document.getElementById("totalresults").innerHTML = `<b>${data.length}</b> result(s) ${
+    document.getElementById("search").value ? `for <b>"${document.getElementById("search").value}"</b>` : ""
+  }`;
+}
+
+// Handle no results
+function handleNoResults() {
+  document.getElementById("cards").style.display = "none";
+  document.getElementById("no-results").style.display = "block";
+  document.getElementById("toolbar").style.display = "none";
+}
+
+// Convert data to GeoJSON format
+function convertToGeoJson(data) {
+  return {
+    type: "FeatureCollection",
+    crs: { type: "name", properties: { name: "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+    features: data.map((item) => ({
       type: "Feature",
       properties: {
         id: item.id,
         main_image: item.main_image,
-        mag: 1.43,
-        time: 1507424832518,
-        felt: null,
-        tsunami: 1,
         icon: "restaurantz",
       },
       geometry: {
         type: "Point",
         coordinates: [item.longitude, item.latitude],
       },
-    };
-  }
+    })),
+  };
 }
 
-// UI Service
-class UIService {
-  constructor() {
-    this.searchInput = document.getElementById("search");
-    this.resultsContainer = document.getElementById("results");
-    this.loadingAnimation = document.getElementById("loading-animation");
-  }
+// Load markers and layers onto the map
+function loadCustomMarkersAndLayers(dataGeoJson) {
+  const uniqueIcons = getUniqueIcons(dataGeoJson);
 
-  setupEventListeners() {
-    this.searchInput.addEventListener("input", this.handleSearchInput.bind(this));
-    document.getElementById("clearsearch").addEventListener("click", this.handleClearSearch.bind(this));
-    document.getElementById("brand").addEventListener("click", this.handleClearSearch.bind(this));
-  }
+  uniqueIcons.forEach(({ name, path }) =>
+    map.loadImage(path, (error, image) => {
+      if (error) throw error;
+      map.addImage(name, image);
+      createCheckboxForFilter(name);
+    })
+  );
 
-  handleSearchInput(event) {
-    const hasValue = event.target.value.length > 0;
-    event.target.classList.toggle("has--value", hasValue);
-  }
-
-  handleClearSearch() {
-    this.searchInput.value = "";
-    this.searchInput.dispatchEvent(new Event("input"));
-  }
-
-  updateResults(count, searchTerm = "") {
-    const resultText = count === 1 ? "result" : "results";
-    const searchTermText = searchTerm ? ` for <b>"${searchTerm}"</b>` : "";
-    document.getElementById("totalresults").innerHTML = `<b>${count}</b> ${resultText}${searchTermText}`;
-  }
-
-  toggleLoading(show) {
-    this.loadingAnimation.style.display = show ? "block" : "none";
-  }
+  map.addSource("earthquakes", { type: "geojson", data: dataGeoJson, cluster: true, clusterMaxZoom: 14, clusterRadius: 50 });
+  map.addLayer(createClusterLayer());
+  map.addLayer(createPointLayer());
 }
 
-// Main Application
-class MapApplication {
-  constructor() {
-    this.mapService = new MapService();
-    this.dataService = new DataService();
-    this.uiService = new UIService();
-  }
-
-  async initialize() {
-    await this.mapService.initialize();
-    this.uiService.setupEventListeners();
-    await this.loadInitialData();
-  }
-
-  async loadInitialData() {
-    this.uiService.toggleLoading(true);
-    const data = await this.dataService.fetchData();
-    await this.updateMapAndUI(data);
-    this.uiService.toggleLoading(false);
-  }
-
-  async updateMapAndUI(data) {
-    this.updateCards(data);
-    this.updateMap(data);
-    this.uiService.updateResults(data.length);
-  }
-
-  updateCards(data) {
-    $app.components.cards.store.listings = data;
-    this.activateCardListeners(data);
-  }
-
-  updateMap(data) {
-    const geoJsonData = {
-      type: "FeatureCollection",
-      features: data.map((item) => item.geoJson),
-    };
-    this.mapService.updateMapData(geoJsonData);
-  }
-
-  activateCardListeners(data) {
-    // Implementation of card click listeners
-    // This would be similar to your existing activateList function
-  }
+// Create layers for clusters and points
+function createClusterLayer() {
+  return {
+    id: "cluster-layer",
+    type: "symbol",
+    source: "earthquakes",
+    filter: ["has", "point_count"],
+    layout: {
+      "icon-image": "r-cluster",
+      "icon-size": iconSize,
+      "icon-allow-overlap": true,
+    },
+  };
 }
 
-// Initialize the application
-document.addEventListener("DOMContentLoaded", () => {
-  const app = new MapApplication();
-  app.initialize();
-});
+function createPointLayer() {
+  return {
+    id: "point-layer",
+    type: "symbol",
+    source: "earthquakes",
+    filter: ["!", ["has", "point_count"]],
+    layout: {
+      "icon-image": ["case", ["==", ["get", "icon"], "restaurantz"], "restaurantz", "default"],
+      "icon-size": iconSize,
+      "icon-allow-overlap": true,
+    },
+  };
+}
+
+// Extract unique icons from data
+function getUniqueIcons(dataGeoJson) {
+  const gfxFolder = `${googleBucketUrl}/map`;
+  const uniqueIcons = new Set(dataGeoJson.features.map((feature) => feature.properties.icon));
+  return Array.from(uniqueIcons).map((icon) => ({ name: icon, path: `${gfxFolder}/${icon}.png` }));
+}
+
+// Create checkboxes for filtering
+function createCheckboxForFilter(id) {
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.id = id;
+  input.checked = true;
+
+  const label = document.createElement("label");
+  label.setAttribute("for", id);
+  label.textContent = id;
+
+  input.addEventListener("change", () => updateFilters(id, input.checked));
+  filterGroup.appendChild(input);
+  filterGroup.appendChild(label);
+}
+
+// Update map filters based on checkbox state
+function updateFilters(id, isChecked) {
+  const filterOp = isChecked ? "==" : "!=";
+  map.setFilter("point-layer", [filterOp, ["get", "icon"], id]);
+}
+
+// Enable search functionality
+function enableSearch() {
+  const searchBox = document.getElementById("search");
+  searchBox.style.visibility = "visible";
+
+  searchBox.addEventListener(
+    "input",
+    debounce(() => {
+      const query = searchBox.value;
+      if (query) handleUserInput(query);
+    }, 300)
+  );
+}
+
+// Debounce function for input
+function debounce(func, wait) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
+// Initialize map on load
+map.on("load", () => getData());
