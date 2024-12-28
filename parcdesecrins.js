@@ -135,9 +135,10 @@ function handleSuccessfulDataFetch(data) {
     showResultsUI();
 
     setupTagClickHandlers();
+    console.log("Data fetched successfully");
     const dataGeoJson = convertToGeoJson(data);
     loadCustomMarkersAndLayers(dataGeoJson);
-    console.log("Data fetched successfully");
+
     loadGoogleMapsAPI();
 
     document.getElementById("map").style.visibility = "visible";
