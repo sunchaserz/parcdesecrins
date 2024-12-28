@@ -237,6 +237,11 @@ function displayNoResults() {
   document.getElementById("toolbar").style.display = "none";
 }
 
+// Generate unique card ID
+function cardLoaded(card) {
+  return `#card-${card.id}`;
+}
+
 // Enable search input
 function enableSearch() {
   document.getElementById("search").addEventListener("input", debounce(getData, 300));
