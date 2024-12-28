@@ -137,8 +137,9 @@ function handleSuccessfulDataFetch(data) {
     setupTagClickHandlers();
     const dataGeoJson = convertToGeoJson(data);
     loadCustomMarkersAndLayers(dataGeoJson);
-    loadGoogleMapsAPI();
     console.log("Data fetched successfully");
+    loadGoogleMapsAPI();
+
     document.getElementById("map").style.visibility = "visible";
   } else {
     showNoResultsUI();
