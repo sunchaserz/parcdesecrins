@@ -133,11 +133,12 @@ function handleSuccessfulDataFetch(data) {
     $app.components.cards.store.listings = data;
     activateList(data);
     showResultsUI();
-    console.log("Data fetched successfully");
+
     setupTagClickHandlers();
     const dataGeoJson = convertToGeoJson(data);
     loadCustomMarkersAndLayers(dataGeoJson);
     loadGoogleMapsAPI();
+    console.log("Data fetched successfully");
     document.getElementById("map").style.visibility = "visible";
   } else {
     showNoResultsUI();
