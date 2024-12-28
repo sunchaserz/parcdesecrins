@@ -130,9 +130,12 @@ function handleSuccessfulDataFetch(data) {
     console.log("We have " + data.length + " results!");
     updateResultsDisplay(data);
     console.log("before");
+    console.log("Webflow object:", window.Webflow);
     console.log("Data before assignment:", data);
     const names = data.map((item) => item.name);
     console.log(names);
+    console.log(`Tags: ${item.tags?.map((tag) => tag.name).join(", ") || "No tags available"}`);
+    console.log(`Authors: ${item.authors?.map((author) => author.name).join(", ") || "No authors available"}`);
     $app.components.cards.store.listings = data;
     console.log("after");
     activateList(data);
