@@ -129,6 +129,7 @@ function handleSuccessfulDataFetch(data) {
   if (data.length > 0) {
     console.log("We have " + data.length + " results!");
     updateResultsDisplay(data);
+    console.log("after");
     $app.components.cards.store.listings = data;
     activateList(data);
     showResultsUI();
@@ -147,7 +148,7 @@ function updateResultsDisplay(data) {
   let result_searchterm =
     document.getElementById("search").value.toLowerCase() == "" ? "" : ' for <b>"' + document.getElementById("search").value.toLowerCase() + '"</b>';
   $("#totalresults").html("<b>" + data.length + "</b> " + result_text + result_searchterm);
-  console.log("Data fetched successfully");
+  console.log("before");
 }
 
 function showResultsUI() {
