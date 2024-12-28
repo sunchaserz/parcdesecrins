@@ -271,5 +271,36 @@ function addMapListeners() {
   });
 }
 
+/**
+ * Creates checkboxes dynamically for filtering map layers by marker type.
+ * @param {string} id - The ID of the marker type.
+ */
+function createCheckboxesNew(id) {
+  console.log("Creating checkbox for:", id);
+
+  // Create checkbox element
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.id = id;
+  input.checked = true;
+
+  // Append checkbox to the filter group
+  filterGroup.appendChild(input);
+
+  // Create label element
+  const label = document.createElement("label");
+  label.setAttribute("for", id);
+  label.textContent = id;
+
+  // Append label to the filter group
+  filterGroup.appendChild(label);
+
+  // Event listener to toggle marker visibility
+  input.addEventListener("change", () => {
+    console.log(`Checkbox toggled for: ${id}`);
+    updateFilter();
+  });
+}
+
 // Call to add listeners
 addMapListeners();
