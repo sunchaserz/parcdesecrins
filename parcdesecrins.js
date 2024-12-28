@@ -49,39 +49,6 @@ function initializeMap() {
     })
   );
 
-  map.on("load", () => {
-    map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
-      if (error) throw error;
-      map.addImage("restaurant+walk", image);
-
-      map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk-active.png", (error, image) => {
-        if (error) throw error;
-        map.addImage("restaurant+walk-active", image);
-
-        map.loadImage(GOOGLE_BUCKET_URL + "/map/r-cluster.png", (error, image) => {
-          if (error) throw error;
-          map.addImage("r-cluster", image);
-
-          map.loadImage(GOOGLE_BUCKET_URL + "/map/w-cluster.png", (error, image) => {
-            if (error) throw error;
-            map.addImage("w-cluster", image);
-            getData();
-          });
-        });
-      });
-    });
-
-    map.on("click", "point-layer", handlePointLayerClick);
-    map.on("click", "cluster-layer", handleClusterLayerClick);
-    map.on("mouseenter", "point-layer", () => {
-      map.getCanvas().style.cursor = "pointer";
-    });
-    map.on("mouseleave", "point-layer", () => {
-      map.getCanvas().style.cursor = "";
-    });
-    map.on("moveend", handleMapMoveEnd);
-  });
-
   // Disable map rotation
   map.dragRotate.disable();
   map.keyboard.disable();
@@ -649,32 +616,77 @@ document.querySelector(".list-toggle").addEventListener("click", function () {
 
 // MAIN EXECUTION
 // Ensure DOM is ready and framework.js is fully loaded
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM is ready and framework.js is fully loaded.");
-  // Check if framework.js is already loaded
-  const frameworkScript = document.querySelector('script[src*="framework.js"]');
-  if (frameworkScript) {
-    if (frameworkScript.readyState === "complete" || frameworkScript.readyState === "loaded") {
-      // If already loaded, proceed immediately
-      initializeCardsComponent();
-      map = initializeMap();
-    } else {
-      // Otherwise, wait for it to load
-      frameworkScript.addEventListener("load", initializeCardsComponent);
-    }
-  } else {
-    console.error("framework.js script not found in the DOM.");
-  }
-});
-
-// Initialize the cards component once conditions are met
-function initializeCardsComponent() {
-  const cardsElement = document.getElementById("cards");
-  if (cardsElement) {
-    // Create and mount the cards component
-    $app.createComponent("cards", initialData).mount("#cards");
-    console.log("Cards component initialized.");
-  } else {
-    console.error("#cards element not found in the DOM.");
-  }
+/**
+ * Ensure framework.js and cards DOM element are available before initializing
+ */
+async function initializeCardsComponent() {
+  await waitForFrameworkJS();
+  await waitForElement("#cards");
+  $app.createComponent("cards", initialData).mount("#cards");
 }
+
+function waitForFrameworkJS() {
+  return new Promise((resolve) => {
+    const interval = setInterval(() => {
+      if (window.$app && window.$app.createComponent) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 50); // Check every 50ms
+  });
+}
+
+function waitForElement(selector) {
+  return new Promise((resolve) => {
+    if (document.querySelector(selector)) {
+      resolve();
+    } else {
+      const observer = new MutationObserver(() => {
+        if (document.querySelector(selector)) {
+          observer.disconnect();
+          resolve();
+        }
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+    }
+  });
+}
+
+// Main Execution
+(async function main() {
+  await initializeCardsComponent();
+  map = initializeMap();
+
+  map.on("load", () => {
+    map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
+      if (error) throw error;
+      map.addImage("restaurant+walk", image);
+
+      map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk-active.png", (error, image) => {
+        if (error) throw error;
+        map.addImage("restaurant+walk-active", image);
+
+        map.loadImage(GOOGLE_BUCKET_URL + "/map/r-cluster.png", (error, image) => {
+          if (error) throw error;
+          map.addImage("r-cluster", image);
+
+          map.loadImage(GOOGLE_BUCKET_URL + "/map/w-cluster.png", (error, image) => {
+            if (error) throw error;
+            map.addImage("w-cluster", image);
+            getData();
+          });
+        });
+      });
+    });
+
+    map.on("click", "point-layer", handlePointLayerClick);
+    map.on("click", "cluster-layer", handleClusterLayerClick);
+    map.on("mouseenter", "point-layer", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+    map.on("mouseleave", "point-layer", () => {
+      map.getCanvas().style.cursor = "";
+    });
+    map.on("moveend", handleMapMoveEnd);
+  });
+})();
