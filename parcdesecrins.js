@@ -130,6 +130,7 @@ function handleSuccessfulDataFetch(data) {
     console.log("We have " + data.length + " results!");
     updateResultsDisplay(data);
     console.log("before");
+    console.log("Data before assignment:", data);
     $app.components.cards.store.listings = data;
     console.log("after");
     activateList(data);
