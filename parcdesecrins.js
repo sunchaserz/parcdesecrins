@@ -233,3 +233,28 @@ function handleUserInput() {
     console.log("User is typing:", query);
   }
 }
+
+function loadGoogleMapsAPI() {
+  const script = document.createElement("script");
+  script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc&callback=mapsApiLoaded&v=weekly";
+  script.defer = true;
+  document.head.appendChild(script);
+
+  window.mapsApiLoaded = () => {
+    console.log("Google Maps API loaded successfully - enabling search input.");
+    geocoder = new google.maps.Geocoder();
+    enableSearch();
+  };
+}
+
+function enableSearch() {
+  document.getElementById("email-form").style.visibility = "visible"; // Show search box when Google Maps API is loaded.
+
+  let debounceTimer;
+  locqueryInput.addEventListener("input", function () {
+    if (!locqueryInput.value) return; // Exit if input is empty.
+
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => handleUserInput(), 300);
+  });
+}
