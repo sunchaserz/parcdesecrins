@@ -131,8 +131,8 @@ function handleSuccessfulDataFetch(data) {
     updateResultsDisplay(data);
     $app.components.cards.store.listings = data;
     activateList(data);
-    showResultsUI();
     console.log("after");
+    showResultsUI();
     setupTagClickHandlers();
     const dataGeoJson = convertToGeoJson(data);
     loadCustomMarkersAndLayers(dataGeoJson);
