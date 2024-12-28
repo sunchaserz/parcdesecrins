@@ -224,7 +224,6 @@ function convertToGeoJson(data) {
     features: geoJsonFeatures,
   };
 }
-d;
 
 // Helper to display tags
 function createTagLink(tag) {
