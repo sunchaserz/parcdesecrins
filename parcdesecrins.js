@@ -2,9 +2,6 @@
  * PARC DES ECRINS
  * @author <THE ALLIANCE>
  *
- * This file is served by jsdelivr (see Webflow setup).
- * Ensure you're using the production setup, not the uncached development setup.
- *
  * LOGIC OVERVIEW
  * ==============
  * - On `map.on("load")`, the `getData()` function is triggered.
@@ -115,6 +112,32 @@ function convertToGeoJson(data) {
     crs: { type: "name", properties: { name: "urn:ogc:def:crs:OGC:1.3:CRS84" } },
     features: geoJsonFeatures,
   };
+}
+
+/**
+ * Retrieves unique icons from the GeoJSON data.
+ */
+function getUniqueIcons(dataGeoJson) {
+  const gfxFolder = `${googleBucketUrl}/map`;
+  const uniqueIcons = new Set();
+
+  dataGeoJson.features.forEach((feature) => {
+    if (feature.properties && feature.properties.icon) {
+      uniqueIcons.add(feature.properties.icon);
+    }
+  });
+
+  return Array.from(uniqueIcons).map((iconName) => ({
+    name: iconName,
+    path: `${gfxFolder}/${iconName}.png`,
+  }));
+}
+
+/**
+ * Updates a card's ID for tracking.
+ */
+function cardLoaded(card) {
+  return `#card-${card.id}`;
 }
 
 // === MAP FUNCTIONALITY ===
