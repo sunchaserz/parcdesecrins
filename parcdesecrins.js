@@ -160,39 +160,48 @@ function convertToGeoJson(data) {
 }
 
 // ===============================
-// Event Handlers
+// Card Functions
 // ===============================
-map.on("load", () => {
-  console.log("Map loaded. Fetching data...");
-  getData();
-});
+function cardLoaded(card) {
+  console.log("Card loaded with ID: " + card.id);
+  return `#card-${card.id}`;
+}
 
-map.on("click", "point-layer", (e) => {
-  const features = map.queryRenderedFeatures(e.point, { layers: ["point-layer"] });
-  if (features.length) {
-    const { geometry, properties } = features[0];
-    openPopup(geometry.coordinates, properties);
-  }
-});
+function activateList(data) {
+  const items = data.map((item) => ({
+    id: item.id,
+    lat: item.latitude,
+    lon: item.longitude,
+  }));
 
-map.on("mouseenter", "point-layer", () => (map.getCanvas().style.cursor = "pointer"));
-map.on("mouseleave", "point-layer", () => (map.getCanvas().style.cursor = ""));
+  const listContainer = document.querySelector(".uui-blogsection01_list");
+  const listItems = listContainer.querySelectorAll(".uui-blogsection01_item:not(:first-child)");
 
-// ===============================
-// Popup Handling
-// ===============================
-function openPopup(coordinates, properties) {
-  new maptilersdk.Popup({ offset: 20 })
-    .setLngLat(coordinates)
-    .setHTML(
-      `
-      <div class="popup">
-        <div class="popup-imgwrap"><img src="${properties.main_image}" alt="" class="popup-image"></div>
-        <div class="popup-txtwrap">${properties.mag} magnitude</div>
-      </div>
-    `
-    )
-    .addTo(map);
+  listItems.forEach((div, index) => {
+    if (items[index]) {
+      div.setAttribute("data-id", items[index].id);
+      div.setAttribute("data-lonlat", `${items[index].lon},${items[index].lat}`);
+
+      div.addEventListener("mouseenter", () => {
+        cleanSelection();
+        div.classList.add("selected");
+        selectListToMap(div);
+      });
+
+      div.querySelector(".fly-to-marker").addEventListener("click", () => flyToMarker(div));
+    }
+  });
+}
+
+function selectListToMap(item) {
+  map.setLayoutProperty("point-layer", "icon-image", ["case", ["==", ["get", "id"], item.dataset.id], "restaurant+walk-active", ["get", "icon"]]);
+}
+
+function flyToMarker(item) {
+  map.flyTo({
+    center: item.dataset.lonlat.split(",").map(Number),
+    zoom: 12,
+  });
 }
 
 // ===============================
