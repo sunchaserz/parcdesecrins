@@ -621,7 +621,9 @@ document.querySelector(".list-toggle").addEventListener("click", function () {
  */
 async function initializeCardsComponent() {
   await waitForFrameworkJS();
+  console.log("Framework.js is loaded");
   await waitForElement("#cards");
+  console.log("Cards DOM element is available");
   $app.createComponent("cards", initialData).mount("#cards");
 }
 
