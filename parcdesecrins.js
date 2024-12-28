@@ -4,6 +4,8 @@
  *
  * This file is being served by jsdelivr. (see webflow)
  * Make sure you are using the prod setup, not the uncached dev setup (see webflow Before </body> tag section)
+ *
+ * MAIN EXECUTION is at the bottom of the file - the map load kicks everything off
  */
 
 // Constants and Configurations
@@ -26,42 +28,6 @@ const filterGroup = document.getElementById("filter-group");
 
 // Initial data for the Cards component
 const initialData = { listings: [] };
-
-// Wait for DOM and framework.js
-async function initializeCardsComponent() {
-  await waitForElement("#cards");
-  await waitForFrameworkJS();
-  $app.createComponent("cards", initialData).mount("#cards");
-}
-
-function waitForElement(selector) {
-  return new Promise((resolve) => {
-    if (document.querySelector(selector)) {
-      resolve();
-    } else {
-      const observer = new MutationObserver(() => {
-        if (document.querySelector(selector)) {
-          observer.disconnect();
-          resolve();
-        }
-      });
-      observer.observe(document.documentElement, { childList: true, subtree: true });
-    }
-  });
-}
-
-function waitForFrameworkJS() {
-  return new Promise((resolve) => {
-    const checkFramework = () => {
-      if (window.$app && window.$app.createComponent) {
-        resolve();
-      } else {
-        setTimeout(checkFramework, 100);
-      }
-    };
-    checkFramework();
-  });
-}
 
 // Maptiler Configuration
 maptilersdk.config.apiKey = "fsCLuIQWGPlRskWhImQz";
@@ -175,43 +141,539 @@ function handleSuccessfulDataFetch(data) {
   }
 }
 
-// Existing functions like `updateResultsDisplay`, `convertToGeoJson`, `loadCustomMarkersAndLayers`, etc., remain the same...
+function updateResultsDisplay(data) {
+  let result_text = data.length == 1 ? "result" : "results";
+  let result_searchterm =
+    document.getElementById("search").value.toLowerCase() == "" ? "" : ' for <b>"' + document.getElementById("search").value.toLowerCase() + '"</b>';
+  $("#totalresults").html("<b>" + data.length + "</b> " + result_text + result_searchterm);
+}
 
-// Main Execution
-(async function main() {
-  await initializeCardsComponent();
-  map = initializeMap();
+function showResultsUI() {
+  document.getElementById("no-results").style.display = "none";
+  document.getElementById("cards").style.display = "block";
+  document.getElementById("toolbar").style.display = "block";
+}
 
-  map.on("load", () => {
-    map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
+function showNoResultsUI() {
+  document.getElementById("cards").style.display = "none";
+  document.getElementById("no-results").style.display = "block";
+  document.getElementById("toolbar").style.display = "none";
+}
+
+function setupTagClickHandlers() {
+  $(".tag").on("click", function () {
+    $("#search").val($(this).text()).trigger("input");
+    $fetch.triggerAction("get_todos");
+  });
+}
+
+function convertToGeoJson(data) {
+  const dataGeoRaw =
+    `{"type": "FeatureCollection","crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },` +
+    `"features": [${data.map((item) => {
+      return `{ "type": "${item.type}", "properties": { "id": "${item.id}", "main_image": "${item.main_image}","mag": 1.43, "time": 1507424832518, "felt": null, "tsunami": 1, "icon" : "restaurantz" }, "geometry": { "type": "Point", "coordinates": [ ${item.longitude}, ${item.latitude} ] } }`;
+    })}]}`;
+  return JSON.parse(dataGeoRaw);
+}
+
+// Map Utility Functions
+function getUniqueIcons(dataGeoJson) {
+  const gfxFolder = GOOGLE_BUCKET_URL + "/map";
+  const uniqueIcons = new Set();
+
+  dataGeoJson.features.forEach((feature) => {
+    if (feature.properties && feature.properties.icon) {
+      uniqueIcons.add(feature.properties.icon);
+    }
+  });
+
+  return Array.from(uniqueIcons).map((icon) => ({ name: icon, path: `${gfxFolder}/${icon}.png` }));
+}
+
+function loadCustomMarkersAndLayers(dataGeoJson) {
+  const customMarkers = getUniqueIcons(dataGeoJson);
+
+  // Clear existing layers and sources
+  ["cluster-layer", "point-layer", "cluster-count", "unclustered-point"].forEach((layer) => {
+    if (map.getLayer(layer)) map.removeLayer(layer);
+  });
+  if (map.getSource("earthquakes")) map.removeSource("earthquakes");
+
+  // Load custom marker icons
+  customMarkers.forEach((marker) => {
+    map.loadImage(marker.path, (error, image) => {
       if (error) throw error;
-      map.addImage("restaurant+walk", image);
+      map.addImage(marker.name, image);
+      createCheckboxesNew(marker.name);
+    });
+  });
 
-      map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk-active.png", (error, image) => {
+  // Add GeoJSON source
+  map.addSource("earthquakes", {
+    type: "geojson",
+    data: dataGeoJson,
+    cluster: true,
+    clusterMaxZoom: 14,
+    clusterRadius: 50,
+    clusterProperties: {
+      has_restaurant: ["any", ["==", ["get", "icon"], "restaurantz"], "false"],
+      has_walk: ["any", ["==", ["get", "icon"], "walk"], "false"],
+      only_restaurant: ["all", ["==", ["get", "icon"], "restaurantz"], "false"],
+      only_walk: ["all", ["==", ["get", "icon"], "walk"], "false"],
+    },
+  });
+
+  // Add layers
+  addMapLayers();
+}
+
+function addMapLayers() {
+  map.addLayer({
+    id: "cluster-layer",
+    type: "symbol",
+    source: "earthquakes",
+    filter: ["has", "point_count"],
+    layout: {
+      "icon-image": [
+        "case",
+        ["all", ["get", "has_restaurant"], ["get", "has_walk"]],
+        "restaurant+walk",
+        ["get", "only_restaurant"],
+        "r-cluster",
+        "w-cluster",
+      ],
+      "icon-size": 0.1,
+      "icon-allow-overlap": true,
+    },
+  });
+
+  map.addLayer({
+    id: "cluster-count",
+    type: "symbol",
+    source: "earthquakes",
+    filter: ["has", "point_count"],
+    layout: {
+      "text-field": "{point_count_abbreviated}",
+      "text-font": ["Arial Unicode MS Bold"],
+      "text-size": 16,
+    },
+    paint: {
+      "text-color": "#ffffff",
+    },
+  });
+
+  map.addLayer({
+    id: "point-layer",
+    type: "symbol",
+    source: "earthquakes",
+    filter: ["!", ["has", "point_count"]],
+    layout: {
+      "icon-image": ["case", ["==", ["get", "icon"], "restaurantz"], "restaurantz", ["==", ["get", "icon"], "walk"], "walk", "walk"],
+      "icon-size": ICON_SIZE,
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
+    },
+  });
+}
+
+// Filter Functions
+function updateFilter() {
+  filterForPointLayer.length = 1;
+  filterForClusterLayer.length = 2;
+
+  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+  checkboxes.forEach((checkbox) => {
+    if (checkbox.checked) {
+      filterForPointLayer.push(["==", ["get", "icon"], checkbox.id]);
+      filterForClusterLayer.push(["get", `only_${checkbox.id}`]);
+    }
+  });
+
+  const myStyle = map.getStyle();
+  myStyle.sources.earthquakes.filter = filterForPointLayer;
+  map.setStyle(myStyle);
+}
+
+function createCheckboxesNew(id) {
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.id = id;
+  input.checked = true;
+  filterGroup.appendChild(input);
+
+  const label = document.createElement("label");
+  label.setAttribute("for", id);
+  label.textContent = id;
+  filterGroup.appendChild(label);
+
+  input.addEventListener("change", updateFilter);
+}
+
+// List Functions
+function activateList(data) {
+  const items = data.map((item) => ({
+    i: item.id,
+    lat: item.latitude,
+    lon: item.longitude,
+  }));
+
+  const listContainer = document.querySelector(".uui-blogsection01_list");
+  const listItems = listContainer.querySelectorAll(".uui-blogsection01_item:not(:first-child)");
+
+  listItems.forEach((div, index) => {
+    if (items[index]) {
+      div.setAttribute("data-id", items[index].i);
+      div.setAttribute("data-lonlat", `${items[index].lon},${items[index].lat}`);
+
+      div.addEventListener("mouseenter", (e) => {
+        cleanSelection();
+        div.classList.toggle("selected");
+        if (div.classList.contains("selected")) {
+          selectListToMap(div);
+        }
+      });
+
+      div.querySelector(".fly-to-marker").addEventListener("click", (e) => {
+        flyToMarker(div);
+      });
+    }
+  });
+}
+
+function selectListToMap(item) {
+  map.setLayoutProperty("point-layer", "icon-image", ["case", ["==", ["get", "id"], item.dataset.id], "restaurant+walk-active", ["get", "icon"]]);
+}
+
+function flyToMarker(item) {
+  map.flyTo({
+    center: item.dataset.lonlat.split(","),
+  });
+}
+
+function cleanSelection() {
+  const listSelected = document.querySelector(".uui-blogsection01_item.selected");
+  if (listSelected) {
+    listSelected.classList.remove("selected");
+  }
+}
+
+function selectMapToList(element) {
+  cleanSelection();
+  const listSelected = document.querySelector(`.uui-blogsection01_item[data-id="${element.properties.id}"]`);
+  listSelected.classList.add("selected");
+}
+
+// Search Functions
+function enableSearch() {
+  document.getElementById("email-form").style.visibility = "visible";
+
+  let debounceTimer;
+
+  locqueryInput.addEventListener("input", function () {
+    if (locqueryInput.value === "") return;
+
+    clearTimeout(debounceTimer);
+
+    debounceTimer = setTimeout(handleUserInput, 300);
+  });
+}
+
+async function handleUserInput() {
+  const { AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
+  const query = locqueryInput.value;
+
+  if (!query.trim()) {
+    console.warn("No input provided for Geocoding");
+    return;
+  }
+
+  let request = {
+    input: query,
+    language: "en-US",
+    region: "fr",
+  };
+
+  const token = new AutocompleteSessionToken();
+  request.sessionToken = token;
+
+  const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+
+  let predictions = [];
+
+  for (let suggestion of suggestions) {
+    const placePrediction = suggestion.placePrediction;
+    let place = await placePrediction.toPlace();
+    place.route = "";
+    await place.fetchFields({
+      fields: ["displayName", "addressComponents", "location"],
+    });
+
+    const addressComponents = place.addressComponents;
+
+    if (!addressComponents) {
+      console.log("No address components available.");
+      return null;
+    }
+
+    const getAddressComponent = (type) => {
+      const component = addressComponents.find((comp) => comp.types.includes(type));
+      return component ? component.longText : "";
+    };
+
+    predictions.push({
+      displayName: place.displayName,
+      location: {
+        lat: place.location?.lat(),
+        lng: place.location?.lng(),
+      },
+      formattedAddress: [getAddressComponent("route"), getAddressComponent("locality"), getAddressComponent("country")]
+        .filter((component) => component && component.trim() !== "")
+        .join(", "),
+    });
+  }
+
+  populateAutoSuggest(predictions);
+}
+
+// Autosuggest Functions
+function populateAutoSuggest(predictions) {
+  const autosuggestDiv = document.getElementById("autosuggest");
+  autosuggestDiv.innerHTML = "";
+
+  const ul = document.createElement("ul");
+
+  predictions.forEach((prediction) => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+            ${prediction.displayName} <span class="grey">${prediction.formattedAddress}</span>
+        `;
+    li.setAttribute("data-center", `${prediction.location.lat},${prediction.location.lng}`);
+    ul.appendChild(li);
+  });
+
+  const img = document.createElement("img");
+  img.className = "powered-by-google";
+  img.src = "https://storage.googleapis.com/geo-devrel-public-buckets/powered_by_google_on_white.png";
+  img.alt = "Powered by Google";
+  ul.appendChild(img);
+
+  ul.addEventListener("click", handleAutosuggestClick);
+
+  autosuggestDiv.appendChild(ul);
+}
+
+function handleAutosuggestClick(event) {
+  let clickedItem = event.target.closest("li");
+  if (clickedItem) {
+    const [lat, lng] = clickedItem.dataset.center.split(",");
+    document.getElementById("search").value = clickedItem.textContent;
+    map.flyTo({
+      center: [parseFloat(lng), parseFloat(lat)],
+      zoom: 12,
+    });
+    document.getElementById("autosuggest").innerHTML = "";
+  }
+}
+
+// Map Event Handlers
+function handlePointLayerClick(e) {
+  const features = getRenderedFeatures(e.point);
+  if (features.length) {
+    const element = features[0];
+    var coordinates = features[0].geometry.coordinates.slice();
+    var mag = features[0].properties.mag;
+    var main_image = features[0].properties.main_image;
+    var tsunami = features[0].properties.tsunami === 1 ? "yes" : "no";
+
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+      coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+
+    new maptilersdk.Popup({ offset: 20 })
+      .setLngLat(coordinates)
+      .setHTML(
+        `<div class="popup"><div class="popup-imgwrap"><img src="${main_image}" loading="lazy" alt="" class="popup-image"></div><div class="popup-txtwrap">${mag} and tsunami: ${tsunami}This is a small text but I&nbsp;am not sure if it is ok to have this here so big and tall what do you think.</div></div>`
+      )
+      .setMaxWidth("360px")
+      .addTo(map);
+
+    selectMapToList(element);
+  }
+}
+
+function handleClusterLayerClick(e) {
+  var features = map.queryRenderedFeatures(e.point, {
+    layers: ["cluster-layer"],
+  });
+  var clusterId = features[0].properties.cluster_id;
+  map.getSource("earthquakes").getClusterExpansionZoom(clusterId, function (err, zoom) {
+    if (err) return;
+    map.easeTo({
+      center: features[0].geometry.coordinates,
+      zoom: zoom,
+    });
+  });
+}
+
+function handleMapMoveEnd() {
+  showRefreshListButton();
+  if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
+    createListFromSource();
+  }
+}
+
+// Utility Functions
+function getRenderedFeatures(point) {
+  return map.queryRenderedFeatures(point, {
+    layers: ["point-layer"],
+  });
+}
+
+function showRefreshListButton() {
+  document.querySelector(".reload").classList.remove("hidden");
+}
+
+function createListFromSource() {
+  document.getElementById("loading-animation").style.display = "block";
+  document.getElementById("reload").classList.remove("hidden");
+  console.log("loading ON");
+  const features = getRenderedFeaturesInView("point-layer");
+
+  if (features.length) {
+    map.off("render", createListFromSource);
+    updateList();
+  }
+}
+
+function getRenderedFeaturesInView(layer) {
+  return map.queryRenderedFeatures({ layers: [layer] });
+}
+
+function updateList() {
+  const features = getRenderedFeatures();
+  const listItems = features.map((item) => item.properties.id);
+
+  const allCards = document.querySelectorAll("#cards .uui-blogsection01_item");
+
+  allCards.forEach((div) => {
+    const dataId = div.getAttribute("data-id");
+    if (listItems.includes(dataId)) {
+      div.classList.remove("hidden");
+    } else {
+      div.classList.add("hidden");
+    }
+  });
+
+  document.getElementById("loading-animation").style.display = "none";
+  document.getElementById("reload").classList.add("hidden");
+  console.log("loading OFF");
+  countVisibleCards();
+}
+
+function countVisibleCards() {
+  const visibleCards = document.querySelectorAll("#cards .uui-blogsection01_item:not(.hidden)");
+  const count = visibleCards.length;
+  updateCounter(count);
+}
+
+function updateCounter(count) {
+  fadeDiv("warning-updated", count);
+}
+
+function fadeDiv(divId, count) {
+  const fadeDiv = document.getElementById(divId);
+  fadeDiv.classList.add("fade-in-out");
+  setTimeout(() => {
+    fadeDiv.classList.remove("fade-in-out");
+  }, 2000);
+  setTimeout(() => {
+    $("#totalresults").html(`<b>${count}</b> results within map area`);
+  }, 1000);
+}
+
+// abusing the x-show  (see webflow on the card) functionality from framework.js to inject an id into the card
+function cardLoaded(card) {
+  //console.log("card loaded" + card.id);
+
+  return "#card-" + card.id;
+}
+
+// Event Listeners
+$("#search").on("input", function () {
+  $(this).val() ? $(this).addClass("has--value") : $(this).removeClass("has--value");
+});
+
+$("#clearsearch,#brand").on("click", function () {
+  $("#search").val("").trigger("input");
+  $fetch.triggerAction("get_todos");
+});
+
+document.querySelector(".list-toggle").addEventListener("click", function () {
+  document.querySelector(".uui-cta06_component").classList.toggle("expanded");
+  this.classList.toggle("active");
+});
+
+map.on("load", () => {
+  map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
+    if (error) throw error;
+    map.addImage("restaurant+walk", image);
+
+    map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk-active.png", (error, image) => {
+      if (error) throw error;
+      map.addImage("restaurant+walk-active", image);
+
+      map.loadImage(GOOGLE_BUCKET_URL + "/map/r-cluster.png", (error, image) => {
         if (error) throw error;
-        map.addImage("restaurant+walk-active", image);
+        map.addImage("r-cluster", image);
 
-        map.loadImage(GOOGLE_BUCKET_URL + "/map/r-cluster.png", (error, image) => {
+        map.loadImage(GOOGLE_BUCKET_URL + "/map/w-cluster.png", (error, image) => {
           if (error) throw error;
-          map.addImage("r-cluster", image);
-
-          map.loadImage(GOOGLE_BUCKET_URL + "/map/w-cluster.png", (error, image) => {
-            if (error) throw error;
-            map.addImage("w-cluster", image);
-            getData();
-          });
+          map.addImage("w-cluster", image);
+          getData();
         });
       });
     });
-
-    map.on("click", "point-layer", handlePointLayerClick);
-    map.on("click", "cluster-layer", handleClusterLayerClick);
-    map.on("mouseenter", "point-layer", () => {
-      map.getCanvas().style.cursor = "pointer";
-    });
-    map.on("mouseleave", "point-layer", () => {
-      map.getCanvas().style.cursor = "";
-    });
-    map.on("moveend", handleMapMoveEnd);
   });
-})();
+
+  map.on("click", "point-layer", handlePointLayerClick);
+  map.on("click", "cluster-layer", handleClusterLayerClick);
+  map.on("mouseenter", "point-layer", () => {
+    map.getCanvas().style.cursor = "pointer";
+  });
+  map.on("mouseleave", "point-layer", () => {
+    map.getCanvas().style.cursor = "";
+  });
+  map.on("moveend", handleMapMoveEnd);
+});
+
+// MAIN EXECUTION
+// Ensure DOM is ready and framework.js is fully loaded
+document.addEventListener("DOMContentLoaded", () => {
+  // Check if framework.js is already loaded
+  const frameworkScript = document.querySelector('script[src*="framework.js"]');
+  if (frameworkScript) {
+    if (frameworkScript.readyState === "complete" || frameworkScript.readyState === "loaded") {
+      // If already loaded, proceed immediately
+      initializeCardsComponent();
+      map = initializeMap();
+    } else {
+      // Otherwise, wait for it to load
+      frameworkScript.addEventListener("load", initializeCardsComponent);
+    }
+  } else {
+    console.error("framework.js script not found in the DOM.");
+  }
+});
+
+// Initialize the cards component once conditions are met
+function initializeCardsComponent() {
+  const cardsElement = document.getElementById("cards");
+  if (cardsElement) {
+    // Create and mount the cards component
+    $app.createComponent("cards", initialData).mount("#cards");
+    console.log("Cards component initialized.");
+  } else {
+    console.error("#cards element not found in the DOM.");
+  }
+}
