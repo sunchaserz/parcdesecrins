@@ -20,7 +20,7 @@ $app.createComponent("cards", { listings: [] }).mount("#cards");
 
 // Initialize map
 document.getElementById("map").style.visibility = "hidden";
-
+maptilersdk.config.apiKey = "fsCLuIQWGPlRskWhImQz";
 const map = new maptilersdk.Map({
   container: "map",
   zoom: 10.5,
