@@ -130,9 +130,9 @@ function handleSuccessfulDataFetch(data) {
     console.log("We have " + data.length + " results!");
     updateResultsDisplay(data);
     $app.components.cards.store.listings = data;
-    console.log("after");
     activateList(data);
     showResultsUI();
+    console.log("after");
     setupTagClickHandlers();
     const dataGeoJson = convertToGeoJson(data);
     loadCustomMarkersAndLayers(dataGeoJson);
