@@ -10,6 +10,7 @@ const googleBucketUrl = "https://storage.googleapis.com/parc_des_ecrins";
 const maptilerApiKey = "fsCLuIQWGPlRskWhImQz";
 const googleApiKey = "AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc";
 const btnDefaultValue = "Search";
+const iconSize = 0.6;
 
 // Bounding box for Parc des Ecrins
 const ecrinsBounds = [5.784014, 44.488283, 6.81118, 45.193431];
@@ -19,10 +20,10 @@ let geocoder;
 const filterGroup = document.getElementById("filter-group");
 const locqueryInput = document.getElementById("search");
 
-// ======= INITIALIZE COMPONENTS =======
+// Initialize data for cards component
 $app.createComponent("cards", { listings: [] }).mount("#cards");
 
-// ======= MAP SETUP =======
+// ======= MAP INITIALIZATION =======
 maptilersdk.config.apiKey = maptilerApiKey;
 
 const map = new maptilersdk.Map({
@@ -42,7 +43,7 @@ map.touchZoomRotate.disableRotation();
 
 // ======= FUNCTIONS =======
 
-// Load Google Maps API
+// Load Google Maps API for autocomplete
 function loadGoogleMapsAPI() {
   const script = document.createElement("script");
   script.src = `https://maps.googleapis.com/maps/api/js?key=${googleApiKey}&callback=mapsApiLoaded&v=weekly`;
@@ -56,7 +57,7 @@ function loadGoogleMapsAPI() {
   };
 }
 
-// Fetch data from Alphi.dev API and update map and cards
+// Fetch data from Alphi.dev API
 function getData() {
   $fetch.createAction("get_todos", {
     options: {
@@ -68,8 +69,7 @@ function getData() {
       onRequestInit: {
         callback: (options) => {
           console.log("Initializing API request");
-          document.getElementById("loading-animation").style.display = "block";
-          document.getElementById("btnSearch").value = "Searching...";
+          showLoading();
           const searchValue = locqueryInput.value.trim();
           if (searchValue) {
             options.url = `${alphiBaseUrl}?endpoint=home&name=${searchValue.toLowerCase()}`;
@@ -83,7 +83,7 @@ function getData() {
       onError: {
         callback: (error) => {
           console.error("Error fetching data:", error);
-          document.getElementById("btnSearch").value = btnDefaultValue;
+          hideLoading();
         },
       },
     },
@@ -92,7 +92,7 @@ function getData() {
 
 // Handle successful API response
 function handleApiSuccess(data) {
-  document.getElementById("btnSearch").value = btnDefaultValue;
+  hideLoading();
   if (data.length > 0) {
     console.log(`${data.length} results found`);
     updateUIWithData(data);
@@ -104,20 +104,19 @@ function handleApiSuccess(data) {
   }
 }
 
-// Update UI with fetched data
+// Update the UI with fetched data
 function updateUIWithData(data) {
   $app.components.cards.store.listings = data;
+  const searchValue = locqueryInput.value.trim();
+  document.getElementById("totalresults").innerHTML = `<b>${data.length}</b> result${data.length > 1 ? "s" : ""} ${
+    searchValue ? `for <b>"${searchValue}"</b>` : ""
+  }`;
   document.getElementById("no-results").style.display = "none";
   document.getElementById("cards").style.display = "block";
   document.getElementById("toolbar").style.display = "block";
-
-  const searchValue = locqueryInput.value.trim();
-  const resultsText = `${data.length} result${data.length > 1 ? "s" : ""}`;
-  const searchTermText = searchValue ? ` for <b>"${searchValue}"</b>` : "";
-  document.getElementById("totalresults").innerHTML = `<b>${resultsText}</b>${searchTermText}`;
 }
 
-// Display "No Results" UI
+// Display "No Results" message
 function displayNoResults() {
   console.log("No results found");
   document.getElementById("no-results").style.display = "block";
@@ -125,41 +124,31 @@ function displayNoResults() {
   document.getElementById("toolbar").style.display = "none";
 }
 
-// Convert data to GeoJSON format
+// Convert fetched data to GeoJSON
 function convertToGeoJson(data) {
   return {
     type: "FeatureCollection",
     features: data.map((item) => ({
       type: "Feature",
-      properties: {
-        id: item.id,
-        main_image: item.main_image,
-        icon: "restaurantz",
-      },
-      geometry: {
-        type: "Point",
-        coordinates: [item.longitude, item.latitude],
-      },
+      properties: { id: item.id, main_image: item.main_image, icon: "restaurantz" },
+      geometry: { type: "Point", coordinates: [item.longitude, item.latitude] },
     })),
   };
 }
 
-// Load custom markers and layers onto the map
+// Load markers and layers on the map
 function loadCustomMarkersAndLayers(dataGeoJson) {
   const customMarkers = getUniqueIcons(dataGeoJson);
-
-  // Clear existing layers
   clearMapLayers();
-
   customMarkers.forEach(({ name, path }) => {
     map.loadImage(path, (error, image) => {
       if (error) throw error;
       map.addImage(name, image);
-      createFilterCheckbox(name);
+      createCheckboxForFilter(name);
     });
   });
 
-  // Add GeoJSON source
+  // Add GeoJSON source and layers
   map.addSource("earthquakes", {
     type: "geojson",
     data: dataGeoJson,
@@ -167,11 +156,10 @@ function loadCustomMarkersAndLayers(dataGeoJson) {
     clusterMaxZoom: 14,
     clusterRadius: 50,
   });
-
   addMapLayers();
 }
 
-// Clear existing map layers and sources
+// Clear existing map layers
 function clearMapLayers() {
   ["cluster-layer", "point-layer", "cluster-count"].forEach((layer) => {
     if (map.getLayer(layer)) map.removeLayer(layer);
@@ -186,12 +174,8 @@ function addMapLayers() {
     type: "symbol",
     source: "earthquakes",
     filter: ["has", "point_count"],
-    layout: {
-      "icon-image": "r-cluster",
-      "icon-size": 0.6,
-    },
+    layout: { "icon-image": "r-cluster", "icon-size": iconSize },
   });
-
   map.addLayer({
     id: "point-layer",
     type: "symbol",
@@ -199,13 +183,13 @@ function addMapLayers() {
     filter: ["!", ["has", "point_count"]],
     layout: {
       "icon-image": ["get", "icon"],
-      "icon-size": 0.6,
+      "icon-size": iconSize,
       "icon-allow-overlap": true,
     },
   });
 }
 
-// Extract unique icons from GeoJSON data
+// Extract unique icons from GeoJSON
 function getUniqueIcons(dataGeoJson) {
   const iconSet = new Set(dataGeoJson.features.map((feature) => feature.properties.icon));
   return Array.from(iconSet).map((icon) => ({
@@ -214,15 +198,15 @@ function getUniqueIcons(dataGeoJson) {
   }));
 }
 
-// Create filter checkbox for icons
-function createFilterCheckbox(id) {
+// Create a filter checkbox for each icon
+function createCheckboxForFilter(id) {
   const input = document.createElement("input");
   input.type = "checkbox";
   input.id = id;
   input.checked = true;
 
   const label = document.createElement("label");
-  label.setAttribute("for", id);
+  label.htmlFor = id;
   label.textContent = id;
 
   input.addEventListener("change", updateFilters);
@@ -231,28 +215,35 @@ function createFilterCheckbox(id) {
   filterGroup.appendChild(label);
 }
 
-// Update filters based on checkbox state
+// Update map filters based on checkboxes
 function updateFilters() {
-  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
   const filterConditions = ["any"];
-  checkboxes.forEach((checkbox) => {
-    if (checkbox.checked) {
-      filterConditions.push(["==", ["get", "icon"], checkbox.id]);
-    }
+  document.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+    if (checkbox.checked) filterConditions.push(["==", ["get", "icon"], checkbox.id]);
   });
   map.setFilter("point-layer", filterConditions);
 }
 
-// Enable search input and autocomplete
+// Show loading animation
+function showLoading() {
+  document.getElementById("loading-animation").style.display = "block";
+  document.getElementById("btnSearch").value = "Searching...";
+}
+
+// Hide loading animation
+function hideLoading() {
+  document.getElementById("loading-animation").style.display = "none";
+  document.getElementById("btnSearch").value = btnDefaultValue;
+}
+
+// Enable search input with autocomplete
 function enableSearch() {
   locqueryInput.addEventListener("input", debounce(handleSearchInput, 300));
 }
 
 // Handle search input
 function handleSearchInput() {
-  const query = locqueryInput.value.trim();
-  if (!query) return;
-  handleUserInput(query);
+  if (locqueryInput.value.trim()) getData();
 }
 
 // Debounce utility
@@ -262,6 +253,11 @@ function debounce(func, delay) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), delay);
   };
+}
+
+// Card loaded helper
+function cardLoaded(card) {
+  return `#card-${card.id}`;
 }
 
 // ======= EVENT LISTENERS =======
