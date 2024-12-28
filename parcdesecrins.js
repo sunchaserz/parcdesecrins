@@ -131,6 +131,8 @@ function handleSuccessfulDataFetch(data) {
     updateResultsDisplay(data);
     console.log("before");
     console.log("Data before assignment:", data);
+    const names = data.map((item) => item.name);
+    console.log(names);
     $app.components.cards.store.listings = data;
     console.log("after");
     activateList(data);
