@@ -650,6 +650,7 @@ document.querySelector(".list-toggle").addEventListener("click", function () {
 // MAIN EXECUTION
 // Ensure DOM is ready and framework.js is fully loaded
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("DOM is ready and framework.js is fully loaded.");
   // Check if framework.js is already loaded
   const frameworkScript = document.querySelector('script[src*="framework.js"]');
   if (frameworkScript) {
