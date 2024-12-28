@@ -129,15 +129,10 @@ function handleSuccessfulDataFetch(data) {
   if (data.length > 0) {
     console.log("We have " + data.length + " results!");
     updateResultsDisplay(data);
-    console.log("Data fetched successfully");
     $app.components.cards.store.listings = data;
-
     activateList(data);
-
     showResultsUI();
-
     setupTagClickHandlers();
-
     const dataGeoJson = convertToGeoJson(data);
     loadCustomMarkersAndLayers(dataGeoJson);
     loadGoogleMapsAPI();
@@ -148,6 +143,7 @@ function handleSuccessfulDataFetch(data) {
 }
 
 function updateResultsDisplay(data) {
+  console.log("Data fetched successfully");
   let result_text = data.length == 1 ? "result" : "results";
   let result_searchterm =
     document.getElementById("search").value.toLowerCase() == "" ? "" : ' for <b>"' + document.getElementById("search").value.toLowerCase() + '"</b>';
