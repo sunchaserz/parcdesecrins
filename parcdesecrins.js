@@ -106,124 +106,124 @@ function getData() {
   $fetch.createAction("get_todos", {
     options: {
       method: "get",
+      //    "url": alphiBaseUrl + "?endpoint=home&name=" + searchterm,
       url: alphiBaseUrl,
-      headers: [{ key: "Content-Type", value: "application/json" }],
+      headers: [
+        {
+          key: "Content-Type",
+          value: "application/json",
+        },
+      ],
       body: [],
     },
     integrations: {
-      authentication: () => console.log("Triggered: " + document.getElementById("search").value),
+      authentication: console.log("triggered" + document.getElementById("search").value),
     },
     events: {
       onTrigger: {
-        callback: () => console.log("Triggering action for: " + document.getElementById("search").value),
+        callback: console.log("triggered for :" + document.getElementById("search").value),
       },
       onRequestInit: {
-        callback: async (options) => {
-          console.log("Initializing Alphi API request...");
-          toggleLoadingState(true);
+        callback: async (options, triggerEl) => {
+          console.log("Initializing alphi request");
+          // show/hide some stuff
+          document.getElementById("loading-animation").style.display = "block";
+          // document.getElementById('results').style.display = "none";
 
-          const searchValue = document.getElementById("search").value.trim();
-          if (searchValue) {
-            console.log("Search term entered. Adding it to the fetch URL.");
-            options.url = `${alphiBaseUrl}?endpoint=home&name=${searchValue.toLowerCase()}`;
+          // Change button text
+          document.getElementById("btnSearch").value = document.getElementById("btnSearch").dataset.wait;
+
+          //const id = triggerEl?.parentElement?.querySelector("[airtable-id]")?.textContent
+          if (document.getElementById("search").value !== "") {
+            console.log("searchterm entered and adding it to the fetch url");
+            // set the value dynamically
+            options.url = alphiBaseUrl + "?endpoint=home&name=" + document.getElementById("search").value.toLowerCase();
+
+            // return the updated options
+            return options;
           }
 
-          return options; // Return updated options
+          // searchterm empty so return all results (from initial options object)
+          return options;
         },
       },
       onSuccess: {
-        callback: async (_, data) => {
-          toggleLoadingState(false);
+        redirectUrl: null,
+        showElement: "#results",
+        hideElement: "#loading-animation",
+        callback: async (response, data) => {
+          // Change button text
+          document.getElementById("btnSearch").value = btnDefaultValue;
 
           if (data.length > 0) {
-            console.log(`Received ${data.length} results from the API.`);
+            // we have results, send to component
+            console.log("We have " + data.length + " results!");
+            console.log(data[0].link);
 
-            updateResultsText(data.length, document.getElementById("search").value);
+            // resultaat bar
+            let result_text = data.length == 1 ? "result" : "results";
+            let result_searchterm =
+              document.getElementById("search").value.toLowerCase() == ""
+                ? ""
+                : ' for <b>"' + document.getElementById("search").value.toLowerCase() + '"</b>';
+            $("#totalresults").html("<b>" + data.length + "</b> " + result_text + result_searchterm);
+
+            // PUT THE DATA INTO THE CARDS
             $app.components.cards.store.listings = data;
-            activateList(data);
+            activateList(data); // make cards clickable
 
-            // Show UI elements
-            toggleResultsVisibility(true);
+            // show/hide when all is ready for clicks
+            document.getElementById("no-results").style.display = "none";
+            document.getElementById("cards").style.display = "block";
+            document.getElementById("toolbar").style.display = "block";
 
-            // Attach click events to tags
-            attachTagClickHandlers();
+            // this needs to be here cause .tag is dynamic
+            $(".tag").on("click", function () {
+              $("#search").val($(this).text()).trigger("input"); // trigger is needed to trigger below input trigger function and add has--value class
+              $fetch.triggerAction("get_todos");
+            });
 
-            // Convert data to GeoJSON and update the map
-            const dataGeoJson = convertToGeoJson(data);
+            // THIS WORKS IF YOU HAVE THE GEOJSON ON GOOGLE BUCKET, but we dont need separate GeoJson for this
+            // we'll just create it on the fly from the data we got from Alphi
+            //const dataRes = await fetch(googleBucketUrl + '/map/data.geojson');
+            //const dataGeo = await dataRes.json();
+
+            // Convert the data we just got from Alphi into GeoJson format for the map
+            const dataGeoRaw =
+              `{"type": "FeatureCollection","crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },` +
+              `"features": [${data.map((item) => {
+                return `{ "type": "${item.type}", "properties": { "id": "${item.id}", "main_image": "${item.main_image}","mag": 1.43, "time": 1507424832518, "felt": null, "tsunami": 1, "icon" : "restaurantz" }, "geometry": { "type": "Point", "coordinates": [ ${item.longitude}, ${item.latitude} ] } }`;
+              })}]}`;
+
+            const dataGeoJson = JSON.parse(dataGeoRaw);
+
+            // PUT THE DATA INTO THE MAP
             loadCustomMarkersAndLayers(dataGeoJson);
-
-            // Load Google Maps API for geocoding
-            loadGoogleMapsAPI();
-            document.getElementById("map").style.visibility = "visible";
+            loadGoogleMapsAPI(); // load google maps api for geocoding search requests
+            document.getElementById("map").style.visibility = "visible"; // show map when all is loaded
           } else {
-            console.log("No results found.");
-            toggleResultsVisibility(false);
+            // 200 but no results
+            console.log("We have " + data.length + " results!");
+
+            // show/hide
+            document.getElementById("cards").style.display = "none";
+            document.getElementById("no-results").style.display = "block";
+            document.getElementById("toolbar").style.display = "none";
           }
         },
       },
       onError: {
-        callback: (response) => {
-          console.error("Error occurred:", response);
-          toggleLoadingState(false);
-        },
-      },
+        redirectUrl: null,
+        showElement: "#error",
+        hideElement: "#cards",
+        callback: async (response, data) => {
+          console.log("Error: " + response);
+          document.getElementById("btnSearch").value = document.getElementById("btnSearch").dataset.default;
+        }, // callback
+      }, // onError
     },
   });
-}
-
-// ===== Helper Functions =====
-
-function toggleLoadingState(isLoading) {
-  document.getElementById("loading-animation").style.display = isLoading ? "block" : "none";
-  document.getElementById("btnSearch").value = isLoading ? document.getElementById("btnSearch").dataset.wait : btnDefaultValue;
-}
-
-function updateResultsText(count, searchTerm) {
-  const resultText = count === 1 ? "result" : "results";
-  const searchTermText = searchTerm ? ` for <b>"${searchTerm.toLowerCase()}"</b>` : "";
-  document.getElementById("totalresults").innerHTML = `<b>${count}</b> ${resultText}${searchTermText}`;
-}
-
-function toggleResultsVisibility(show) {
-  document.getElementById("no-results").style.display = show ? "none" : "block";
-  document.getElementById("cards").style.display = show ? "block" : "none";
-  document.getElementById("toolbar").style.display = show ? "block" : "none";
-}
-
-function attachTagClickHandlers() {
-  $(".tag").on("click", function () {
-    const tagText = $(this).text();
-    $("#search").val(tagText).trigger("input");
-    $fetch.triggerAction("get_todos");
-  });
-}
-
-function convertToGeoJson(data) {
-  const geoJsonFeatures = data.map((item) => {
-    return {
-      type: "Feature",
-      properties: {
-        id: item.id,
-        main_image: item.main_image,
-        mag: 1.43,
-        time: 1507424832518,
-        felt: null,
-        tsunami: 1,
-        icon: "restaurantz",
-      },
-      geometry: {
-        type: "Point",
-        coordinates: [item.longitude, item.latitude],
-      },
-    };
-  });
-
-  return {
-    type: "FeatureCollection",
-    crs: { type: "name", properties: { name: "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-    features: geoJsonFeatures,
-  };
-}
+} // getData
 
 // Helper to display tags
 function createTagLink(tag) {
