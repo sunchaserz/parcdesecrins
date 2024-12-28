@@ -49,6 +49,39 @@ function initializeMap() {
     })
   );
 
+  map.on("load", () => {
+    map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
+      if (error) throw error;
+      map.addImage("restaurant+walk", image);
+
+      map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk-active.png", (error, image) => {
+        if (error) throw error;
+        map.addImage("restaurant+walk-active", image);
+
+        map.loadImage(GOOGLE_BUCKET_URL + "/map/r-cluster.png", (error, image) => {
+          if (error) throw error;
+          map.addImage("r-cluster", image);
+
+          map.loadImage(GOOGLE_BUCKET_URL + "/map/w-cluster.png", (error, image) => {
+            if (error) throw error;
+            map.addImage("w-cluster", image);
+            getData();
+          });
+        });
+      });
+    });
+
+    map.on("click", "point-layer", handlePointLayerClick);
+    map.on("click", "cluster-layer", handleClusterLayerClick);
+    map.on("mouseenter", "point-layer", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+    map.on("mouseleave", "point-layer", () => {
+      map.getCanvas().style.cursor = "";
+    });
+    map.on("moveend", handleMapMoveEnd);
+  });
+
   // Disable map rotation
   map.dragRotate.disable();
   map.keyboard.disable();
@@ -644,36 +677,3 @@ function initializeCardsComponent() {
     console.error("#cards element not found in the DOM.");
   }
 }
-
-map.on("load", () => {
-  map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
-    if (error) throw error;
-    map.addImage("restaurant+walk", image);
-
-    map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk-active.png", (error, image) => {
-      if (error) throw error;
-      map.addImage("restaurant+walk-active", image);
-
-      map.loadImage(GOOGLE_BUCKET_URL + "/map/r-cluster.png", (error, image) => {
-        if (error) throw error;
-        map.addImage("r-cluster", image);
-
-        map.loadImage(GOOGLE_BUCKET_URL + "/map/w-cluster.png", (error, image) => {
-          if (error) throw error;
-          map.addImage("w-cluster", image);
-          getData();
-        });
-      });
-    });
-  });
-
-  map.on("click", "point-layer", handlePointLayerClick);
-  map.on("click", "cluster-layer", handleClusterLayerClick);
-  map.on("mouseenter", "point-layer", () => {
-    map.getCanvas().style.cursor = "pointer";
-  });
-  map.on("mouseleave", "point-layer", () => {
-    map.getCanvas().style.cursor = "";
-  });
-  map.on("moveend", handleMapMoveEnd);
-});
