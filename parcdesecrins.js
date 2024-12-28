@@ -1,29 +1,30 @@
 /**
- * PARC DES ECRINS - MAP INTEGRATION
- * =================================
- * This script handles data fetching, rendering map layers, and interacting with a Webflow page.
+ * PARC DES ECRINS
+ * @author <THE ALLIANCE>
+ *
+ * This file handles loading and displaying data on the map and in cards.
+ * API keys are embedded in the code as requested.
  */
 
-// ======= CONSTANTS =======
+// ===== Constants =====
 const alphiBaseUrl = "https://live.api-server.io/run/v1/66ade5323b53b139de1ea229";
 const googleBucketUrl = "https://storage.googleapis.com/parc_des_ecrins";
 const maptilerApiKey = "fsCLuIQWGPlRskWhImQz";
 const googleApiKey = "AIzaSyDCeFfHwzjUWP2yZh7iTw1dGvAzG8cSLNc";
 const btnDefaultValue = "Search";
+const ecrinsBounds = [5.784014, 44.488283, 6.81118, 45.193431];
 const iconSize = 0.6;
 
-// Bounding box for Parc des Ecrins
-const ecrinsBounds = [5.784014, 44.488283, 6.81118, 45.193431];
-
-// ======= GLOBAL VARIABLES =======
+// ===== Global Variables =====
 let geocoder;
-const filterGroup = document.getElementById("filter-group");
-const locqueryInput = document.getElementById("search");
+let filterForPointLayer = ["any"];
+let filterForClusterLayer = ["all", ["has", "point_count"]];
 
-// Initialize data for cards component
+// ===== Initial Setup =====
 $app.createComponent("cards", { listings: [] }).mount("#cards");
+document.getElementById("map").style.visibility = "hidden";
 
-// ======= MAP INITIALIZATION =======
+// ===== Map Setup =====
 maptilersdk.config.apiKey = maptilerApiKey;
 
 const map = new maptilersdk.Map({
@@ -36,14 +37,13 @@ const map = new maptilersdk.Map({
   navigationControl: false,
 }).addControl(new maptilersdk.MaptilerNavigationControl({ showCompass: false }));
 
-// Disable unnecessary map interactions
 map.dragRotate.disable();
 map.keyboard.disable();
 map.touchZoomRotate.disableRotation();
 
-// ======= FUNCTIONS =======
+// ===== Main Functions =====
 
-// Load Google Maps API for autocomplete
+// Load Google Maps API for geocoding
 function loadGoogleMapsAPI() {
   const script = document.createElement("script");
   script.src = `https://maps.googleapis.com/maps/api/js?key=${googleApiKey}&callback=mapsApiLoaded&v=weekly`;
@@ -51,7 +51,6 @@ function loadGoogleMapsAPI() {
   document.head.appendChild(script);
 
   window.mapsApiLoaded = () => {
-    console.log("Google Maps API loaded successfully");
     geocoder = new google.maps.Geocoder();
     enableSearch();
   };
@@ -68,9 +67,8 @@ function getData() {
     events: {
       onRequestInit: {
         callback: (options) => {
-          console.log("Initializing API request");
           showLoading();
-          const searchValue = locqueryInput.value.trim();
+          const searchValue = document.getElementById("search").value.trim();
           if (searchValue) {
             options.url = `${alphiBaseUrl}?endpoint=home&name=${searchValue.toLowerCase()}`;
           }
@@ -107,21 +105,13 @@ function handleApiSuccess(data) {
 // Update the UI with fetched data
 function updateUIWithData(data) {
   $app.components.cards.store.listings = data;
-  const searchValue = locqueryInput.value.trim();
+  const searchValue = document.getElementById("search").value.trim();
   document.getElementById("totalresults").innerHTML = `<b>${data.length}</b> result${data.length > 1 ? "s" : ""} ${
     searchValue ? `for <b>"${searchValue}"</b>` : ""
   }`;
   document.getElementById("no-results").style.display = "none";
   document.getElementById("cards").style.display = "block";
   document.getElementById("toolbar").style.display = "block";
-}
-
-// Display "No Results" message
-function displayNoResults() {
-  console.log("No results found");
-  document.getElementById("no-results").style.display = "block";
-  document.getElementById("cards").style.display = "none";
-  document.getElementById("toolbar").style.display = "none";
 }
 
 // Convert fetched data to GeoJSON
@@ -136,10 +126,11 @@ function convertToGeoJson(data) {
   };
 }
 
-// Load markers and layers on the map
+// Load custom markers and layers onto the map
 function loadCustomMarkersAndLayers(dataGeoJson) {
   const customMarkers = getUniqueIcons(dataGeoJson);
   clearMapLayers();
+
   customMarkers.forEach(({ name, path }) => {
     map.loadImage(path, (error, image) => {
       if (error) throw error;
@@ -148,7 +139,6 @@ function loadCustomMarkersAndLayers(dataGeoJson) {
     });
   });
 
-  // Add GeoJSON source and layers
   map.addSource("earthquakes", {
     type: "geojson",
     data: dataGeoJson,
@@ -156,15 +146,8 @@ function loadCustomMarkersAndLayers(dataGeoJson) {
     clusterMaxZoom: 14,
     clusterRadius: 50,
   });
-  addMapLayers();
-}
 
-// Clear existing map layers
-function clearMapLayers() {
-  ["cluster-layer", "point-layer", "cluster-count"].forEach((layer) => {
-    if (map.getLayer(layer)) map.removeLayer(layer);
-  });
-  if (map.getSource("earthquakes")) map.removeSource("earthquakes");
+  addMapLayers();
 }
 
 // Add layers to the map
@@ -176,6 +159,7 @@ function addMapLayers() {
     filter: ["has", "point_count"],
     layout: { "icon-image": "r-cluster", "icon-size": iconSize },
   });
+
   map.addLayer({
     id: "point-layer",
     type: "symbol",
@@ -189,7 +173,15 @@ function addMapLayers() {
   });
 }
 
-// Extract unique icons from GeoJSON
+// Clear existing map layers
+function clearMapLayers() {
+  ["cluster-layer", "point-layer", "cluster-count"].forEach((layer) => {
+    if (map.getLayer(layer)) map.removeLayer(layer);
+  });
+  if (map.getSource("earthquakes")) map.removeSource("earthquakes");
+}
+
+// Get unique icons from GeoJSON
 function getUniqueIcons(dataGeoJson) {
   const iconSet = new Set(dataGeoJson.features.map((feature) => feature.properties.icon));
   return Array.from(iconSet).map((icon) => ({
@@ -198,7 +190,7 @@ function getUniqueIcons(dataGeoJson) {
   }));
 }
 
-// Create a filter checkbox for each icon
+// Create filter checkboxes
 function createCheckboxForFilter(id) {
   const input = document.createElement("input");
   input.type = "checkbox";
@@ -211,11 +203,11 @@ function createCheckboxForFilter(id) {
 
   input.addEventListener("change", updateFilters);
 
-  filterGroup.appendChild(input);
-  filterGroup.appendChild(label);
+  document.getElementById("filter-group").appendChild(input);
+  document.getElementById("filter-group").appendChild(label);
 }
 
-// Update map filters based on checkboxes
+// Update filters based on checkboxes
 function updateFilters() {
   const filterConditions = ["any"];
   document.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
@@ -223,6 +215,8 @@ function updateFilters() {
   });
   map.setFilter("point-layer", filterConditions);
 }
+
+// ===== Utility Functions =====
 
 // Show loading animation
 function showLoading() {
@@ -236,17 +230,19 @@ function hideLoading() {
   document.getElementById("btnSearch").value = btnDefaultValue;
 }
 
-// Enable search input with autocomplete
+// Display "No Results" message
+function displayNoResults() {
+  document.getElementById("no-results").style.display = "block";
+  document.getElementById("cards").style.display = "none";
+  document.getElementById("toolbar").style.display = "none";
+}
+
+// Enable search input
 function enableSearch() {
-  locqueryInput.addEventListener("input", debounce(handleSearchInput, 300));
+  document.getElementById("search").addEventListener("input", debounce(getData, 300));
 }
 
-// Handle search input
-function handleSearchInput() {
-  if (locqueryInput.value.trim()) getData();
-}
-
-// Debounce utility
+// Debounce helper function
 function debounce(func, delay) {
   let timeout;
   return (...args) => {
@@ -255,10 +251,13 @@ function debounce(func, delay) {
   };
 }
 
-// Card loaded helper
-function cardLoaded(card) {
-  return `#card-${card.id}`;
-}
-
-// ======= EVENT LISTENERS =======
+// ===== Event Listeners =====
 map.on("load", getData);
+map.on("click", "point-layer", (e) => {
+  const features = map.queryRenderedFeatures(e.point, { layers: ["point-layer"] });
+  if (features.length) {
+    const feature = features[0];
+    const coordinates = feature.geometry.coordinates.slice();
+    new maptilersdk.Popup().setLngLat(coordinates).setHTML(`<div>${feature.properties.main_image}</div>`).addTo(map);
+  }
+});
