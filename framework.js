@@ -124,26 +124,20 @@ var $app = (function (f) {
   const C = Object.create(null),
     b = (e, t, i, n, r) => J(e, t, `return(${i})`, n, r),
     J = (e, t, i, n, r) => {
-      console.log("Inputs to J:", { e, t, i, n, r });
       const o = C[i] || (C[i] = Q(i));
-      if (typeof o !== "function") {
-        console.error(`Generated value is not a function: ${o}`);
-        return;
-      }
       try {
         return o(e, t, n, r);
       } catch (c) {
-        console.error("Error during function call:", c);
-        throw c;
+        console.log("Value before accessing [0]:", someVariable);
+        console.log("Full object:", someParentObject);
+        console.error(c);
       }
     },
     Q = (e) => {
       try {
-        console.log("Generating function for:", e);
         return new Function("$store", "$scope", "$el", "$event", `with($scope){${e}}`);
       } catch (t) {
-        console.error("Invalid expression for function generation:", t.message);
-        return () => {};
+        return console.error(`${t.message} in expression: ${e}`), () => {};
       }
     };
   function tt(e, t = 100, i = !1) {
