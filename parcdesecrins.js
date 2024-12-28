@@ -614,6 +614,37 @@ document.querySelector(".list-toggle").addEventListener("click", function () {
   this.classList.toggle("active");
 });
 
+// MAIN EXECUTION
+// Ensure DOM is ready and framework.js is fully loaded
+document.addEventListener("DOMContentLoaded", () => {
+  // Check if framework.js is already loaded
+  const frameworkScript = document.querySelector('script[src*="framework.js"]');
+  if (frameworkScript) {
+    if (frameworkScript.readyState === "complete" || frameworkScript.readyState === "loaded") {
+      // If already loaded, proceed immediately
+      initializeCardsComponent();
+      map = initializeMap();
+    } else {
+      // Otherwise, wait for it to load
+      frameworkScript.addEventListener("load", initializeCardsComponent);
+    }
+  } else {
+    console.error("framework.js script not found in the DOM.");
+  }
+});
+
+// Initialize the cards component once conditions are met
+function initializeCardsComponent() {
+  const cardsElement = document.getElementById("cards");
+  if (cardsElement) {
+    // Create and mount the cards component
+    $app.createComponent("cards", initialData).mount("#cards");
+    console.log("Cards component initialized.");
+  } else {
+    console.error("#cards element not found in the DOM.");
+  }
+}
+
 map.on("load", () => {
   map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
     if (error) throw error;
@@ -646,34 +677,3 @@ map.on("load", () => {
   });
   map.on("moveend", handleMapMoveEnd);
 });
-
-// MAIN EXECUTION
-// Ensure DOM is ready and framework.js is fully loaded
-document.addEventListener("DOMContentLoaded", () => {
-  // Check if framework.js is already loaded
-  const frameworkScript = document.querySelector('script[src*="framework.js"]');
-  if (frameworkScript) {
-    if (frameworkScript.readyState === "complete" || frameworkScript.readyState === "loaded") {
-      // If already loaded, proceed immediately
-      initializeCardsComponent();
-      map = initializeMap();
-    } else {
-      // Otherwise, wait for it to load
-      frameworkScript.addEventListener("load", initializeCardsComponent);
-    }
-  } else {
-    console.error("framework.js script not found in the DOM.");
-  }
-});
-
-// Initialize the cards component once conditions are met
-function initializeCardsComponent() {
-  const cardsElement = document.getElementById("cards");
-  if (cardsElement) {
-    // Create and mount the cards component
-    $app.createComponent("cards", initialData).mount("#cards");
-    console.log("Cards component initialized.");
-  } else {
-    console.error("#cards element not found in the DOM.");
-  }
-}
