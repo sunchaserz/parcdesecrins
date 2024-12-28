@@ -59,6 +59,10 @@ map.keyboard.disable();
 map.touchZoomRotate.disableRotation();
 
 // === UTILITY FUNCTIONS ===
+
+/**
+ * Toggles the loading state of the application.
+ */
 function toggleLoadingState(isLoading) {
   const loadingAnimation = document.getElementById("loading-animation");
   const searchButton = document.getElementById("btnSearch");
@@ -67,23 +71,56 @@ function toggleLoadingState(isLoading) {
   searchButton.value = isLoading ? searchButton.dataset.wait || "Loading..." : btnDefaultValue;
 }
 
+/**
+ * Updates the results text based on the search results.
+ */
 function updateResultsText(count, searchTerm) {
   const resultText = count === 1 ? "result" : "results";
   const searchTermText = searchTerm ? ` for <b>"${searchTerm.toLowerCase()}"</b>` : "";
   document.getElementById("totalresults").innerHTML = `<b>${count}</b> ${resultText}${searchTermText}`;
 }
 
+/**
+ * Toggles the visibility of results elements.
+ */
 function toggleResultsVisibility(show) {
   document.getElementById("no-results").style.display = show ? "none" : "block";
   document.getElementById("cards").style.display = show ? "block" : "none";
   document.getElementById("toolbar").style.display = show ? "block" : "none";
 }
 
+/**
+ * Converts the fetched data into GeoJSON format.
+ */
+function convertToGeoJson(data) {
+  const geoJsonFeatures = data.map((item) => ({
+    type: "Feature",
+    properties: {
+      id: item.id,
+      main_image: item.main_image,
+      mag: 1.43,
+      time: 1507424832518,
+      felt: null,
+      tsunami: 1,
+      icon: "restaurantz",
+    },
+    geometry: {
+      type: "Point",
+      coordinates: [item.longitude, item.latitude],
+    },
+  }));
+
+  return {
+    type: "FeatureCollection",
+    crs: { type: "name", properties: { name: "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+    features: geoJsonFeatures,
+  };
+}
+
 // === MAP FUNCTIONALITY ===
 
 /**
- * Function: loadCustomMarkersAndLayers
- * Description: Converts GeoJSON data to markers and layers for the map.
+ * Loads custom markers and layers on the map.
  */
 async function loadCustomMarkersAndLayers(dataGeoJson) {
   // Clear existing layers and sources
@@ -107,12 +144,6 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
     cluster: true,
     clusterMaxZoom: 14,
     clusterRadius: 50,
-    clusterProperties: {
-      has_restaurant: ["any", ["==", ["get", "icon"], "restaurantz"], "false"],
-      has_walk: ["any", ["==", ["get", "icon"], "walk"], "false"],
-      only_restaurant: ["all", ["==", ["get", "icon"], "restaurantz"], "false"],
-      only_walk: ["all", ["==", ["get", "icon"], "walk"], "false"],
-    },
   });
 
   map.addLayer({
@@ -148,8 +179,7 @@ async function loadCustomMarkersAndLayers(dataGeoJson) {
 }
 
 /**
- * Function: getData
- * Description: Fetches data from Alphi.dev API and updates the map and cards.
+ * Fetches data from the Alphi API and updates the map and cards.
  */
 function getData() {
   $fetch.createAction("get_todos", {
@@ -193,17 +223,30 @@ function getData() {
   });
 }
 
-// === EVENT LISTENERS ===
+/**
+ * Adds event listeners for map interactions.
+ */
+function addMapListeners() {
+  map.on("load", () => {
+    console.log("Map loaded.");
+    getData();
+  });
 
-// When the map is loaded, fetch data
-map.on("load", () => {
-  console.log("Map loaded.");
-  getData();
-});
+  map.on("click", "point-layer", (e) => {
+    const features = map.queryRenderedFeatures(e.point, { layers: ["point-layer"] });
+    if (features.length) {
+      const feature = features[0];
+      new maptilersdk.Popup({ offset: 20 })
+        .setLngLat(feature.geometry.coordinates)
+        .setHTML(`<div class="popup">${feature.properties.id}</div>`)
+        .addTo(map);
+    }
+  });
 
-// Example of updating layers on map interactions
-map.on("moveend", () => {
-  console.log("Map moved.");
-});
+  map.on("moveend", () => {
+    console.log("Map moved.");
+  });
+}
 
-// === END ===
+// Call to add listeners
+addMapListeners();
