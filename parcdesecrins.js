@@ -10,8 +10,8 @@
 
 // Constants and Configurations
 // const ALPHI_BASE_URL = "https://live.api-server.io/run/v1/66ade5323b53b139de1ea229";
-const ALPHI_BASE_URL = "https://storage.googleapis.com/parc_des_ecrins/parcdesecrins-airtable-dump.json?cachebuster=1688047200";
 const GOOGLE_BUCKET_URL = "https://storage.googleapis.com/parc_des_ecrins";
+const AIRTABLE_DATA_URL = GOOGLE_BUCKET_URL + "parcdesecrins-airtable-dump.json";
 const ECRINS_BOUNDS = [5.784014, 44.488283, 6.81118, 45.193431];
 const ICON_SIZE = 0.6;
 const BTN_DEFAULT_VALUE = "Search";
@@ -77,7 +77,7 @@ function getData() {
   $fetch.createAction("get_todos", {
     options: {
       method: "get",
-      url: ALPHI_BASE_URL,
+      url: AIRTABLE_DATA_URL,
       headers: [{ key: "Content-Type", value: "application/json" }],
       body: [],
     },
@@ -96,7 +96,7 @@ function getData() {
 
           if (document.getElementById("search").value !== "") {
             console.log("searchterm entered and adding it to the fetch url");
-            options.url = ALPHI_BASE_URL + "?endpoint=home&name=" + document.getElementById("search").value.toLowerCase();
+            options.url = AIRTABLE_DATA_URL + "?endpoint=home&name=" + document.getElementById("search").value.toLowerCase();
           }
           return options;
         },
@@ -106,8 +106,6 @@ function getData() {
         showElement: "#results",
         hideElement: "#loading-animation",
         callback: async (response, data) => {
-          console.log("Success: " + response);
-          console.log(JSON.stringify(data, null, 2));
           handleSuccessfulDataFetch(data);
         },
       },
@@ -127,11 +125,6 @@ function getData() {
 // Helper Functions
 function handleSuccessfulDataFetch(data) {
   document.getElementById("btnSearch").value = BTN_DEFAULT_VALUE;
-
-  // convert data object to array
-  // const { data: dataArray } = data; // Extracts 'data' into a new variable
-
-  // console.log("dataArray: " + JSON.stringify(dataArray, null, 2));
 
   if (data.length > 0) {
     console.log("We have " + data.length + " results!");
@@ -453,9 +446,7 @@ function populateAutoSuggest(predictions) {
 
   predictions.forEach((prediction) => {
     const li = document.createElement("li");
-    li.innerHTML = `
-            ${prediction.displayName} <span class="grey">${prediction.formattedAddress}</span>
-        `;
+    li.innerHTML = `${prediction.displayName} <span class="grey">${prediction.formattedAddress}</span>`;
     li.setAttribute("data-center", `${prediction.location.lat},${prediction.location.lng}`);
     ul.appendChild(li);
   });
