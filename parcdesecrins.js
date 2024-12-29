@@ -106,6 +106,8 @@ function getData() {
         showElement: "#results",
         hideElement: "#loading-animation",
         callback: async (response, data) => {
+          console.log("Success: " + response);
+          console.log("Data: " + data);
           handleSuccessfulDataFetch(data);
         },
       },
