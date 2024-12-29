@@ -461,6 +461,7 @@ function populateAutoSuggest(predictions) {
   ul.addEventListener("click", handleAutosuggestClick);
 
   autosuggestDiv.appendChild(ul);
+  autosuggestDiv.style.visibility = "visible";
 }
 
 function handleAutosuggestClick(event) {
