@@ -448,6 +448,7 @@ function populateAutoSuggest(predictions) {
     const li = document.createElement("li");
     li.innerHTML = `${prediction.displayName} <span class="grey">${prediction.formattedAddress}</span>`;
     li.setAttribute("data-center", `${prediction.location.lat},${prediction.location.lng}`);
+    li.setAttribute("data-displayName", `${prediction.displayName}`);
     ul.appendChild(li);
   });
 
@@ -466,7 +467,7 @@ function handleAutosuggestClick(event) {
   let clickedItem = event.target.closest("li");
   if (clickedItem) {
     const [lat, lng] = clickedItem.dataset.center.split(",");
-    document.getElementById("search").value = clickedItem.textContent;
+    document.getElementById("search").value = clickedItem.dataset.displayName;
     map.flyTo({
       center: [parseFloat(lng), parseFloat(lat)],
       zoom: 12,
