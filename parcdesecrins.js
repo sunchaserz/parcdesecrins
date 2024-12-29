@@ -130,6 +130,7 @@ function handleSuccessfulDataFetch(data) {
 
   const { data: dataArray } = data; // Extracts 'data' into a new variable
   console.log("we found smeth" + dataArray.length); // Outputs: 6
+  console.log("dataArray: " + JSON.stringify(dataArray, null, 2));
 
   if (data.length > 0) {
     console.log("We have " + data.length + " results!");
