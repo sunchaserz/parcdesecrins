@@ -10,7 +10,7 @@
 
 // Constants and Configurations
 // const ALPHI_BASE_URL = "https://live.api-server.io/run/v1/66ade5323b53b139de1ea229";
-const ALPHI_BASE_URL = "https://storage.cloud.google.com/parc_des_ecrins/airtable-dump.json";
+const ALPHI_BASE_URL = "https://storage.googleapis.com/parc_des_ecrins/airtable-dump.json";
 const GOOGLE_BUCKET_URL = "https://storage.googleapis.com/parc_des_ecrins";
 const ECRINS_BOUNDS = [5.784014, 44.488283, 6.81118, 45.193431];
 const ICON_SIZE = 0.6;
