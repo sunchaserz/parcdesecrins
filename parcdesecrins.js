@@ -107,7 +107,7 @@ function getData() {
         hideElement: "#loading-animation",
         callback: async (response, data) => {
           console.log("Success: " + response);
-          console.log("data: " + JSON.stringify(data, null, 2));
+          console.log(JSON.stringify(data, null, 2));
           handleSuccessfulDataFetch(data);
         },
       },
