@@ -128,6 +128,9 @@ function getData() {
 function handleSuccessfulDataFetch(data) {
   document.getElementById("btnSearch").value = BTN_DEFAULT_VALUE;
 
+  const { data: dataArray } = data; // Extracts 'data' into a new variable
+  console.log("we found smeth" + dataArray.length); // Outputs: 6
+
   if (data.length > 0) {
     console.log("We have " + data.length + " results!");
     updateResultsDisplay(data);
