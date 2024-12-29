@@ -10,7 +10,7 @@
 
 // Constants and Configurations
 // const ALPHI_BASE_URL = "https://live.api-server.io/run/v1/66ade5323b53b139de1ea229";
-const ALPHI_BASE_URL = "https://storage.googleapis.com/parc_des_ecrins/airtable-dump.json?cachebuster=1688047200";
+const ALPHI_BASE_URL = "https://storage.googleapis.com/parc_des_ecrins/parcdesecrins-airtable-dump.json?cachebuster=1688047200";
 const GOOGLE_BUCKET_URL = "https://storage.googleapis.com/parc_des_ecrins";
 const ECRINS_BOUNDS = [5.784014, 44.488283, 6.81118, 45.193431];
 const ICON_SIZE = 0.6;
@@ -129,18 +129,18 @@ function handleSuccessfulDataFetch(data) {
   document.getElementById("btnSearch").value = BTN_DEFAULT_VALUE;
 
   // convert data object to array
-  const { data: dataArray } = data; // Extracts 'data' into a new variable
+  // const { data: dataArray } = data; // Extracts 'data' into a new variable
 
-  console.log("dataArray: " + JSON.stringify(dataArray, null, 2));
+  // console.log("dataArray: " + JSON.stringify(dataArray, null, 2));
 
-  if (dataArray.length > 0) {
-    console.log("We have " + dataArray.length + " results!");
-    updateResultsDisplay(dataArray);
-    $app.components.cards.store.listings = dataArray;
-    activateList(dataArray);
+  if (data.length > 0) {
+    console.log("We have " + data.length + " results!");
+    updateResultsDisplay(data);
+    $app.components.cards.store.listings = data;
+    activateList(data);
     showResultsUI();
     setupTagClickHandlers();
-    const dataGeoJson = convertToGeoJson(dataArray);
+    const dataGeoJson = convertToGeoJson(data);
     loadCustomMarkersAndLayers(dataGeoJson);
     loadGoogleMapsAPI();
     document.getElementById("map").style.visibility = "visible";
