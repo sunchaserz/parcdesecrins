@@ -128,18 +128,19 @@ function getData() {
 function handleSuccessfulDataFetch(data) {
   document.getElementById("btnSearch").value = BTN_DEFAULT_VALUE;
 
+  // convert data object to array
   const { data: dataArray } = data; // Extracts 'data' into a new variable
-  console.log("we found smeth" + dataArray.length); // Outputs: 6
+
   console.log("dataArray: " + JSON.stringify(dataArray, null, 2));
 
-  if (data.length > 0) {
-    console.log("We have " + data.length + " results!");
-    updateResultsDisplay(data);
-    $app.components.cards.store.listings = data;
-    activateList(data);
+  if (dataArray.length > 0) {
+    console.log("We have " + dataArray.length + " results!");
+    updateResultsDisplay(dataArray);
+    $app.components.cards.store.listings = dataArray;
+    activateList(dataArray);
     showResultsUI();
     setupTagClickHandlers();
-    const dataGeoJson = convertToGeoJson(data);
+    const dataGeoJson = convertToGeoJson(dataArray);
     loadCustomMarkersAndLayers(dataGeoJson);
     loadGoogleMapsAPI();
     document.getElementById("map").style.visibility = "visible";
