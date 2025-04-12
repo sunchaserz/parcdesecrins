@@ -518,13 +518,18 @@ function enableSearch() {
   // Update search icon and clear button based on input value
   function updateSearchUI() {
     const hasValue = DOM.search.value.trim() !== "";
-    const spyglassIcon = document.querySelector(".search-icon");
-    const clearIcon = document.querySelector(".clear-icon");
+    const spyglassIcon = document.querySelector("#search-icon");
+    const clearIcon = document.querySelector("#clear-icon");
     const clearSearchSvg = document.querySelector("#clearsearch svg");
 
     if (spyglassIcon && clearIcon) {
-      spyglassIcon.style.display = hasValue ? "none" : "block";
-      clearIcon.style.display = hasValue ? "block" : "none";
+      if (hasValue) {
+        spyglassIcon.style.display = "none";
+        clearIcon.style.display = "block";
+      } else {
+        spyglassIcon.style.display = "block";
+        clearIcon.style.display = "none";
+      }
     }
 
     if (DOM.clearSearch) {
@@ -546,7 +551,7 @@ function enableSearch() {
   });
 
   // Add click handler for clear icon
-  const clearIcon = document.querySelector(".clear-icon");
+  const clearIcon = document.querySelector("#clear-icon");
   if (clearIcon) {
     clearIcon.addEventListener("click", function (e) {
       e.preventDefault();
@@ -569,8 +574,8 @@ document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
     }
 
     // Force update UI after clear
-    const spyglassIcon = document.querySelector(".search-icon");
-    const clearIcon = document.querySelector(".clear-icon");
+    const spyglassIcon = document.querySelector("#search-icon");
+    const clearIcon = document.querySelector("#clear-icon");
     if (spyglassIcon && clearIcon) {
       spyglassIcon.style.display = "block";
       clearIcon.style.display = "none";
