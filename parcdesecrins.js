@@ -49,6 +49,7 @@ const DOM = {
   reload: document.querySelector(".reload"),
   listContainer: document.querySelector(".uui-blogsection01_list"),
   emailForm: document.getElementById("email-form"),
+  clearSearch: document.getElementById("clearsearch"),
 };
 
 // Global Variables
@@ -514,8 +515,8 @@ function enableSearch() {
 
   const debouncedHandleUserInput = debounce(handleUserInput, CONFIG.ui.debounceTime);
 
-  // Update search icon based on input value
-  function updateSearchIcon() {
+  // Update search icon and clear button based on input value
+  function updateSearchUI() {
     const hasValue = DOM.search.value.trim() !== "";
     const spyglassIcon = document.querySelector(".search-icon");
     const clearIcon = document.querySelector(".clear-icon");
@@ -524,13 +525,17 @@ function enableSearch() {
       spyglassIcon.style.display = hasValue ? "none" : "block";
       clearIcon.style.display = hasValue ? "block" : "none";
     }
+
+    if (DOM.clearSearch) {
+      DOM.clearSearch.style.display = hasValue ? "block" : "none";
+    }
   }
 
-  // Initialize icons state
-  updateSearchIcon();
+  // Initialize UI state
+  updateSearchUI();
 
   DOM.search.addEventListener("input", function () {
-    updateSearchIcon();
+    updateSearchUI();
     if (DOM.search.value === "") return;
     debouncedHandleUserInput();
   });
@@ -554,17 +559,19 @@ document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
   element.addEventListener("click", function () {
     DOM.search.value = "";
     DOM.search.dispatchEvent(new Event("input"));
-    // Replace $fetch.triggerAction with vanilla JS equivalent
     if (window.$fetch && window.$fetch.triggerAction) {
       window.$fetch.triggerAction("get_todos");
     }
 
-    // Force update icons after clear
+    // Force update UI after clear
     const spyglassIcon = document.querySelector(".search-icon");
     const clearIcon = document.querySelector(".clear-icon");
     if (spyglassIcon && clearIcon) {
       spyglassIcon.style.display = "block";
       clearIcon.style.display = "none";
+    }
+    if (DOM.clearSearch) {
+      DOM.clearSearch.style.display = "none";
     }
   });
 });
