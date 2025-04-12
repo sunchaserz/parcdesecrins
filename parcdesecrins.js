@@ -64,6 +64,35 @@ const initialData = { listings: [] };
 // Maptiler Configuration
 maptilersdk.config.apiKey = "fsCLuIQWGPlRskWhImQz";
 
+// Loading State Management
+class LoadingManager {
+  constructor() {
+    this.loadingCount = 0;
+  }
+
+  startLoading() {
+    this.loadingCount++;
+    if (this.loadingCount === 1) {
+      DOM.loadingAnimation.style.display = "block";
+    }
+  }
+
+  stopLoading() {
+    this.loadingCount = Math.max(0, this.loadingCount - 1);
+    if (this.loadingCount === 0) {
+      DOM.loadingAnimation.style.display = "none";
+    }
+  }
+
+  reset() {
+    this.loadingCount = 0;
+    DOM.loadingAnimation.style.display = "none";
+  }
+}
+
+// Initialize loading manager
+const loadingManager = new LoadingManager();
+
 // Map Initialization
 function initializeMap() {
   document.getElementById("map").style.visibility = "hidden";
@@ -174,14 +203,14 @@ function updateFilter() {
   }
 }
 
-// Update getData to use MapDataManager
+// Update getData to use loading manager
 async function getData() {
   try {
     if (!window.mapDataManager) {
       window.mapDataManager = new MapDataManager();
     }
 
-    DOM.loadingAnimation.style.display = "block";
+    loadingManager.startLoading();
     DOM.btnSearch.value = DOM.btnSearch.dataset.wait;
 
     const url =
@@ -192,7 +221,7 @@ async function getData() {
   } catch (error) {
     console.error("Error fetching data:", error);
     DOM.btnSearch.value = DOM.btnSearch.dataset.default;
-    DOM.loadingAnimation.style.display = "none";
+    loadingManager.reset();
   }
 }
 
@@ -214,6 +243,7 @@ function handleSuccessfulDataFetch(data) {
   } else {
     showNoResultsUI();
   }
+  loadingManager.stopLoading();
 }
 
 function updateResultsDisplay(data) {
@@ -266,6 +296,8 @@ function getUniqueIcons(dataGeoJson) {
 
 function loadCustomMarkersAndLayers(dataGeoJson) {
   const customMarkers = getUniqueIcons(dataGeoJson);
+  let loadedImages = 0;
+  const totalImages = customMarkers.length;
 
   // Clear existing layers and sources
   ["cluster-layer", "point-layer", "cluster-count", "unclustered-point"].forEach((layer) => {
@@ -276,9 +308,20 @@ function loadCustomMarkersAndLayers(dataGeoJson) {
   // Load custom marker icons
   customMarkers.forEach((marker) => {
     map.loadImage(marker.path, (error, image) => {
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading image:", error);
+        loadedImages++;
+        if (loadedImages === totalImages) {
+          loadingManager.stopLoading();
+        }
+        return;
+      }
       map.addImage(marker.name, image);
       createCheckboxesNew(marker.name);
+      loadedImages++;
+      if (loadedImages === totalImages) {
+        loadingManager.stopLoading();
+      }
     });
   });
 
@@ -440,7 +483,7 @@ function waitForElement(selector) {
   });
 }
 
-// Update cleanup to include MapDataManager
+// Update cleanup to reset loading state
 function cleanup() {
   if (window._elementObserver) {
     window._elementObserver.disconnect();
@@ -451,6 +494,7 @@ function cleanup() {
   if (window.mapDataManager) {
     window.mapDataManager.clearCache();
   }
+  loadingManager.reset();
   map?.remove();
 }
 
@@ -796,3 +840,29 @@ main().catch((error) => {
 
 // Add cleanup on page unload
 window.addEventListener("unload", cleanup);
+
+// List Selection Functions
+function cleanSelection() {
+  const listSelected = document.querySelector(".uui-blogsection01_item.selected");
+  if (listSelected) {
+    listSelected.classList.remove("selected");
+  }
+}
+
+function selectListToMap(item) {
+  map.setLayoutProperty("point-layer", "icon-image", ["case", ["==", ["get", "id"], item.dataset.id], "restaurant+walk-active", ["get", "icon"]]);
+}
+
+function flyToMarker(item) {
+  map.flyTo({
+    center: item.dataset.lonlat.split(","),
+  });
+}
+
+function selectMapToList(element) {
+  cleanSelection();
+  const listSelected = document.querySelector(`.uui-blogsection01_item[data-id="${element.properties.id}"]`);
+  if (listSelected) {
+    listSelected.classList.add("selected");
+  }
+}
