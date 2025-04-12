@@ -232,7 +232,9 @@ function handleSuccessfulDataFetch(data) {
   if (data.length > 0) {
     console.log("We have " + data.length + " results!");
     updateResultsDisplay(data);
-    $app.components.cards.store.listings = data;
+    if (window.$app && window.$app.components && window.$app.components.cards) {
+      window.$app.components.cards.store.listings = data;
+    }
     activateList(data);
     showResultsUI();
     setupTagClickHandlers();
@@ -247,9 +249,10 @@ function handleSuccessfulDataFetch(data) {
 }
 
 function updateResultsDisplay(data) {
-  let result_text = data.length == 1 ? "result" : "results";
-  let result_searchterm = DOM.search.value.toLowerCase() == "" ? "" : ' for <b>"' + DOM.search.value.toLowerCase() + '"</b>';
-  DOM.totalResults.innerHTML = "<b>" + data.length + "</b> " + result_text + result_searchterm;
+  const resultText = data.length === 1 ? "result" : "results";
+  const resultSearchTerm = DOM.search.value.toLowerCase() === "" ? "" : ` for <b>"${DOM.search.value.toLowerCase()}"</b>`;
+
+  DOM.totalResults.innerHTML = `<b>${data.length}</b> ${resultText}${resultSearchTerm}`;
 }
 
 function showResultsUI() {
@@ -265,9 +268,14 @@ function showNoResultsUI() {
 }
 
 function setupTagClickHandlers() {
-  $(".tag").on("click", function () {
-    DOM.search.val($(this).text()).trigger("input");
-    $fetch.triggerAction("get_todos");
+  document.querySelectorAll(".tag").forEach((tag) => {
+    tag.addEventListener("click", function () {
+      DOM.search.value = this.textContent;
+      DOM.search.dispatchEvent(new Event("input"));
+      if (window.$fetch && window.$fetch.triggerAction) {
+        window.$fetch.triggerAction("get_todos");
+      }
+    });
   });
 }
 
@@ -534,24 +542,31 @@ function enableSearch() {
       e.preventDefault();
       DOM.search.value = "";
       DOM.search.dispatchEvent(new Event("input"));
-      $fetch.triggerAction("get_todos");
+      if (window.$fetch && window.$fetch.triggerAction) {
+        window.$fetch.triggerAction("get_todos");
+      }
     });
   }
 }
 
 // Update clear search button click handler
-$("#clearsearch,#brand").on("click", function () {
-  DOM.search.value = "";
-  DOM.search.dispatchEvent(new Event("input"));
-  $fetch.triggerAction("get_todos");
+document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
+  element.addEventListener("click", function () {
+    DOM.search.value = "";
+    DOM.search.dispatchEvent(new Event("input"));
+    // Replace $fetch.triggerAction with vanilla JS equivalent
+    if (window.$fetch && window.$fetch.triggerAction) {
+      window.$fetch.triggerAction("get_todos");
+    }
 
-  // Force update icons after clear
-  const spyglassIcon = document.querySelector(".search-icon");
-  const clearIcon = document.querySelector(".clear-icon");
-  if (spyglassIcon && clearIcon) {
-    spyglassIcon.style.display = "block";
-    clearIcon.style.display = "none";
-  }
+    // Force update icons after clear
+    const spyglassIcon = document.querySelector(".search-icon");
+    const clearIcon = document.querySelector(".clear-icon");
+    if (spyglassIcon && clearIcon) {
+      spyglassIcon.style.display = "block";
+      clearIcon.style.display = "none";
+    }
+  });
 });
 
 async function handleUserInput() {
@@ -778,14 +793,9 @@ DOM.search.addEventListener("input", function () {
   this.value ? this.classList.add("has--value") : this.classList.remove("has--value");
 });
 
-$("#clearsearch,#brand").on("click", function () {
-  DOM.search.value = "";
-  DOM.search.dispatchEvent(new Event("input"));
-  $fetch.triggerAction("get_todos");
-});
-
-document.querySelector(".list-toggle").addEventListener("click", function () {
-  document.querySelector(".uui-cta06_component").classList.toggle("expanded");
+// Update list toggle
+document.querySelector(".list-toggle")?.addEventListener("click", function () {
+  document.querySelector(".uui-cta06_component")?.classList.toggle("expanded");
   this.classList.toggle("active");
 });
 
