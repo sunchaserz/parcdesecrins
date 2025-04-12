@@ -517,6 +517,7 @@ function enableSearch() {
 
   // Update search icon and clear button based on input value
   function updateSearchUI() {
+    console.log("updateSearchUI");
     const hasValue = DOM.search.value.trim() !== "";
     const emailValue = document.querySelector('input[name="Email-3"]')?.value.trim() || "";
     const spyglassIcon = document.querySelector("#spyglass");
