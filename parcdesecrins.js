@@ -919,6 +919,12 @@ async function loadMapImages() {
 // Main Execution
 async function main() {
   try {
+    // Hide menu-tabs immediately on page load
+    const menuTabs = document.querySelector(".menu-tabs.w-form");
+    if (menuTabs) {
+      menuTabs.style.display = "none";
+    }
+
     await initializeCardsComponent();
     map = initializeMap();
     window.listManager = new ListManager();
@@ -953,6 +959,14 @@ main().catch((error) => {
 
 // Add cleanup on page unload
 window.addEventListener("unload", cleanup);
+
+// Add initial hide on page load
+document.addEventListener("DOMContentLoaded", function () {
+  const menuTabs = document.querySelector(".menu-tabs.w-form");
+  if (menuTabs) {
+    menuTabs.style.display = "none";
+  }
+});
 
 // List Selection Functions
 function cleanSelection() {
