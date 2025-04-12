@@ -522,6 +522,7 @@ function enableSearch() {
     const spyglassIcon = document.querySelector("#spyglass");
     const clearSearch = document.querySelector("#clearsearch");
     const clearSearchSvg = document.querySelector("#clearsearch svg");
+    const spyglassSvg = document.querySelector("#spyglass svg");
 
     console.log("hasValue", hasValue);
 
@@ -542,6 +543,11 @@ function enableSearch() {
         clearSearchSvg.style.width = "100%";
         clearSearchSvg.style.height = "100%";
       }
+    }
+
+    if (spyglassIcon && spyglassSvg) {
+      spyglassSvg.style.width = "100%";
+      spyglassSvg.style.height = "100%";
     }
   }
 
@@ -587,6 +593,7 @@ document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
     // Force update UI after clear
     const spyglassIcon = document.querySelector("#spyglass");
     const clearSearch = document.querySelector("#clearsearch");
+    const spyglassSvg = document.querySelector("#spyglass svg");
     if (spyglassIcon && clearSearch) {
       spyglassIcon.style.display = "block";
       clearSearch.style.display = "none";
@@ -598,6 +605,10 @@ document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
         clearSearchSvg.style.width = "100%";
         clearSearchSvg.style.height = "100%";
       }
+    }
+    if (spyglassSvg) {
+      spyglassSvg.style.width = "100%";
+      spyglassSvg.style.height = "100%";
     }
   });
 });
