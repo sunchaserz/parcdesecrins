@@ -520,6 +520,7 @@ function enableSearch() {
     const hasValue = DOM.search.value.trim() !== "";
     const spyglassIcon = document.querySelector(".search-icon");
     const clearIcon = document.querySelector(".clear-icon");
+    const clearSearchSvg = document.querySelector("#clearsearch svg");
 
     if (spyglassIcon && clearIcon) {
       spyglassIcon.style.display = hasValue ? "none" : "block";
@@ -528,6 +529,10 @@ function enableSearch() {
 
     if (DOM.clearSearch) {
       DOM.clearSearch.style.display = hasValue ? "block" : "none";
+      if (clearSearchSvg) {
+        clearSearchSvg.style.width = "100%";
+        clearSearchSvg.style.height = "100%";
+      }
     }
   }
 
@@ -572,6 +577,11 @@ document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
     }
     if (DOM.clearSearch) {
       DOM.clearSearch.style.display = "none";
+      const clearSearchSvg = document.querySelector("#clearsearch svg");
+      if (clearSearchSvg) {
+        clearSearchSvg.style.width = "100%";
+        clearSearchSvg.style.height = "100%";
+      }
     }
   });
 });
