@@ -524,6 +524,7 @@ function enableSearch() {
     const clearSearchSvg = document.querySelector("#clearsearch svg");
 
     if (spyglassIcon && clearIcon) {
+      console.log("hasValue", hasValue);
       if (hasValue || emailValue) {
         spyglassIcon.style.display = "none";
         clearIcon.style.display = "block";
