@@ -518,7 +518,7 @@ function enableSearch() {
   // Update search icon and clear button based on input value
   function updateSearchUI() {
     const hasValue = DOM.search.value.trim() !== "";
-    const spyglassIcon = document.querySelector("#search-icon");
+    const spyglassIcon = document.querySelector(".f-field-icon-r.w-embed");
     const clearIcon = document.querySelector("#clear-icon");
     const clearSearchSvg = document.querySelector("#clearsearch svg");
 
@@ -574,7 +574,7 @@ document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
     }
 
     // Force update UI after clear
-    const spyglassIcon = document.querySelector("#search-icon");
+    const spyglassIcon = document.querySelector(".f-field-icon-r.w-embed");
     const clearIcon = document.querySelector("#clear-icon");
     if (spyglassIcon && clearIcon) {
       spyglassIcon.style.display = "block";
