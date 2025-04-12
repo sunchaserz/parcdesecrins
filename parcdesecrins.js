@@ -520,23 +520,24 @@ function enableSearch() {
     const hasValue = DOM.search.value.trim() !== "";
     const emailValue = document.querySelector('input[name="Email-3"]')?.value.trim() || "";
     const spyglassIcon = document.querySelector("#spyglass");
-    const clearIcon = document.querySelector("#clear-icon");
+    const clearSearch = document.querySelector("#clearsearch");
     const clearSearchSvg = document.querySelector("#clearsearch svg");
+
     console.log("hasValue", hasValue);
 
-    if (spyglassIcon && clearIcon) {
+    if (spyglassIcon && clearSearch) {
       console.log("hasValue", hasValue);
       if (hasValue || emailValue) {
         spyglassIcon.style.display = "none";
-        clearIcon.style.display = "block";
+        clearSearch.style.display = "block";
       } else {
         spyglassIcon.style.display = "block";
-        clearIcon.style.display = "none";
+        clearSearch.style.display = "none";
       }
     }
 
-    if (DOM.clearSearch) {
-      DOM.clearSearch.style.display = hasValue ? "block" : "none";
+    if (clearSearch) {
+      clearSearch.style.display = hasValue ? "block" : "none";
       if (clearSearchSvg) {
         clearSearchSvg.style.width = "100%";
         clearSearchSvg.style.height = "100%";
@@ -560,10 +561,10 @@ function enableSearch() {
     debouncedHandleUserInput();
   });
 
-  // Add click handler for clear icon
-  const clearIcon = document.querySelector("#clear-icon");
-  if (clearIcon) {
-    clearIcon.addEventListener("click", function (e) {
+  // Add click handler for clear search
+  const clearSearch = document.querySelector("#clearsearch");
+  if (clearSearch) {
+    clearSearch.addEventListener("click", function (e) {
       e.preventDefault();
       DOM.search.value = "";
       DOM.search.dispatchEvent(new Event("input"));
@@ -585,13 +586,13 @@ document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
 
     // Force update UI after clear
     const spyglassIcon = document.querySelector("#spyglass");
-    const clearIcon = document.querySelector("#clear-icon");
-    if (spyglassIcon && clearIcon) {
+    const clearSearch = document.querySelector("#clearsearch");
+    if (spyglassIcon && clearSearch) {
       spyglassIcon.style.display = "block";
-      clearIcon.style.display = "none";
+      clearSearch.style.display = "none";
     }
-    if (DOM.clearSearch) {
-      DOM.clearSearch.style.display = "none";
+    if (clearSearch) {
+      clearSearch.style.display = "none";
       const clearSearchSvg = document.querySelector("#clearsearch svg");
       if (clearSearchSvg) {
         clearSearchSvg.style.width = "100%";
