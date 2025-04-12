@@ -8,13 +8,47 @@
  * MAIN EXECUTION is at the bottom of the file - the map load kicks everything off
  */
 
-// Constants and Configurations
-// const ALPHI_BASE_URL = "https://live.api-server.io/run/v1/66ade5323b53b139de1ea229";
-const GOOGLE_BUCKET_URL = "https://storage.googleapis.com/parc_des_ecrins";
-const AIRTABLE_DATA_URL = GOOGLE_BUCKET_URL + "/parcdesecrins-airtable-dump.json";
-const ECRINS_BOUNDS = [5.784014, 44.488283, 6.81118, 45.193431];
-const ICON_SIZE = 0.6;
-const BTN_DEFAULT_VALUE = "Search";
+// Configuration
+const CONFIG = {
+  urls: {
+    googleBucket: "https://storage.googleapis.com/parc_des_ecrins",
+    airtableData: "https://storage.googleapis.com/parc_des_ecrins/parcdesecrins-airtable-dump.json",
+    mapImages: {
+      restaurantWalk: "/map/restaurant+walk.png",
+      restaurantWalkActive: "/map/restaurant+walk-active.png",
+      rCluster: "/map/r-cluster.png",
+      wCluster: "/map/w-cluster.png",
+    },
+  },
+  map: {
+    bounds: [5.784014, 44.488283, 6.81118, 45.193431],
+    center: [6.079625696485338, 45.05582527284327],
+    zoom: 10.5,
+    style: "b80bd75b-379c-45e4-9006-643ba8aa190e",
+    iconSize: 0.6,
+  },
+  ui: {
+    btnDefaultValue: "Search",
+    debounceTime: 300,
+    fadeTimeout: 2000,
+    updateTimeout: 1000,
+  },
+};
+
+// DOM Elements Cache
+const DOM = {
+  search: document.getElementById("search"),
+  loadingAnimation: document.getElementById("loading-animation"),
+  btnSearch: document.getElementById("btnSearch"),
+  cards: document.getElementById("cards"),
+  toolbar: document.getElementById("toolbar"),
+  noResults: document.getElementById("no-results"),
+  filterGroup: document.getElementById("filter-group"),
+  autosuggest: document.getElementById("autosuggest"),
+  totalResults: document.getElementById("totalresults"),
+  reload: document.querySelector(".reload"),
+  listContainer: document.querySelector(".uui-blogsection01_list"),
+};
 
 // Global Variables
 let geocoder;
@@ -22,10 +56,6 @@ let searchterm = "";
 let filterForPointLayer = ["any"];
 let filterForClusterLayer = ["all", ["has", "point_count"]];
 let map;
-
-// DOM Elements
-const locqueryInput = document.getElementById("search");
-const filterGroup = document.getElementById("filter-group");
 
 // Initial data for the Cards component
 const initialData = { listings: [] };
@@ -72,59 +102,87 @@ function loadGoogleMapsAPI() {
   };
 }
 
-// Data Fetching
-function getData() {
-  $fetch.createAction("get_todos", {
-    options: {
-      method: "get",
-      url: AIRTABLE_DATA_URL,
-      headers: [{ key: "Content-Type", value: "application/json" }],
-      body: [],
-    },
-    integrations: {
-      authentication: console.log("triggered" + document.getElementById("search").value),
-    },
-    events: {
-      onTrigger: {
-        callback: console.log("triggered for :" + document.getElementById("search").value),
-      },
-      onRequestInit: {
-        callback: async (options, triggerEl) => {
-          console.log("Initializing alphi request");
-          document.getElementById("loading-animation").style.display = "block";
-          document.getElementById("btnSearch").value = document.getElementById("btnSearch").dataset.wait;
+// Map Data Management
+class MapDataManager {
+  constructor() {
+    this.cache = new Map();
+    this.currentFilter = null;
+  }
 
-          if (document.getElementById("search").value !== "") {
-            console.log("searchterm entered and adding it to the fetch url");
-            options.url = AIRTABLE_DATA_URL + "?endpoint=home&name=" + document.getElementById("search").value.toLowerCase();
-          }
-          return options;
-        },
-      },
-      onSuccess: {
-        redirectUrl: null,
-        showElement: "#results",
-        hideElement: "#loading-animation",
-        callback: async (response, data) => {
-          handleSuccessfulDataFetch(data);
-        },
-      },
-      onError: {
-        redirectUrl: null,
-        showElement: "#error",
-        hideElement: "#cards",
-        callback: async (response, data) => {
-          console.log("Error: " + response);
-          document.getElementById("btnSearch").value = document.getElementById("btnSearch").dataset.default;
-        },
-      },
-    },
-  });
+  async fetchData(url) {
+    if (this.cache.has(url)) {
+      return this.cache.get(url);
+    }
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      this.cache.set(url, data);
+      return data;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      throw error;
+    }
+  }
+
+  updateFilter(filter) {
+    this.currentFilter = filter;
+    if (map && map.getSource("earthquakes")) {
+      map.setFilter("point-layer", filter);
+    }
+  }
+
+  clearCache() {
+    this.cache.clear();
+  }
+}
+
+// Update filter functions
+function updateFilter() {
+  filterForPointLayer.length = 1;
+  filterForClusterLayer.length = 2;
+
+  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+  const checkedTypes = Array.from(checkboxes)
+    .filter((checkbox) => checkbox.checked)
+    .map((checkbox) => checkbox.id);
+
+  if (checkedTypes.length === 0) {
+    filterForPointLayer = ["any"];
+  } else {
+    filterForPointLayer = ["any", ...checkedTypes.map((type) => ["==", ["get", "icon"], type])];
+  }
+
+  if (window.mapDataManager) {
+    window.mapDataManager.updateFilter(filterForPointLayer);
+  }
+}
+
+// Update getData to use MapDataManager
+async function getData() {
+  try {
+    if (!window.mapDataManager) {
+      window.mapDataManager = new MapDataManager();
+    }
+
+    DOM.loadingAnimation.style.display = "block";
+    DOM.btnSearch.value = DOM.btnSearch.dataset.wait;
+
+    const url =
+      DOM.search.value !== "" ? `${CONFIG.urls.airtableData}?endpoint=home&name=${DOM.search.value.toLowerCase()}` : CONFIG.urls.airtableData;
+
+    const data = await window.mapDataManager.fetchData(url);
+    handleSuccessfulDataFetch(data);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    DOM.btnSearch.value = DOM.btnSearch.dataset.default;
+    DOM.loadingAnimation.style.display = "none";
+  }
 }
 
 // Helper Functions
 function handleSuccessfulDataFetch(data) {
-  document.getElementById("btnSearch").value = BTN_DEFAULT_VALUE;
+  DOM.btnSearch.value = CONFIG.ui.btnDefaultValue;
 
   if (data.length > 0) {
     console.log("We have " + data.length + " results!");
@@ -144,26 +202,25 @@ function handleSuccessfulDataFetch(data) {
 
 function updateResultsDisplay(data) {
   let result_text = data.length == 1 ? "result" : "results";
-  let result_searchterm =
-    document.getElementById("search").value.toLowerCase() == "" ? "" : ' for <b>"' + document.getElementById("search").value.toLowerCase() + '"</b>';
-  $("#totalresults").html("<b>" + data.length + "</b> " + result_text + result_searchterm);
+  let result_searchterm = DOM.search.value.toLowerCase() == "" ? "" : ' for <b>"' + DOM.search.value.toLowerCase() + '"</b>';
+  DOM.totalResults.innerHTML = "<b>" + data.length + "</b> " + result_text + result_searchterm;
 }
 
 function showResultsUI() {
-  document.getElementById("no-results").style.display = "none";
-  document.getElementById("cards").style.display = "block";
-  document.getElementById("toolbar").style.display = "block";
+  DOM.noResults.style.display = "none";
+  DOM.cards.style.display = "block";
+  DOM.toolbar.style.display = "block";
 }
 
 function showNoResultsUI() {
-  document.getElementById("cards").style.display = "none";
-  document.getElementById("no-results").style.display = "block";
-  document.getElementById("toolbar").style.display = "none";
+  DOM.cards.style.display = "none";
+  DOM.noResults.style.display = "block";
+  DOM.toolbar.style.display = "none";
 }
 
 function setupTagClickHandlers() {
   $(".tag").on("click", function () {
-    $("#search").val($(this).text()).trigger("input");
+    DOM.search.val($(this).text()).trigger("input");
     $fetch.triggerAction("get_todos");
   });
 }
@@ -179,7 +236,7 @@ function convertToGeoJson(data) {
 
 // Map Utility Functions
 function getUniqueIcons(dataGeoJson) {
-  const gfxFolder = GOOGLE_BUCKET_URL + "/map";
+  const gfxFolder = CONFIG.urls.googleBucket + "/map";
   const uniqueIcons = new Set();
 
   dataGeoJson.features.forEach((feature) => {
@@ -270,48 +327,64 @@ function addMapLayers() {
     filter: ["!", ["has", "point_count"]],
     layout: {
       "icon-image": ["case", ["==", ["get", "icon"], "restaurantz"], "restaurantz", ["==", ["get", "icon"], "walk"], "walk", "walk"],
-      "icon-size": ICON_SIZE,
+      "icon-size": CONFIG.map.iconSize,
       "icon-allow-overlap": true,
       "icon-ignore-placement": true,
     },
   });
 }
 
-// Filter Functions
-function updateFilter() {
-  filterForPointLayer.length = 1;
-  filterForClusterLayer.length = 2;
+// List Management
+class ListManager {
+  constructor() {
+    this.observer = null;
+    this.eventListeners = new Map();
+  }
 
-  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+  initialize() {
+    this.setupEventDelegation();
+  }
 
-  checkboxes.forEach((checkbox) => {
-    if (checkbox.checked) {
-      filterForPointLayer.push(["==", ["get", "icon"], checkbox.id]);
-      filterForClusterLayer.push(["get", `only_${checkbox.id}`]);
+  setupEventDelegation() {
+    if (DOM.listContainer) {
+      DOM.listContainer.addEventListener("mouseenter", this.handleListHover.bind(this), true);
+      DOM.listContainer.addEventListener("click", this.handleListClick.bind(this), true);
     }
-  });
+  }
 
-  const myStyle = map.getStyle();
-  myStyle.sources.earthquakes.filter = filterForPointLayer;
-  map.setStyle(myStyle);
+  handleListHover(event) {
+    const item = event.target.closest(".uui-blogsection01_item");
+    if (!item) return;
+
+    cleanSelection();
+    item.classList.toggle("selected");
+    if (item.classList.contains("selected")) {
+      selectListToMap(item);
+    }
+  }
+
+  handleListClick(event) {
+    const flyToButton = event.target.closest(".fly-to-marker");
+    if (!flyToButton) return;
+
+    const item = flyToButton.closest(".uui-blogsection01_item");
+    if (item) {
+      flyToMarker(item);
+    }
+  }
+
+  cleanup() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+    this.eventListeners.forEach((listener, element) => {
+      element.removeEventListener(listener.type, listener.handler);
+    });
+    this.eventListeners.clear();
+  }
 }
 
-function createCheckboxesNew(id) {
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.id = id;
-  input.checked = true;
-  filterGroup.appendChild(input);
-
-  const label = document.createElement("label");
-  label.setAttribute("for", id);
-  label.textContent = id;
-  filterGroup.appendChild(label);
-
-  input.addEventListener("change", updateFilter);
-}
-
-// List Functions
+// Update activateList to use the new ListManager
 function activateList(data) {
   const items = data.map((item) => ({
     i: item.id,
@@ -319,70 +392,66 @@ function activateList(data) {
     lon: item.longitude,
   }));
 
-  const listContainer = document.querySelector(".uui-blogsection01_list");
-  const listItems = listContainer.querySelectorAll(".uui-blogsection01_item:not(:first-child)");
+  const listItems = DOM.listContainer?.querySelectorAll(".uui-blogsection01_item:not(:first-child)");
 
-  listItems.forEach((div, index) => {
-    if (items[index]) {
-      div.setAttribute("data-id", items[index].i);
-      div.setAttribute("data-lonlat", `${items[index].lon},${items[index].lat}`);
+  if (listItems) {
+    listItems.forEach((div, index) => {
+      if (items[index]) {
+        div.setAttribute("data-id", items[index].i);
+        div.setAttribute("data-lonlat", `${items[index].lon},${items[index].lat}`);
+      }
+    });
+  }
+}
 
-      div.addEventListener("mouseenter", (e) => {
-        cleanSelection();
-        div.classList.toggle("selected");
-        if (div.classList.contains("selected")) {
-          selectListToMap(div);
+// Update waitForElement to include cleanup
+function waitForElement(selector) {
+  return new Promise((resolve) => {
+    if (document.querySelector(selector)) {
+      resolve();
+    } else {
+      const observer = new MutationObserver(() => {
+        if (document.querySelector(selector)) {
+          observer.disconnect();
+          resolve();
         }
       });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
 
-      div.querySelector(".fly-to-marker").addEventListener("click", (e) => {
-        flyToMarker(div);
-      });
+      // Store observer for cleanup
+      window._elementObserver = observer;
     }
   });
 }
 
-function selectListToMap(item) {
-  map.setLayoutProperty("point-layer", "icon-image", ["case", ["==", ["get", "id"], item.dataset.id], "restaurant+walk-active", ["get", "icon"]]);
-}
-
-function flyToMarker(item) {
-  map.flyTo({
-    center: item.dataset.lonlat.split(","),
-  });
-}
-
-function cleanSelection() {
-  const listSelected = document.querySelector(".uui-blogsection01_item.selected");
-  if (listSelected) {
-    listSelected.classList.remove("selected");
+// Update cleanup to include MapDataManager
+function cleanup() {
+  if (window._elementObserver) {
+    window._elementObserver.disconnect();
   }
-}
-
-function selectMapToList(element) {
-  cleanSelection();
-  const listSelected = document.querySelector(`.uui-blogsection01_item[data-id="${element.properties.id}"]`);
-  listSelected.classList.add("selected");
+  if (window.listManager) {
+    window.listManager.cleanup();
+  }
+  if (window.mapDataManager) {
+    window.mapDataManager.clearCache();
+  }
+  map?.remove();
 }
 
 // Search Functions
 function enableSearch() {
-  document.getElementById("email-form").style.visibility = "visible";
+  DOM.emailForm.style.visibility = "visible";
+  const debouncedHandleUserInput = debounce(handleUserInput, CONFIG.ui.debounceTime);
 
-  let debounceTimer;
-
-  locqueryInput.addEventListener("input", function () {
-    if (locqueryInput.value === "") return;
-
-    clearTimeout(debounceTimer);
-
-    debounceTimer = setTimeout(handleUserInput, 300);
+  DOM.search.addEventListener("input", function () {
+    if (DOM.search.value === "") return;
+    debouncedHandleUserInput();
   });
 }
 
 async function handleUserInput() {
   const { AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
-  const query = locqueryInput.value;
+  const query = DOM.search.value;
 
   if (!query.trim()) {
     console.warn("No input provided for Geocoding");
@@ -439,8 +508,7 @@ async function handleUserInput() {
 
 // Autosuggest Functions
 function populateAutoSuggest(predictions) {
-  const autosuggestDiv = document.getElementById("autosuggest");
-  autosuggestDiv.innerHTML = "";
+  DOM.autosuggest.innerHTML = "";
 
   const ul = document.createElement("ul");
 
@@ -460,20 +528,20 @@ function populateAutoSuggest(predictions) {
 
   ul.addEventListener("click", handleAutosuggestClick);
 
-  autosuggestDiv.appendChild(ul);
-  autosuggestDiv.classList.remove("hidden");
+  DOM.autosuggest.appendChild(ul);
+  DOM.autosuggest.classList.remove("hidden");
 }
 
 function handleAutosuggestClick(event) {
   let clickedItem = event.target.closest("li");
   if (clickedItem) {
     const [lat, lng] = clickedItem.dataset.center.split(",");
-    document.getElementById("search").value = clickedItem.dataset.displayname;
+    DOM.search.value = clickedItem.dataset.displayname;
     map.flyTo({
       center: [parseFloat(lng), parseFloat(lat)],
       zoom: 12,
     });
-    document.getElementById("autosuggest").innerHTML = "";
+    DOM.autosuggest.innerHTML = "";
   }
 }
 
@@ -532,12 +600,12 @@ function getRenderedFeatures(point) {
 }
 
 function showRefreshListButton() {
-  document.querySelector(".reload").classList.remove("hidden");
+  DOM.reload.classList.remove("hidden");
 }
 
 function createListFromSource() {
-  document.getElementById("loading-animation").style.display = "block";
-  document.getElementById("reload").classList.remove("hidden");
+  DOM.loadingAnimation.style.display = "block";
+  DOM.reload.classList.remove("hidden");
   console.log("loading ON");
   const features = getRenderedFeaturesInView("point-layer");
 
@@ -566,8 +634,8 @@ function updateList() {
     }
   });
 
-  document.getElementById("loading-animation").style.display = "none";
-  document.getElementById("reload").classList.add("hidden");
+  DOM.loadingAnimation.style.display = "none";
+  DOM.reload.classList.add("hidden");
   console.log("loading OFF");
   countVisibleCards();
 }
@@ -587,10 +655,10 @@ function fadeDiv(divId, count) {
   fadeDiv.classList.add("fade-in-out");
   setTimeout(() => {
     fadeDiv.classList.remove("fade-in-out");
-  }, 2000);
+  }, CONFIG.ui.fadeTimeout);
   setTimeout(() => {
-    $("#totalresults").html(`<b>${count}</b> results within map area`);
-  }, 1000);
+    DOM.totalResults.innerHTML = `<b>${count}</b> results within map area`;
+  }, CONFIG.ui.updateTimeout);
 }
 
 // abusing the x-show  (see webflow on the card) functionality from framework.js to inject an id into the card
@@ -601,12 +669,12 @@ function cardLoaded(card) {
 }
 
 // Event Listeners
-$("#search").on("input", function () {
+DOM.search.on("input", function () {
   $(this).val() ? $(this).addClass("has--value") : $(this).removeClass("has--value");
 });
 
 $("#clearsearch,#brand").on("click", function () {
-  $("#search").val("").trigger("input");
+  DOM.search.val("").trigger("input");
   $fetch.triggerAction("get_todos");
 });
 
@@ -637,62 +705,74 @@ function waitForFrameworkJS() {
   });
 }
 
-function waitForElement(selector) {
-  return new Promise((resolve) => {
-    if (document.querySelector(selector)) {
-      resolve();
-    } else {
-      const observer = new MutationObserver(() => {
-        if (document.querySelector(selector)) {
-          observer.disconnect();
-          resolve();
-        }
-      });
-      observer.observe(document.documentElement, { childList: true, subtree: true });
-    }
-  });
+// Utility Functions
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+async function loadMapImages() {
+  const imagePromises = Object.entries(CONFIG.urls.mapImages).map(
+    ([key, path]) =>
+      new Promise((resolve, reject) => {
+        map.loadImage(CONFIG.urls.googleBucket + path, (error, image) => {
+          if (error) reject(error);
+          else resolve({ name: key, image });
+        });
+      })
+  );
+
+  try {
+    const images = await Promise.all(imagePromises);
+    images.forEach(({ name, image }) => map.addImage(name, image));
+    return true;
+  } catch (error) {
+    console.error("Error loading map images:", error);
+    return false;
+  }
 }
 
 // Main Execution
 async function main() {
-  await initializeCardsComponent();
-  map = initializeMap();
+  try {
+    await initializeCardsComponent();
+    map = initializeMap();
+    window.listManager = new ListManager();
+    window.listManager.initialize();
 
-  map.on("load", () => {
-    map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk.png", (error, image) => {
-      if (error) throw error;
-      map.addImage("restaurant+walk", image);
+    map.on("load", async () => {
+      const imagesLoaded = await loadMapImages();
+      if (imagesLoaded) {
+        getData();
+      }
 
-      map.loadImage(GOOGLE_BUCKET_URL + "/map/restaurant+walk-active.png", (error, image) => {
-        if (error) throw error;
-        map.addImage("restaurant+walk-active", image);
-
-        map.loadImage(GOOGLE_BUCKET_URL + "/map/r-cluster.png", (error, image) => {
-          if (error) throw error;
-          map.addImage("r-cluster", image);
-
-          map.loadImage(GOOGLE_BUCKET_URL + "/map/w-cluster.png", (error, image) => {
-            if (error) throw error;
-            map.addImage("w-cluster", image);
-            getData(); // GET DATA
-          });
-        });
+      map.on("click", "point-layer", handlePointLayerClick);
+      map.on("click", "cluster-layer", handleClusterLayerClick);
+      map.on("mouseenter", "point-layer", () => {
+        map.getCanvas().style.cursor = "pointer";
       });
+      map.on("mouseleave", "point-layer", () => {
+        map.getCanvas().style.cursor = "";
+      });
+      map.on("moveend", handleMapMoveEnd);
     });
-
-    map.on("click", "point-layer", handlePointLayerClick);
-    map.on("click", "cluster-layer", handleClusterLayerClick);
-    map.on("mouseenter", "point-layer", () => {
-      map.getCanvas().style.cursor = "pointer";
-    });
-    map.on("mouseleave", "point-layer", () => {
-      map.getCanvas().style.cursor = "";
-    });
-    map.on("moveend", handleMapMoveEnd);
-  });
+  } catch (error) {
+    console.error("Error during initialization:", error);
+    cleanup();
+  }
 }
 
 // Call main explicitly
 main().catch((error) => {
   console.error("Error during initialization:", error);
 });
+
+// Add cleanup on page unload
+window.addEventListener("unload", cleanup);
