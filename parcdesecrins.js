@@ -518,6 +518,9 @@ function enableSearch() {
     }
   }
 
+  // Initialize icons state
+  updateSearchIcon();
+
   DOM.search.addEventListener("input", function () {
     updateSearchIcon();
     if (DOM.search.value === "") return;
@@ -535,6 +538,21 @@ function enableSearch() {
     });
   }
 }
+
+// Update clear search button click handler
+$("#clearsearch,#brand").on("click", function () {
+  DOM.search.value = "";
+  DOM.search.dispatchEvent(new Event("input"));
+  $fetch.triggerAction("get_todos");
+
+  // Force update icons after clear
+  const spyglassIcon = document.querySelector(".search-icon");
+  const clearIcon = document.querySelector(".clear-icon");
+  if (spyglassIcon && clearIcon) {
+    spyglassIcon.style.display = "block";
+    clearIcon.style.display = "none";
+  }
+});
 
 async function handleUserInput() {
   const { AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
