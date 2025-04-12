@@ -75,6 +75,11 @@ class LoadingManager {
     this.loadingCount++;
     if (this.loadingCount === 1) {
       DOM.loadingAnimation.style.display = "block";
+      // Hide menu-tabs when loading starts
+      const menuTabs = document.querySelector(".menu-tabs.w-form");
+      if (menuTabs) {
+        menuTabs.style.display = "none";
+      }
     }
   }
 
@@ -214,6 +219,12 @@ async function getData() {
     loadingManager.startLoading();
     DOM.btnSearch.value = DOM.btnSearch.dataset.wait;
 
+    // Hide menu-tabs during loading
+    const menuTabs = document.querySelector(".menu-tabs.w-form");
+    if (menuTabs) {
+      menuTabs.style.display = "none";
+    }
+
     const url =
       DOM.search.value !== "" ? `${CONFIG.urls.airtableData}?endpoint=home&name=${DOM.search.value.toLowerCase()}` : CONFIG.urls.airtableData;
 
@@ -243,6 +254,12 @@ function handleSuccessfulDataFetch(data) {
     loadCustomMarkersAndLayers(dataGeoJson);
     loadGoogleMapsAPI();
     document.getElementById("map").style.visibility = "visible";
+
+    // Show menu-tabs after content is loaded
+    const menuTabs = document.querySelector(".menu-tabs.w-form");
+    if (menuTabs) {
+      menuTabs.style.display = "block";
+    }
   } else {
     showNoResultsUI();
   }
