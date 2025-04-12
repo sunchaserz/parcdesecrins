@@ -506,10 +506,34 @@ function enableSearch() {
 
   const debouncedHandleUserInput = debounce(handleUserInput, CONFIG.ui.debounceTime);
 
+  // Update search icon based on input value
+  function updateSearchIcon() {
+    const hasValue = DOM.search.value.trim() !== "";
+    const spyglassIcon = document.querySelector(".search-icon");
+    const clearIcon = document.querySelector(".clear-icon");
+
+    if (spyglassIcon && clearIcon) {
+      spyglassIcon.style.display = hasValue ? "none" : "block";
+      clearIcon.style.display = hasValue ? "block" : "none";
+    }
+  }
+
   DOM.search.addEventListener("input", function () {
+    updateSearchIcon();
     if (DOM.search.value === "") return;
     debouncedHandleUserInput();
   });
+
+  // Add click handler for clear icon
+  const clearIcon = document.querySelector(".clear-icon");
+  if (clearIcon) {
+    clearIcon.addEventListener("click", function (e) {
+      e.preventDefault();
+      DOM.search.value = "";
+      DOM.search.dispatchEvent(new Event("input"));
+      $fetch.triggerAction("get_todos");
+    });
+  }
 }
 
 async function handleUserInput() {
