@@ -669,12 +669,13 @@ function cardLoaded(card) {
 }
 
 // Event Listeners
-DOM.search.on("input", function () {
-  $(this).val() ? $(this).addClass("has--value") : $(this).removeClass("has--value");
+DOM.search.addEventListener("input", function () {
+  this.value ? this.classList.add("has--value") : this.classList.remove("has--value");
 });
 
 $("#clearsearch,#brand").on("click", function () {
-  DOM.search.val("").trigger("input");
+  DOM.search.value = "";
+  DOM.search.dispatchEvent(new Event("input"));
   $fetch.triggerAction("get_todos");
 });
 
