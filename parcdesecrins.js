@@ -48,6 +48,7 @@ const DOM = {
   totalResults: document.getElementById("totalresults"),
   reload: document.querySelector(".reload"),
   listContainer: document.querySelector(".uui-blogsection01_list"),
+  emailForm: document.getElementById("email-form"),
 };
 
 // Global Variables
@@ -137,7 +138,22 @@ class MapDataManager {
   }
 }
 
-// Update filter functions
+// Filter Functions
+function createCheckboxesNew(id) {
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.id = id;
+  input.checked = true;
+  DOM.filterGroup.appendChild(input);
+
+  const label = document.createElement("label");
+  label.setAttribute("for", id);
+  label.textContent = id;
+  DOM.filterGroup.appendChild(label);
+
+  input.addEventListener("change", updateFilter);
+}
+
 function updateFilter() {
   filterForPointLayer.length = 1;
   filterForClusterLayer.length = 2;
@@ -440,7 +456,10 @@ function cleanup() {
 
 // Search Functions
 function enableSearch() {
-  DOM.emailForm.style.visibility = "visible";
+  if (DOM.emailForm) {
+    DOM.emailForm.style.visibility = "visible";
+  }
+
   const debouncedHandleUserInput = debounce(handleUserInput, CONFIG.ui.debounceTime);
 
   DOM.search.addEventListener("input", function () {
