@@ -518,12 +518,13 @@ function enableSearch() {
   // Update search icon and clear button based on input value
   function updateSearchUI() {
     const hasValue = DOM.search.value.trim() !== "";
+    const emailValue = document.querySelector('input[name="Email-3"]')?.value.trim() || "";
     const spyglassIcon = document.querySelector("#spyglass");
     const clearIcon = document.querySelector("#clear-icon");
     const clearSearchSvg = document.querySelector("#clearsearch svg");
 
     if (spyglassIcon && clearIcon) {
-      if (hasValue) {
+      if (hasValue || emailValue) {
         spyglassIcon.style.display = "none";
         clearIcon.style.display = "block";
       } else {
@@ -543,6 +544,12 @@ function enableSearch() {
 
   // Initialize UI state
   updateSearchUI();
+
+  // Add input listener for Email-3 field
+  const emailInput = document.querySelector('input[name="Email-3"]');
+  if (emailInput) {
+    emailInput.addEventListener("input", updateSearchUI);
+  }
 
   DOM.search.addEventListener("input", function () {
     updateSearchUI();
