@@ -553,6 +553,7 @@ function enableSearch() {
   }
 
   DOM.search.addEventListener("input", function () {
+    console.log("input", DOM.search.value);
     updateSearchUI();
     if (DOM.search.value === "") return;
     debouncedHandleUserInput();
