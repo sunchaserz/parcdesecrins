@@ -788,6 +788,9 @@ function handleMapMoveEnd() {
     const visibleCards = document.querySelectorAll("#cards .uui-blogsection01_item[style='display: block']");
     const count = visibleCards.length;
     updateCounter(count);
+
+    // Hide the reload button after filtering is complete
+    DOM.reload.classList.add("hidden");
   }
 }
 
