@@ -541,10 +541,7 @@ function enableSearch() {
     const clearSearchSvg = document.querySelector("#clearsearch svg");
     const spyglassSvg = document.querySelector("#spyglass svg");
 
-    console.log("hasValue", hasValue);
-
     if (spyglassIcon && clearSearch) {
-      console.log("hasValue", hasValue);
       if (hasValue || emailValue) {
         spyglassIcon.style.display = "none";
         clearSearch.style.display = "block";
@@ -769,7 +766,28 @@ function handleClusterLayerClick(e) {
 function handleMapMoveEnd() {
   showRefreshListButton();
   if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
-    createListFromSource();
+    // Get current map bounds
+    const bounds = map.getBounds();
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+
+    // Get all cards from the current data
+    const allCards = document.querySelectorAll("#cards .uui-blogsection01_item");
+
+    // Filter cards based on bounds
+    allCards.forEach((card) => {
+      const lonlat = card.getAttribute("data-lonlat");
+      if (lonlat) {
+        const [lon, lat] = lonlat.split(",").map(Number);
+        const isInBounds = lon >= sw.lng && lon <= ne.lng && lat >= sw.lat && lat <= ne.lat;
+        card.style.display = isInBounds ? "block" : "none";
+      }
+    });
+
+    // Update the results count
+    const visibleCards = document.querySelectorAll("#cards .uui-blogsection01_item[style='display: block']");
+    const count = visibleCards.length;
+    updateCounter(count);
   }
 }
 
