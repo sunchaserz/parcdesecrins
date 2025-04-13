@@ -260,6 +260,9 @@ function handleSuccessfulDataFetch(data) {
     if (menuTabs) {
       menuTabs.style.display = "block";
     }
+
+    // Show reload button when new data is loaded
+    DOM.reload.classList.remove("hidden");
   } else {
     showNoResultsUI();
   }
@@ -764,7 +767,6 @@ function handleClusterLayerClick(e) {
 }
 
 function handleMapMoveEnd() {
-  showRefreshListButton();
   if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
     // Get current map bounds
     const bounds = map.getBounds();
