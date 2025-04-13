@@ -786,8 +786,8 @@ function handleMapMoveEnd() {
       }
     });
 
-    // Update the results count
-    const visibleCards = document.querySelectorAll("#cards .uui-blogsection01_item:not([style*='display: none'])");
+    // Update the results count, excluding the first card
+    const visibleCards = document.querySelectorAll("#cards .uui-blogsection01_item:not(:first-child):not([style*='display: none'])");
     const count = visibleCards.length;
 
     // Update the total results display
