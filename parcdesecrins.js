@@ -75,6 +75,8 @@ class LoadingManager {
     this.loadingCount++;
     if (this.loadingCount === 1) {
       DOM.loadingAnimation.style.display = "block";
+      // Show reload button when loading starts
+      DOM.reload.classList.remove("hidden");
       // Hide menu-tabs when loading starts
       const menuTabs = document.querySelector(".menu-tabs.w-form");
       if (menuTabs) {
@@ -87,12 +89,16 @@ class LoadingManager {
     this.loadingCount = Math.max(0, this.loadingCount - 1);
     if (this.loadingCount === 0) {
       DOM.loadingAnimation.style.display = "none";
+      // Hide reload button when loading stops
+      DOM.reload.classList.add("hidden");
     }
   }
 
   reset() {
     this.loadingCount = 0;
     DOM.loadingAnimation.style.display = "none";
+    // Hide reload button on reset
+    DOM.reload.classList.add("hidden");
   }
 }
 
@@ -260,9 +266,6 @@ function handleSuccessfulDataFetch(data) {
     if (menuTabs) {
       menuTabs.style.display = "block";
     }
-
-    // Show reload button when new data is loaded
-    DOM.reload.classList.remove("hidden");
   } else {
     showNoResultsUI();
   }
@@ -768,6 +771,9 @@ function handleClusterLayerClick(e) {
 
 function handleMapMoveEnd() {
   if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
+    // Start loading before filtering
+    loadingManager.startLoading();
+
     // Get current map bounds
     const bounds = map.getBounds();
     const ne = bounds.getNorthEast();
@@ -793,8 +799,8 @@ function handleMapMoveEnd() {
     // Update the total results display
     DOM.totalResults.innerHTML = `<b>${count}</b> results within map area`;
 
-    // Hide the reload button after filtering is complete
-    DOM.reload.classList.add("hidden");
+    // Stop loading after filtering is complete
+    loadingManager.stopLoading();
   }
 }
 
@@ -806,7 +812,7 @@ function getRenderedFeatures(point) {
 }
 
 function showRefreshListButton() {
-  DOM.reload.classList.remove("hidden");
+  // This function is now handled by the LoadingManager
 }
 
 function createListFromSource() {
@@ -949,6 +955,9 @@ async function main() {
     if (menuTabs) {
       menuTabs.style.display = "none";
     }
+
+    // Hide reload button on page load
+    DOM.reload.classList.add("hidden");
 
     await initializeCardsComponent();
     map = initializeMap();
