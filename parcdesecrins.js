@@ -787,9 +787,11 @@ function handleMapMoveEnd() {
     });
 
     // Update the results count
-    const visibleCards = document.querySelectorAll("#cards .uui-blogsection01_item[style='display: block']");
+    const visibleCards = document.querySelectorAll("#cards .uui-blogsection01_item:not([style*='display: none'])");
     const count = visibleCards.length;
-    updateCounter(count);
+
+    // Update the total results display
+    DOM.totalResults.innerHTML = `<b>${count}</b> results within map area`;
 
     // Hide the reload button after filtering is complete
     DOM.reload.classList.add("hidden");
