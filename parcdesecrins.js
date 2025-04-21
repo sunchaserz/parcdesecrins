@@ -1050,26 +1050,36 @@ function injectCSS() {
   style.textContent = `
     /* Grid layout - default */
     #cards.grid-layout .uui-blogsection01_list {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
     }
 
     #cards.grid-layout .uui-blogsection01_item {
-      width: calc(33.33% - 20px);
-      margin: 10px;
+      width: 100%;
+      margin: 0;
+      box-sizing: border-box;
     }
 
     /* List layout */
     #cards.list-layout .uui-blogsection01_list {
       display: flex;
       flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
     }
 
     #cards.list-layout .uui-blogsection01_item {
       display: flex;
       width: 100%;
-      margin: 10px 0;
+      margin: 0;
       flex-direction: row;
+      box-sizing: border-box;
     }
 
     #cards.list-layout .uui-blogsection01_image-wrapper {
