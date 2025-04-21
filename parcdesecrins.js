@@ -950,6 +950,9 @@ async function loadMapImages() {
 // Main Execution
 async function main() {
   try {
+    // Inject CSS for layout styles immediately
+    injectCSS();
+
     // Hide menu-tabs immediately on page load
     const menuTabs = document.querySelector(".menu-tabs.w-form");
     if (menuTabs) {
@@ -1035,9 +1038,15 @@ async function main() {
   }
 }
 
-// Add CSS to handle grid and list layouts
+// Function to inject CSS styles
 function injectCSS() {
+  // Check if styles are already injected
+  if (document.getElementById("view-toggle-styles")) {
+    return;
+  }
+
   const style = document.createElement("style");
+  style.id = "view-toggle-styles";
   style.textContent = `
     /* Grid layout - default */
     #cards.grid-layout .uui-blogsection01_list {
@@ -1074,10 +1083,8 @@ function injectCSS() {
     }
   `;
   document.head.appendChild(style);
+  console.log("View toggle styles injected successfully");
 }
-
-// Call the CSS injection function when the document is loaded
-document.addEventListener("DOMContentLoaded", injectCSS);
 
 // Call main explicitly
 main().catch((error) => {
