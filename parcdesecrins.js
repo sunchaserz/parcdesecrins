@@ -32,6 +32,7 @@ const CONFIG = {
     debounceTime: 300,
     fadeTimeout: 2000,
     updateTimeout: 1000,
+    defaultViewMode: "list", // Default view mode
   },
 };
 
@@ -283,6 +284,9 @@ function showResultsUI() {
   DOM.noResults.style.display = "none";
   DOM.cards.style.display = "block";
   DOM.toolbar.style.display = "block";
+
+  // Ensure the view toggle is in the toolbar
+  initViewToggle();
 }
 
 function showNoResultsUI() {
@@ -1027,3 +1031,162 @@ function selectMapToList(element) {
     listSelected.classList.add("selected");
   }
 }
+
+// Create and initialize the view toggle
+function initViewToggle() {
+  // Check if view toggle already exists
+  if (document.getElementById("view-toggle")) return;
+
+  // Create the view toggle container
+  const viewToggle = document.createElement("div");
+  viewToggle.id = "view-toggle";
+  viewToggle.className = "view-toggle";
+  viewToggle.style.cssText = "display: flex; margin-left: auto; gap: 8px; align-items: center;";
+
+  // Create list view button
+  const listBtn = document.createElement("button");
+  listBtn.id = "list-view-btn";
+  listBtn.className = "view-btn" + (getCurrentViewMode() === "list" ? " active" : "");
+  listBtn.setAttribute("aria-label", "List view");
+  listBtn.style.cssText =
+    "display: flex; align-items: center; justify-content: center; padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; background: #f5f5f5; cursor: pointer; font-size: 14px;";
+  listBtn.innerHTML =
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg><span style="margin-left: 8px;">List</span>';
+
+  // Create grid view button
+  const gridBtn = document.createElement("button");
+  gridBtn.id = "grid-view-btn";
+  gridBtn.className = "view-btn" + (getCurrentViewMode() === "grid" ? " active" : "");
+  gridBtn.setAttribute("aria-label", "Grid view");
+  gridBtn.style.cssText =
+    "display: flex; align-items: center; justify-content: center; padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; background: #f5f5f5; cursor: pointer; font-size: 14px;";
+  gridBtn.innerHTML =
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span style="margin-left: 8px;">Grid</span>';
+
+  // Add event listeners
+  listBtn.addEventListener("click", () => switchViewMode("list"));
+  gridBtn.addEventListener("click", () => switchViewMode("grid"));
+
+  // Append buttons to container
+  viewToggle.appendChild(listBtn);
+  viewToggle.appendChild(gridBtn);
+
+  // Append container to toolbar
+  DOM.toolbar.appendChild(viewToggle);
+
+  // Apply current view mode
+  applyViewMode(getCurrentViewMode());
+}
+
+// Get current view mode from localStorage or default
+function getCurrentViewMode() {
+  return localStorage.getItem("viewMode") || CONFIG.ui.defaultViewMode;
+}
+
+// Switch between list and grid view
+function switchViewMode(mode) {
+  localStorage.setItem("viewMode", mode);
+  applyViewMode(mode);
+
+  // Update active state on buttons
+  const listBtn = document.getElementById("list-view-btn");
+  const gridBtn = document.getElementById("grid-view-btn");
+
+  if (listBtn && gridBtn) {
+    if (mode === "list") {
+      listBtn.classList.add("active");
+      gridBtn.classList.remove("active");
+    } else {
+      gridBtn.classList.add("active");
+      listBtn.classList.remove("active");
+    }
+  }
+}
+
+// Apply the view mode to the cards container
+function applyViewMode(mode) {
+  const listContainer = DOM.listContainer;
+  if (listContainer) {
+    if (mode === "grid") {
+      listContainer.classList.add("grid-view");
+      listContainer.classList.remove("list-view");
+
+      // Apply grid styles
+      listContainer.style.display = "grid";
+      listContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(280px, 1fr))";
+      listContainer.style.gap = "20px";
+    } else {
+      listContainer.classList.add("list-view");
+      listContainer.classList.remove("grid-view");
+
+      // Reset to list styles
+      listContainer.style.display = "flex";
+      listContainer.style.flexDirection = "column";
+      listContainer.style.gap = "16px";
+    }
+  }
+
+  // Apply styles to card items
+  const cardItems = document.querySelectorAll(".uui-blogsection01_item");
+  cardItems.forEach((item) => {
+    if (mode === "grid") {
+      item.style.width = "100%";
+      item.style.display = "flex";
+      item.style.flexDirection = "column";
+
+      // Find and adjust image container
+      const imgContainer = item.querySelector(".uui-blogsection01_image-wrapper");
+      if (imgContainer) {
+        imgContainer.style.width = "100%";
+        imgContainer.style.height = "160px";
+      }
+
+      // Adjust content layout
+      const content = item.querySelector(".uui-blogsection01_content");
+      if (content) {
+        content.style.padding = "16px";
+      }
+    } else {
+      item.style.width = "100%";
+      item.style.display = "flex";
+      item.style.flexDirection = "row";
+
+      // Find and adjust image container
+      const imgContainer = item.querySelector(".uui-blogsection01_image-wrapper");
+      if (imgContainer) {
+        imgContainer.style.width = "200px";
+        imgContainer.style.height = "140px";
+      }
+
+      // Adjust content layout
+      const content = item.querySelector(".uui-blogsection01_content");
+      if (content) {
+        content.style.flex = "1";
+        content.style.padding = "12px 16px";
+      }
+    }
+  });
+}
+
+// Add styles for view toggle buttons
+document.addEventListener("DOMContentLoaded", function () {
+  const styleElement = document.createElement("style");
+  styleElement.textContent = `
+    .view-btn.active {
+      background-color: #e6e6e6 !important;
+      font-weight: bold;
+    }
+
+    .view-toggle button:hover {
+      background-color: #e9e9e9;
+    }
+
+    #toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+  `;
+  document.head.appendChild(styleElement);
+});
