@@ -961,14 +961,51 @@ async function main() {
 
     // Set grid view button to active by default
     const gridViewButton = document.querySelector(".button-with-icon.grid-view");
+    const listViewButton = document.querySelector(".button-with-icon.list-view");
+    const cardsContainer = document.getElementById("cards");
+
     if (gridViewButton) {
       gridViewButton.classList.add("active");
+
+      // Add click handler for grid view
+      gridViewButton.addEventListener("click", function () {
+        // Toggle active class
+        gridViewButton.classList.add("active");
+        if (listViewButton) {
+          listViewButton.classList.remove("active");
+        }
+
+        // Apply grid layout to cards
+        if (cardsContainer) {
+          cardsContainer.classList.remove("list-layout");
+          cardsContainer.classList.add("grid-layout");
+        }
+      });
     }
 
     // Ensure list view button is not active by default
-    const listViewButton = document.querySelector(".button-with-icon.list-view");
     if (listViewButton) {
       listViewButton.classList.remove("active");
+
+      // Add click handler for list view
+      listViewButton.addEventListener("click", function () {
+        // Toggle active class
+        listViewButton.classList.add("active");
+        if (gridViewButton) {
+          gridViewButton.classList.remove("active");
+        }
+
+        // Apply list layout to cards
+        if (cardsContainer) {
+          cardsContainer.classList.remove("grid-layout");
+          cardsContainer.classList.add("list-layout");
+        }
+      });
+    }
+
+    // Set default layout class on cards container
+    if (cardsContainer) {
+      cardsContainer.classList.add("grid-layout");
     }
 
     await initializeCardsComponent();
@@ -997,6 +1034,50 @@ async function main() {
     cleanup();
   }
 }
+
+// Add CSS to handle grid and list layouts
+function injectCSS() {
+  const style = document.createElement("style");
+  style.textContent = `
+    /* Grid layout - default */
+    #cards.grid-layout .uui-blogsection01_list {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    #cards.grid-layout .uui-blogsection01_item {
+      width: calc(33.33% - 20px);
+      margin: 10px;
+    }
+
+    /* List layout */
+    #cards.list-layout .uui-blogsection01_list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #cards.list-layout .uui-blogsection01_item {
+      display: flex;
+      width: 100%;
+      margin: 10px 0;
+      flex-direction: row;
+    }
+
+    #cards.list-layout .uui-blogsection01_image-wrapper {
+      width: 30%;
+      min-width: 200px;
+    }
+
+    #cards.list-layout .uui-blogsection01_content {
+      width: 70%;
+      padding: 0 20px;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// Call the CSS injection function when the document is loaded
+document.addEventListener("DOMContentLoaded", injectCSS);
 
 // Call main explicitly
 main().catch((error) => {
