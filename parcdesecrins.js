@@ -959,6 +959,18 @@ async function main() {
     // Hide reload button on page load
     DOM.reload.classList.add("hidden");
 
+    // Set grid view button to active by default
+    const gridViewButton = document.querySelector(".button-with-icon.grid-view");
+    if (gridViewButton) {
+      gridViewButton.style.opacity = "1";
+    }
+
+    // Set list view button to inactive by default
+    const listViewButton = document.querySelector(".button-with-icon.list-view");
+    if (listViewButton) {
+      listViewButton.style.opacity = "0.5";
+    }
+
     await initializeCardsComponent();
     map = initializeMap();
     window.listManager = new ListManager();
