@@ -962,13 +962,13 @@ async function main() {
     // Set grid view button to active by default
     const gridViewButton = document.querySelector(".button-with-icon.grid-view");
     if (gridViewButton) {
-      gridViewButton.style.opacity = "1";
+      gridViewButton.classList.add("active");
     }
 
-    // Set list view button to inactive by default
+    // Ensure list view button is not active by default
     const listViewButton = document.querySelector(".button-with-icon.list-view");
     if (listViewButton) {
-      listViewButton.style.opacity = "0.5";
+      listViewButton.classList.remove("active");
     }
 
     await initializeCardsComponent();
