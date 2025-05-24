@@ -1118,7 +1118,6 @@ function injectCSS() {
 
     #cards.list-layout .uui-blogsection01_item,
     .uui-blogsection01_list.list-mode .uui-blogsection01_item {
-      display: flex !important;
       flex-direction: row !important;
       width: 100% !important;
       max-width: 100% !important;
