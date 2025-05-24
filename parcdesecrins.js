@@ -1155,6 +1155,12 @@ function injectCSS() {
         width: 100% !important;
       }
     }
+
+    #cards.grid-layout .card-wrapper {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+    }
   `;
   document.head.appendChild(style);
   console.log("View toggle styles injected successfully");
