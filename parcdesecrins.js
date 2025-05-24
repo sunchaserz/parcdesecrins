@@ -965,6 +965,7 @@ async function main() {
     // Set grid view button to active by default
     const gridViewButton = document.querySelector(".button-with-icon.grid-view");
     const listViewButton = document.querySelector(".button-with-icon.list-view");
+    const listToggleButton = document.querySelector(".list-toggle");
     const cardsContainer = document.getElementById("cards");
 
     if (gridViewButton) {
@@ -976,6 +977,11 @@ async function main() {
         gridViewButton.classList.add("active");
         if (listViewButton) {
           listViewButton.classList.remove("active");
+        }
+
+        // Show list toggle button when in grid view
+        if (listToggleButton) {
+          listToggleButton.style.display = "block";
         }
 
         // Apply grid layout to cards
@@ -996,6 +1002,11 @@ async function main() {
         listViewButton.classList.add("active");
         if (gridViewButton) {
           gridViewButton.classList.remove("active");
+        }
+
+        // Hide list toggle button when in list view
+        if (listToggleButton) {
+          listToggleButton.style.display = "none";
         }
 
         // Apply list layout to cards
