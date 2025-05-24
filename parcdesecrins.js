@@ -1014,6 +1014,7 @@ async function main() {
           cardsContainer.classList.remove("grid-layout");
           cardsContainer.classList.add("list-layout");
         }
+        resetListViewGridStyles();
       });
     }
 
@@ -1148,5 +1149,16 @@ function selectMapToList(element) {
   const listSelected = document.querySelector(`.uui-blogsection01_item[data-id="${element.properties.id}"]`);
   if (listSelected) {
     listSelected.classList.add("selected");
+  }
+}
+
+function resetListViewGridStyles() {
+  const list = document.querySelector(".uui-blogsection01_list");
+  if (list) {
+    list.style.display = "flex";
+    list.style.flexDirection = "column";
+    list.style.gridTemplateColumns = "";
+    list.style.gridTemplateRows = "";
+    // Remove any other grid-related inline styles if present
   }
 }
