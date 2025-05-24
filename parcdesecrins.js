@@ -1075,14 +1075,16 @@ function injectCSS() {
       box-sizing: border-box;
     }
 
-    /* List layout */
+    /* List layout - override Webflow grid */
     #cards.list-layout .uui-blogsection01_list {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      width: 100%;
-      box-sizing: border-box;
-      padding: 10px;
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      gap: 20px !important;
+      padding: 10px !important;
+      grid-template-columns: none !important;
+      grid-template-rows: none !important;
     }
 
     #cards.list-layout .uui-blogsection01_item {
