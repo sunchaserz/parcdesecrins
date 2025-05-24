@@ -1142,6 +1142,7 @@ function injectCSS() {
       align-items: center !important;
       justify-content: center !important;
       overflow: hidden !important;
+      padding-top: 0 !important;
     }
 
     #cards.list-layout .uui-blogsection01_image-wrapper img,
