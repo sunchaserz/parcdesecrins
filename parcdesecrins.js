@@ -1125,22 +1125,41 @@ function injectCSS() {
       width: 100% !important;
       max-width: 100% !important;
       box-sizing: border-box !important;
-      align-items: flex-start !important;
+      align-items: center !important;
+      min-height: 120px !important;
+      padding: 8px 0 !important;
     }
 
     #cards.list-layout .uui-blogsection01_image-wrapper,
     .uui-blogsection01_list.list-mode .uui-blogsection01_image-wrapper {
       width: 30% !important;
-      min-width: 200px !important;
+      min-width: 120px !important;
+      max-width: 180px !important;
+      height: 120px !important;
       margin-right: 1rem !important;
       flex-shrink: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow: hidden !important;
+    }
+
+    #cards.list-layout .uui-blogsection01_image-wrapper img,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_image-wrapper img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      display: block !important;
     }
 
     #cards.list-layout .uui-blogsection01_content,
     .uui-blogsection01_list.list-mode .uui-blogsection01_content {
       width: 70% !important;
-      padding: 0 !important;
+      padding: 0 8px !important;
       flex-grow: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
     }
 
     /* Media query for responsive grid */
