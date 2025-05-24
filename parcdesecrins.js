@@ -1189,6 +1189,10 @@ function injectCSS() {
     .uui-blogsection01_item:not([data-id]) {
       display: none !important;
     }
+
+    .uui-blogsection01_list .uui-blogsection01_item:nth-child(1) {
+      display: none !important;
+    }
   `;
   document.head.appendChild(style);
   console.log("View toggle styles injected successfully");
