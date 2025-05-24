@@ -973,21 +973,22 @@ async function main() {
 
       // Add click handler for grid view
       gridViewButton.addEventListener("click", function () {
-        // Toggle active class
         gridViewButton.classList.add("active");
         if (listViewButton) {
           listViewButton.classList.remove("active");
         }
-
-        // Show list toggle button when in grid view
         if (listToggleButton) {
           listToggleButton.style.display = "block";
         }
-
-        // Apply grid layout to cards
         if (cardsContainer) {
           cardsContainer.classList.remove("list-layout");
           cardsContainer.classList.add("grid-layout");
+        }
+        // Toggle Webflow grid/list-mode classes
+        const grid = document.querySelector(".uui-blogsection01_list");
+        if (grid) {
+          grid.classList.add("w-layout-grid");
+          grid.classList.remove("list-mode");
         }
       });
     }
@@ -998,21 +999,22 @@ async function main() {
 
       // Add click handler for list view
       listViewButton.addEventListener("click", function () {
-        // Toggle active class
         listViewButton.classList.add("active");
         if (gridViewButton) {
           gridViewButton.classList.remove("active");
         }
-
-        // Hide list toggle button when in list view
         if (listToggleButton) {
           listToggleButton.style.display = "none";
         }
-
-        // Apply list layout to cards
         if (cardsContainer) {
           cardsContainer.classList.remove("grid-layout");
           cardsContainer.classList.add("list-layout");
+        }
+        // Toggle Webflow grid/list-mode classes
+        const grid = document.querySelector(".uui-blogsection01_list");
+        if (grid) {
+          grid.classList.remove("w-layout-grid");
+          grid.classList.add("list-mode");
         }
         resetListViewGridStyles();
       });
@@ -1061,7 +1063,8 @@ function injectCSS() {
   style.id = "view-toggle-styles";
   style.textContent = `
     /* Grid layout - default */
-    #cards.grid-layout .uui-blogsection01_list {
+    #cards.grid-layout .uui-blogsection01_list,
+    .uui-blogsection01_list.w-layout-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 20px;
@@ -1077,29 +1080,35 @@ function injectCSS() {
     }
 
     /* List layout - override Webflow grid */
-    #cards.list-layout .uui-blogsection01_list {
+    #cards.list-layout .uui-blogsection01_list,
+    .uui-blogsection01_list.list-mode {
       display: flex !important;
       flex-direction: column !important;
       width: 100% !important;
       box-sizing: border-box !important;
-      gap: 20px !important;
+      gap: 2rem !important;
       padding: 10px !important;
       grid-template-columns: none !important;
       grid-template-rows: none !important;
     }
 
-    #cards.list-layout .uui-blogsection01_item {
+    #cards.list-layout .uui-blogsection01_item,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_item {
+      display: flex;
       width: 100% !important;
       max-width: 100% !important;
       box-sizing: border-box !important;
+      flex-direction: row;
     }
 
-    #cards.list-layout .uui-blogsection01_image-wrapper {
+    #cards.list-layout .uui-blogsection01_image-wrapper,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_image-wrapper {
       width: 30%;
       min-width: 200px;
     }
 
-    #cards.list-layout .uui-blogsection01_content {
+    #cards.list-layout .uui-blogsection01_content,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_content {
       width: 70%;
       padding: 0 20px;
     }
