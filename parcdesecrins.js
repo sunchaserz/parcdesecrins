@@ -1108,23 +1108,27 @@ function injectCSS() {
 
     #cards.list-layout .uui-blogsection01_item,
     .uui-blogsection01_list.list-mode .uui-blogsection01_item {
-      display: flex;
+      display: flex !important;
+      flex-direction: row !important;
       width: 100% !important;
       max-width: 100% !important;
       box-sizing: border-box !important;
-      flex-direction: row;
+      align-items: flex-start !important;
     }
 
     #cards.list-layout .uui-blogsection01_image-wrapper,
     .uui-blogsection01_list.list-mode .uui-blogsection01_image-wrapper {
-      width: 30%;
-      min-width: 200px;
+      width: 30% !important;
+      min-width: 200px !important;
+      margin-right: 1rem !important;
+      flex-shrink: 0 !important;
     }
 
     #cards.list-layout .uui-blogsection01_content,
     .uui-blogsection01_list.list-mode .uui-blogsection01_content {
-      width: 70%;
-      padding: 0 20px;
+      width: 70% !important;
+      padding: 0 !important;
+      flex-grow: 1 !important;
     }
   `;
   document.head.appendChild(style);
