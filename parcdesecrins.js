@@ -1098,11 +1098,13 @@ function injectCSS() {
     #cards.grid-layout .uui-blogsection01_image-wrapper {
       width: 100% !important;
       margin-bottom: 1rem !important;
+      flex-shrink: 0 !important;
     }
 
     #cards.grid-layout .uui-blogsection01_content {
       width: 100% !important;
       padding: 0 !important;
+      flex: 1 !important;
     }
 
     /* List layout - override Webflow grid */
