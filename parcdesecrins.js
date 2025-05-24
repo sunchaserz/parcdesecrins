@@ -1067,30 +1067,30 @@ function injectCSS() {
     /* Grid layout - default */
     #cards.grid-layout .uui-blogsection01_list,
     .uui-blogsection01_list.w-layout-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      width: 100%;
-      box-sizing: border-box;
-      padding: 10px;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 20px !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      padding: 10px !important;
     }
 
     #cards.grid-layout .uui-blogsection01_item {
-      width: 100%;
-      margin: 0;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
+      width: calc((100% - 40px) / 3) !important; /* 40px accounts for the two 20px gaps between 3 items */
+      margin: 0 !important;
+      box-sizing: border-box !important;
+      display: flex !important;
+      flex-direction: column !important;
     }
 
     #cards.grid-layout .uui-blogsection01_image-wrapper {
-      width: 100%;
-      margin-bottom: 1rem;
+      width: 100% !important;
+      margin-bottom: 1rem !important;
     }
 
     #cards.grid-layout .uui-blogsection01_content {
-      width: 100%;
-      padding: 0;
+      width: 100% !important;
+      padding: 0 !important;
     }
 
     /* List layout - override Webflow grid */
@@ -1102,8 +1102,6 @@ function injectCSS() {
       box-sizing: border-box !important;
       gap: 2rem !important;
       padding: 10px !important;
-      grid-template-columns: none !important;
-      grid-template-rows: none !important;
     }
 
     #cards.list-layout .uui-blogsection01_item,
@@ -1129,6 +1127,19 @@ function injectCSS() {
       width: 70% !important;
       padding: 0 !important;
       flex-grow: 1 !important;
+    }
+
+    /* Media query for responsive grid */
+    @media screen and (max-width: 991px) {
+      #cards.grid-layout .uui-blogsection01_item {
+        width: calc((100% - 20px) / 2) !important; /* 2 items per row on medium screens */
+      }
+    }
+
+    @media screen and (max-width: 767px) {
+      #cards.grid-layout .uui-blogsection01_item {
+        width: 100% !important; /* 1 item per row on small screens */
+      }
     }
   `;
   document.head.appendChild(style);
