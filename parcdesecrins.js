@@ -1089,11 +1089,9 @@ function injectCSS() {
     }
 
     #cards.list-layout .uui-blogsection01_item {
-      display: flex;
-      width: 100%;
-      margin: 0;
-      flex-direction: row;
-      box-sizing: border-box;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
     }
 
     #cards.list-layout .uui-blogsection01_image-wrapper {
@@ -1159,6 +1157,11 @@ function resetListViewGridStyles() {
     list.style.flexDirection = "column";
     list.style.gridTemplateColumns = "";
     list.style.gridTemplateRows = "";
+    list.style.justifyItems = "";
+    list.style.alignItems = "";
+    list.style.gridColumnGap = "";
+    list.style.gridRowGap = "";
+    list.style.gridArea = "";
     // Remove any other grid-related inline styles if present
   }
 }
