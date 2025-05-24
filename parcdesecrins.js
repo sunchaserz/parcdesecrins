@@ -990,6 +990,7 @@ async function main() {
           grid.classList.add("w-layout-grid");
           grid.classList.remove("list-mode");
         }
+        forceGridViewDisplay();
       });
     }
 
@@ -1017,6 +1018,7 @@ async function main() {
           grid.classList.add("list-mode");
         }
         resetListViewGridStyles();
+        forceListViewDisplay();
       });
     }
 
@@ -1172,5 +1174,30 @@ function resetListViewGridStyles() {
     list.style.gridRowGap = "";
     list.style.gridArea = "";
     // Remove any other grid-related inline styles if present
+  }
+}
+
+function forceListViewDisplay() {
+  const list = document.querySelector(".uui-blogsection01_list");
+  if (list) {
+    list.style.display = "flex";
+    list.style.flexDirection = "column";
+    list.style.gridTemplateColumns = "";
+    list.style.gridTemplateRows = "";
+    list.style.justifyItems = "";
+    list.style.alignItems = "";
+    list.style.gridColumnGap = "";
+    list.style.gridRowGap = "";
+    list.style.gridArea = "";
+  }
+}
+
+function forceGridViewDisplay() {
+  const list = document.querySelector(".uui-blogsection01_list");
+  if (list) {
+    list.style.display = "grid";
+    list.style.flexDirection = "";
+    list.style.gridTemplateColumns = "repeat(3, 1fr)";
+    list.style.gridTemplateRows = "";
   }
 }
