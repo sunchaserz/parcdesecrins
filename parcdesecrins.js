@@ -1079,6 +1079,18 @@ function injectCSS() {
       width: 100%;
       margin: 0;
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #cards.grid-layout .uui-blogsection01_image-wrapper {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    #cards.grid-layout .uui-blogsection01_content {
+      width: 100%;
+      padding: 0;
     }
 
     /* List layout - override Webflow grid */
