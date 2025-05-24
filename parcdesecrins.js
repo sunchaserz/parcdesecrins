@@ -1181,6 +1181,10 @@ function injectCSS() {
       flex-direction: column !important;
       width: 100% !important;
     }
+
+    .uui-blogsection01_item:first-child {
+      display: none !important;
+    }
   `;
   document.head.appendChild(style);
   console.log("View toggle styles injected successfully");
