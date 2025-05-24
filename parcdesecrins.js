@@ -1064,6 +1064,20 @@ function injectCSS() {
   const style = document.createElement("style");
   style.id = "view-toggle-styles";
   style.textContent = `
+    /* Reset any existing styles */
+    .uui-blogsection01_list {
+      all: initial !important;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    .uui-blogsection01_item {
+      all: initial !important;
+      box-sizing: border-box !important;
+    }
+
     /* Grid layout - default */
     #cards.grid-layout .uui-blogsection01_list,
     .uui-blogsection01_list.w-layout-grid {
@@ -1074,7 +1088,7 @@ function injectCSS() {
     }
 
     #cards.grid-layout .uui-blogsection01_item {
-      flex: 0 0 33.333% !important;
+      width: 33.333% !important;
       padding: 10px !important;
       box-sizing: border-box !important;
       display: flex !important;
@@ -1130,13 +1144,13 @@ function injectCSS() {
     /* Media query for responsive grid */
     @media screen and (max-width: 991px) {
       #cards.grid-layout .uui-blogsection01_item {
-        flex: 0 0 50% !important; /* 2 items per row on medium screens */
+        width: 50% !important;
       }
     }
 
     @media screen and (max-width: 767px) {
       #cards.grid-layout .uui-blogsection01_item {
-        flex: 0 0 100% !important; /* 1 item per row on small screens */
+        width: 100% !important;
       }
     }
   `;
