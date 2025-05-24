@@ -1091,8 +1091,6 @@ function injectCSS() {
       width: 33.333% !important;
       padding: 10px !important;
       box-sizing: border-box !important;
-      display: flex !important;
-      flex-direction: column !important;
     }
 
     #cards.grid-layout .uui-blogsection01_image-wrapper {
