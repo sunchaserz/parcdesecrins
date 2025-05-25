@@ -1093,16 +1093,14 @@ function injectCSS() {
       box-sizing: border-box !important;
     }
 
-    #cards.grid-layout .uui-blogsection01_image-wrapper {
-      width: 100% !important;
-      margin-bottom: 1rem !important;
-      flex-shrink: 0 !important;
+    /* Remove left padding from first column */
+    #cards.grid-layout .uui-blogsection01_item:nth-child(3n+1) {
+      padding-left: 0 !important;
     }
 
-    #cards.grid-layout .uui-blogsection01_content {
-      width: 100% !important;
-      padding: 0 !important;
-      flex: 1 !important;
+    /* Remove right padding from last column */
+    #cards.grid-layout .uui-blogsection01_item:nth-child(3n) {
+      padding-right: 0 !important;
     }
 
     /* List layout - override Webflow grid */
@@ -1124,7 +1122,19 @@ function injectCSS() {
       box-sizing: border-box !important;
       align-items: center !important;
       min-height: 150px !important;
-      padding: 8px 0 !important;
+      padding: 8px 10px !important;
+    }
+
+    /* Remove left padding from first item in list view */
+    #cards.list-layout .uui-blogsection01_item:first-child,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_item:first-child {
+      padding-left: 0 !important;
+    }
+
+    /* Remove right padding from last item in list view */
+    #cards.list-layout .uui-blogsection01_item:last-child,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_item:last-child {
+      padding-right: 0 !important;
     }
 
     #cards.list-layout .uui-blogsection01_image-wrapper,
