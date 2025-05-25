@@ -1093,13 +1093,13 @@ function injectCSS() {
       box-sizing: border-box !important;
     }
 
-    /* Remove left padding from first column */
-    #cards.grid-layout .uui-blogsection01_item:nth-child(3n+1) {
+    /* Remove left padding from first column (accounting for hidden placeholder) */
+    #cards.grid-layout .uui-blogsection01_item:nth-child(3n+2) {
       padding-left: 0 !important;
     }
 
-    /* Remove right padding from last column */
-    #cards.grid-layout .uui-blogsection01_item:nth-child(3n) {
+    /* Remove right padding from last column (accounting for hidden placeholder) */
+    #cards.grid-layout .uui-blogsection01_item:nth-child(3n+1) {
       padding-right: 0 !important;
     }
 
