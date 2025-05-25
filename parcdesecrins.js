@@ -813,13 +813,22 @@ function handleMapMoveEnd() {
       card.style.setProperty("padding-right", "10px", "important");
     });
 
-    // Recalculate padding based on visible cards count
+    // Recalculate padding based on column position
     if (visibleCount > 0) {
-      // First visible card should have no left padding
-      visibleCards[0].style.setProperty("padding-left", "0", "important");
+      // Calculate which cards are in first and last columns
+      visibleCards.forEach((card, index) => {
+        const column = index % 3; // 0 = first column, 1 = middle column, 2 = last column
 
-      // Last visible card should have no right padding
-      visibleCards[visibleCount - 1].style.setProperty("padding-right", "0", "important");
+        // First column gets no left padding
+        if (column === 0) {
+          card.style.setProperty("padding-left", "0", "important");
+        }
+
+        // Last column gets no right padding
+        if (column === 2) {
+          card.style.setProperty("padding-right", "0", "important");
+        }
+      });
     }
 
     // Update the total results display
