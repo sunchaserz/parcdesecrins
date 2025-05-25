@@ -779,19 +779,32 @@ function handleMapMoveEnd() {
     const ne = bounds.getNorthEast();
     const sw = bounds.getSouthWest();
 
-    // Get all cards from the current data
+    // Get all cards from both containers
     const allCards = document.querySelectorAll("#cards .uui-blogsection01_item:not(:first-child)");
+    const allResults = document.querySelectorAll("#results .uui-blogsection01_item:not(:first-child)");
 
     // Filter cards based on bounds
     let visibleCount = 0;
+    const visibleCards = [];
+
     allCards.forEach((card) => {
       const lonlat = card.getAttribute("data-lonlat");
       if (lonlat) {
         const [lon, lat] = lonlat.split(",").map(Number);
         const isInBounds = lon >= sw.lng && lon <= ne.lng && lat >= sw.lat && lat <= ne.lat;
         card.style.display = isInBounds ? "block" : "none";
-        if (isInBounds) visibleCount++;
+        if (isInBounds) {
+          visibleCount++;
+          visibleCards.push(card);
+        }
       }
+    });
+
+    // Update results container to match visible cards
+    allResults.forEach((result) => {
+      const cardId = result.getAttribute("data-id");
+      const isVisible = visibleCards.some((card) => card.getAttribute("data-id") === cardId);
+      result.style.display = isVisible ? "block" : "none";
     });
 
     // Update the total results display
