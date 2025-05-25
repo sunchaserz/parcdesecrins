@@ -807,6 +807,21 @@ function handleMapMoveEnd() {
       result.style.setProperty("display", isVisible ? "block" : "none", "important");
     });
 
+    // Reset all padding first
+    visibleCards.forEach((card) => {
+      card.style.setProperty("padding-left", "10px", "important");
+      card.style.setProperty("padding-right", "10px", "important");
+    });
+
+    // Recalculate padding based on visible cards count
+    if (visibleCount > 0) {
+      // First visible card should have no left padding
+      visibleCards[0].style.setProperty("padding-left", "0", "important");
+
+      // Last visible card should have no right padding
+      visibleCards[visibleCount - 1].style.setProperty("padding-right", "0", "important");
+    }
+
     // Update the total results display
     const resultText = visibleCount === 1 ? "result" : "results";
     DOM.totalResults.innerHTML = `<b>${visibleCount}</b> ${resultText} within map area`;
