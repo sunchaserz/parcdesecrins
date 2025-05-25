@@ -831,9 +831,19 @@ function handleMapMoveEnd() {
       });
     }
 
-    // Update the total results display
+    // Update the total results display with animation
     const resultText = visibleCount === 1 ? "result" : "results";
-    DOM.totalResults.innerHTML = `<b>${visibleCount}</b> ${resultText} within map area`;
+
+    // Add a small delay before updating the results
+    setTimeout(() => {
+      DOM.totalResults.innerHTML = `<b>${visibleCount}</b> ${resultText} within map area`;
+      DOM.totalResults.classList.add("results-updating");
+
+      // Remove the animation class after it completes
+      setTimeout(() => {
+        DOM.totalResults.classList.remove("results-updating");
+      }, 500);
+    }, 200);
 
     // Stop loading after filtering is complete
     loadingManager.stopLoading();
@@ -1235,6 +1245,26 @@ function injectCSS() {
 
     .uui-blogsection01_list .uui-blogsection01_item:nth-child(1) {
       display: none !important;
+    }
+
+    /* Results animation */
+    @keyframes resultsUpdate {
+      0% {
+        opacity: 0.5;
+        transform: scale(0.95);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .results-updating {
+      animation: resultsUpdate 0.5s ease-out;
     }
   `;
   document.head.appendChild(style);
