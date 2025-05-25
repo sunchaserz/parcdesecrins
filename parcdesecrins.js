@@ -1112,7 +1112,7 @@ function injectCSS() {
       flex-direction: column !important;
       width: 100% !important;
       box-sizing: border-box !important;
-      gap: 2rem !important;
+      gap: 0 !important;
       padding: 10px !important;
     }
 
@@ -1123,16 +1123,16 @@ function injectCSS() {
       max-width: 100% !important;
       box-sizing: border-box !important;
       align-items: center !important;
-      min-height: 120px !important;
+      min-height: 150px !important;
       padding: 8px 0 !important;
     }
 
     #cards.list-layout .uui-blogsection01_image-wrapper,
     .uui-blogsection01_list.list-mode .uui-blogsection01_image-wrapper {
-      width: 30% !important;
-      min-width: 120px !important;
-      max-width: 180px !important;
-      height: 120px !important;
+      width: auto !important;
+      min-width: 150px !important;
+      max-width: none !important;
+      height: 150px !important;
       margin-right: 1rem !important;
       flex-shrink: 0 !important;
       display: flex !important;
