@@ -1259,15 +1259,9 @@ function injectCSS() {
     @keyframes resultsUpdate {
       0% {
         opacity: 0.5;
-        transform: scale(0.95) translateY(10px);
-      }
-      50% {
-        opacity: 1;
-        transform: scale(1.05) translateY(-5px);
       }
       100% {
         opacity: 1;
-        transform: scale(1) translateY(0);
       }
     }
 
