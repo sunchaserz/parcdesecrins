@@ -836,15 +836,7 @@ function handleMapMoveEnd() {
 
     // Add a small delay before updating the results
     setTimeout(() => {
-      const currentCount = parseInt(DOM.totalResults.querySelector("b")?.textContent || "0");
-      const countElement = document.createElement("b");
-      countElement.textContent = visibleCount;
-      countElement.setAttribute("data-prev", currentCount);
-      countElement.setAttribute("data-next", visibleCount);
-
-      DOM.totalResults.innerHTML = "";
-      DOM.totalResults.appendChild(countElement);
-      DOM.totalResults.appendChild(document.createTextNode(` ${resultText} within map area`));
+      DOM.totalResults.innerHTML = `<b>${visibleCount}</b> ${resultText} within map area`;
       DOM.totalResults.classList.add("results-updating");
 
       // Remove the animation class after it completes
@@ -1259,60 +1251,21 @@ function injectCSS() {
     @keyframes resultsUpdate {
       0% {
         opacity: 0.5;
+        transform: scale(0.95);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.05);
       }
       100% {
         opacity: 1;
+        transform: scale(1);
       }
     }
 
     .results-updating {
       animation: resultsUpdate 0.5s ease-out;
       display: inline-block;
-    }
-
-    .results-updating b {
-      display: inline-block;
-      position: relative;
-    }
-
-    .results-updating b::before {
-      content: attr(data-prev);
-      position: absolute;
-      top: -100%;
-      left: 0;
-      opacity: 0;
-      animation: rollOut 0.5s ease-out;
-    }
-
-    .results-updating b::after {
-      content: attr(data-next);
-      position: absolute;
-      top: 100%;
-      left: 0;
-      opacity: 0;
-      animation: rollIn 0.5s ease-out;
-    }
-
-    @keyframes rollOut {
-      0% {
-        top: 0;
-        opacity: 1;
-      }
-      100% {
-        top: -100%;
-        opacity: 0;
-      }
-    }
-
-    @keyframes rollIn {
-      0% {
-        top: 100%;
-        opacity: 0;
-      }
-      100% {
-        top: 0;
-        opacity: 1;
-      }
     }
   `;
   document.head.appendChild(style);
