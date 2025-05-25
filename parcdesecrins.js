@@ -780,24 +780,23 @@ function handleMapMoveEnd() {
     const sw = bounds.getSouthWest();
 
     // Get all cards from the current data
-    const allCards = document.querySelectorAll("#cards .uui-blogsection01_item");
+    const allCards = document.querySelectorAll("#cards .uui-blogsection01_item:not(:first-child)");
 
     // Filter cards based on bounds
+    let visibleCount = 0;
     allCards.forEach((card) => {
       const lonlat = card.getAttribute("data-lonlat");
       if (lonlat) {
         const [lon, lat] = lonlat.split(",").map(Number);
         const isInBounds = lon >= sw.lng && lon <= ne.lng && lat >= sw.lat && lat <= ne.lat;
         card.style.display = isInBounds ? "block" : "none";
+        if (isInBounds) visibleCount++;
       }
     });
 
-    // Update the results count, excluding the first card
-    const visibleCards = document.querySelectorAll("#cards .uui-blogsection01_item:not(:first-child):not([style*='display: none'])");
-    const count = visibleCards.length;
-
     // Update the total results display
-    DOM.totalResults.innerHTML = `<b>${count}</b> results within map area`;
+    const resultText = visibleCount === 1 ? "result" : "results";
+    DOM.totalResults.innerHTML = `<b>${visibleCount}</b> ${resultText} within map area`;
 
     // Stop loading after filtering is complete
     loadingManager.stopLoading();
