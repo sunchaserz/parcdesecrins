@@ -792,7 +792,7 @@ function handleMapMoveEnd() {
       if (lonlat) {
         const [lon, lat] = lonlat.split(",").map(Number);
         const isInBounds = lon >= sw.lng && lon <= ne.lng && lat >= sw.lat && lat <= ne.lat;
-        card.style.display = isInBounds ? "block" : "none";
+        card.style.setProperty("display", isInBounds ? "block" : "none", "important");
         if (isInBounds) {
           visibleCount++;
           visibleCards.push(card);
@@ -804,7 +804,7 @@ function handleMapMoveEnd() {
     allResults.forEach((result) => {
       const cardId = result.getAttribute("data-id");
       const isVisible = visibleCards.some((card) => card.getAttribute("data-id") === cardId);
-      result.style.display = isVisible ? "block" : "none";
+      result.style.setProperty("display", isVisible ? "block" : "none", "important");
     });
 
     // Update the total results display
