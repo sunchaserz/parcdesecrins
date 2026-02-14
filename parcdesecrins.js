@@ -28,7 +28,7 @@ const CONFIG = {
     iconSize: 0.6,
   },
   ui: {
-    btnDefaultValue: "Search",
+    btnDefaultValue: "Searcher",
     debounceTime: 300,
     fadeTimeout: 2000,
     updateTimeout: 1000,
@@ -119,7 +119,7 @@ function initializeMap() {
   }).addControl(
     new maptilersdk.MaptilerNavigationControl({
       showCompass: false,
-    })
+    }),
   );
 
   // Disable map rotation
@@ -746,7 +746,7 @@ function handlePointLayerClick(e) {
     new maptilersdk.Popup({ offset: 20 })
       .setLngLat(coordinates)
       .setHTML(
-        `<div class="popup"><div class="popup-imgwrap"><img src="${main_image}" loading="lazy" alt="" class="popup-image"></div><div class="popup-txtwrap">${mag} and tsunami: ${tsunami}This is a small text but I&nbsp;am not sure if it is ok to have this here so big and tall what do you think.</div></div>`
+        `<div class="popup"><div class="popup-imgwrap"><img src="${main_image}" loading="lazy" alt="" class="popup-image"></div><div class="popup-txtwrap">${mag} and tsunami: ${tsunami}This is a small text but I&nbsp;am not sure if it is ok to have this here so big and tall what do you think.</div></div>`,
       )
       .setMaxWidth("360px")
       .addTo(map);
@@ -980,7 +980,7 @@ async function loadMapImages() {
           if (error) reject(error);
           else resolve({ name: key, image });
         });
-      })
+      }),
   );
 
   try {
