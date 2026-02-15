@@ -84,9 +84,7 @@ class LoadingManager {
     this.loadingCount++;
     if (this.loadingCount === 1) {
       DOM.loadingAnimation.style.display = "block";
-      // Show reload button when loading starts
       DOM.reload.classList.remove("hidden");
-      // Hide menu-tabs when loading starts
       const menuTabs = document.querySelector(".menu-tabs.w-form");
       if (menuTabs) {
         menuTabs.style.display = "none";
@@ -98,7 +96,6 @@ class LoadingManager {
     this.loadingCount = Math.max(0, this.loadingCount - 1);
     if (this.loadingCount === 0) {
       DOM.loadingAnimation.style.display = "none";
-      // Hide reload button when loading stops
       DOM.reload.classList.add("hidden");
     }
   }
@@ -106,7 +103,6 @@ class LoadingManager {
   reset() {
     this.loadingCount = 0;
     DOM.loadingAnimation.style.display = "none";
-    // Hide reload button on reset
     DOM.reload.classList.add("hidden");
   }
 }
@@ -131,7 +127,6 @@ function initializeMap() {
     }),
   );
 
-  // Disable map rotation
   map.dragRotate.disable();
   map.keyboard.disable();
   map.touchZoomRotate.disableRotation();
@@ -234,7 +229,6 @@ async function getData() {
     loadingManager.startLoading();
     DOM.btnSearch.value = DOM.btnSearch.dataset.wait;
 
-    // Hide menu-tabs during loading
     const menuTabs = document.querySelector(".menu-tabs.w-form");
     if (menuTabs) {
       menuTabs.style.display = "none";
@@ -270,7 +264,6 @@ function handleSuccessfulDataFetch(data) {
     loadGoogleMapsAPI();
     document.getElementById("map").style.visibility = "visible";
 
-    // Show menu-tabs after content is loaded
     const menuTabs = document.querySelector(".menu-tabs.w-form");
     if (menuTabs) {
       menuTabs.style.display = "block";
@@ -347,13 +340,11 @@ function loadCustomMarkersAndLayers(dataGeoJson) {
   let loadedImages = 0;
   const totalImages = customMarkers.length;
 
-  // Clear existing layers and sources
   ["cluster-layer", "point-layer", "cluster-count", "unclustered-point"].forEach((layer) => {
     if (map.getLayer(layer)) map.removeLayer(layer);
   });
   if (map.getSource("earthquakes")) map.removeSource("earthquakes");
 
-  // Load custom marker icons
   customMarkers.forEach((marker) => {
     map.loadImage(marker.path, (error, image) => {
       if (error) {
@@ -373,7 +364,6 @@ function loadCustomMarkersAndLayers(dataGeoJson) {
     });
   });
 
-  // Add GeoJSON source
   map.addSource("earthquakes", {
     type: "geojson",
     data: dataGeoJson,
@@ -388,7 +378,6 @@ function loadCustomMarkersAndLayers(dataGeoJson) {
     },
   });
 
-  // Add layers
   addMapLayers();
 }
 
@@ -458,7 +447,6 @@ class ListManager {
       DOM.listContainer.addEventListener("click", this.handleListClick.bind(this), true);
     }
 
-    // Also listen for card clicks to open detail page
     const cardsContainer = document.getElementById("cards");
     if (cardsContainer) {
       cardsContainer.addEventListener("click", handleCardDetailClick, false);
@@ -517,7 +505,6 @@ function activateList(data) {
   }
 }
 
-// Update waitForElement to include cleanup
 function waitForElement(selector) {
   return new Promise((resolve) => {
     if (document.querySelector(selector)) {
@@ -530,14 +517,11 @@ function waitForElement(selector) {
         }
       });
       observer.observe(document.documentElement, { childList: true, subtree: true });
-
-      // Store observer for cleanup
       window._elementObserver = observer;
     }
   });
 }
 
-// Update cleanup to reset loading state
 function cleanup() {
   if (window._elementObserver) {
     window._elementObserver.disconnect();
@@ -560,7 +544,6 @@ function enableSearch() {
 
   const debouncedHandleUserInput = debounce(handleUserInput, CONFIG.ui.debounceTime);
 
-  // Update search icon and clear button based on input value
   function updateSearchUI() {
     const hasValue = DOM.search.value.trim() !== "";
     const emailValue = document.querySelector('input[name="Email-3"]')?.value.trim() || "";
@@ -593,10 +576,8 @@ function enableSearch() {
     }
   }
 
-  // Initialize UI state
   updateSearchUI();
 
-  // Add input listener for Email-3 field
   const emailInput = document.querySelector('input[name="Email-3"]');
   if (emailInput) {
     emailInput.addEventListener("input", updateSearchUI);
@@ -609,7 +590,6 @@ function enableSearch() {
     debouncedHandleUserInput();
   });
 
-  // Add click handler for clear search
   const clearSearch = document.querySelector("#clearsearch");
   if (clearSearch) {
     clearSearch.addEventListener("click", function (e) {
@@ -632,7 +612,6 @@ document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
       window.$fetch.triggerAction("get_todos");
     }
 
-    // Force update UI after clear
     const spyglassIcon = document.querySelector("#spyglass");
     const clearSearch = document.querySelector("#clearsearch");
     const spyglassSvg = document.querySelector("#spyglass svg");
@@ -793,19 +772,15 @@ function handleClusterLayerClick(e) {
 
 function handleMapMoveEnd() {
   if (map.getLayer("point-layer") && map.isSourceLoaded("earthquakes")) {
-    // Start loading before filtering
     loadingManager.startLoading();
 
-    // Get current map bounds
     const bounds = map.getBounds();
     const ne = bounds.getNorthEast();
     const sw = bounds.getSouthWest();
 
-    // Get all cards from both containers
     const allCards = document.querySelectorAll("#cards .uui-blogsection01_item:not(:first-child)");
     const allResults = document.querySelectorAll("#results .uui-blogsection01_item:not(:first-child)");
 
-    // Filter cards based on bounds
     let visibleCount = 0;
     const visibleCards = [];
 
@@ -822,46 +797,35 @@ function handleMapMoveEnd() {
       }
     });
 
-    // Update results container to match visible cards
     allResults.forEach((result) => {
       const cardId = result.getAttribute("data-id");
       const isVisible = visibleCards.some((card) => card.getAttribute("data-id") === cardId);
       result.style.setProperty("display", isVisible ? "block" : "none", "important");
     });
 
-    // Reset all padding first
     visibleCards.forEach((card) => {
       card.style.setProperty("padding-left", "10px", "important");
       card.style.setProperty("padding-right", "10px", "important");
     });
 
-    // Recalculate padding based on column position
     if (visibleCount > 0) {
-      // Calculate which cards are in first and last columns
       visibleCards.forEach((card, index) => {
-        const column = index % 3; // 0 = first column, 1 = middle column, 2 = last column
-
-        // First column gets no left padding
+        const column = index % 3;
         if (column === 0) {
           card.style.setProperty("padding-left", "0", "important");
         }
-
-        // Last column gets no right padding
         if (column === 2) {
           card.style.setProperty("padding-right", "0", "important");
         }
       });
     }
 
-    // Update the total results display with animation
     const resultText = visibleCount === 1 ? "result" : "results";
 
-    // Add a small delay before updating the results
     setTimeout(() => {
       DOM.totalResults.innerHTML = `<b>${visibleCount}</b> ${resultText} within map area`;
       DOM.totalResults.classList.add("results-updating");
 
-      // Remove the animation class after it completes
       setTimeout(() => {
         DOM.totalResults.classList.remove("results-updating");
       }, 500);
@@ -870,7 +834,6 @@ function handleMapMoveEnd() {
     // Reset pagination on map move
     listState.currentPage = 1;
 
-    // Stop loading after filtering is complete
     loadingManager.stopLoading();
   }
 }
@@ -944,10 +907,7 @@ function fadeDiv(divId, count) {
   }, CONFIG.ui.updateTimeout);
 }
 
-// abusing the x-show  (see webflow on the card) functionality from framework.js to inject an id into the card
 function cardLoaded(card) {
-  //console.log("card loaded" + card.id);
-
   return "#card-" + card.id;
 }
 
@@ -956,17 +916,12 @@ DOM.search.addEventListener("input", function () {
   this.value ? this.classList.add("has--value") : this.classList.remove("has--value");
 });
 
-// Update list toggle
 document.querySelector(".list-toggle")?.addEventListener("click", function () {
   document.querySelector(".uui-cta06_component")?.classList.toggle("expanded");
   this.classList.toggle("active");
 });
 
 // MAIN EXECUTION
-// Ensure DOM is ready and framework.js is fully loaded
-/**
- * Ensure framework.js and cards DOM element are available before initializing
- */
 async function initializeCardsComponent() {
   await waitForFrameworkJS();
   await waitForElement("#cards");
@@ -980,11 +935,10 @@ function waitForFrameworkJS() {
         clearInterval(interval);
         resolve();
       }
-    }, 50); // Check every 50ms
+    }, 50);
   });
 }
 
-// Utility Functions
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -1047,7 +1001,6 @@ function sortVisibleCards(sortBy) {
     return listState.sortDir === "asc" ? valA - valB : valB - valA;
   });
 
-  // Reorder in DOM
   visibleCards.forEach((card) => list.appendChild(card));
   applyPagination();
   updateSortButtonStates();
@@ -1070,15 +1023,8 @@ function applyPagination() {
   if (!list) return;
 
   const allCards = Array.from(list.querySelectorAll(".uui-blogsection01_item:not(:first-child)"));
-  const visibleCards = allCards.filter((c) => {
-    const d = c.style.display;
-    return d !== "none";
-  });
 
-  // Re-check: some might be filtered by map bounds — we track "display:none" via setProperty
-  // We need to count cards that SHOULD be visible (not hidden by map bounds)
   const boundsVisible = allCards.filter((c) => {
-    // cards hidden by map bounds have display:none with !important
     return c.style.getPropertyPriority("display") !== "important" || c.style.getPropertyValue("display") !== "none";
   });
 
@@ -1092,9 +1038,8 @@ function applyPagination() {
 
   let idx = 0;
   allCards.forEach((card) => {
-    // Only paginate cards not hidden by map bounds
     const hiddenByBounds = card.style.getPropertyValue("display") === "none" && card.style.getPropertyPriority("display") === "important";
-    if (hiddenByBounds) return; // leave as-is (hidden by map)
+    if (hiddenByBounds) return;
 
     if (idx >= start && idx < end) {
       card.style.setProperty("display", "block", "important");
@@ -1168,14 +1113,12 @@ function augmentCardsForListView() {
     const listing = findListingById(id);
     if (!listing) return;
 
-    // Store data attributes for sorting
     card.setAttribute("data-price", listing.price || "0");
     card.setAttribute("data-name", listing.name || listing.title || "");
 
     const content = card.querySelector(".uui-blogsection01_content");
     if (!content) return;
 
-    // Add type label
     const type = listing.type || "Experience";
     let typeLabel = card.querySelector(".pde-card-type");
     if (!typeLabel) {
@@ -1185,7 +1128,6 @@ function augmentCardsForListView() {
       content.insertBefore(typeLabel, content.firstChild);
     }
 
-    // Add star rating row
     let ratingRow = card.querySelector(".pde-card-rating");
     if (!ratingRow) {
       ratingRow = document.createElement("div");
@@ -1193,7 +1135,6 @@ function augmentCardsForListView() {
       const rating = listing.rating || 4;
       const reviewCount = listing.reviews || Math.floor(Math.random() * 40 + 10);
       ratingRow.innerHTML = `<span class="pde-stars">${renderStars(rating)}</span><span class="pde-review-count">${rating.toFixed(1)} (${reviewCount} reviews)</span>`;
-      // Insert after title
       const title = content.querySelector(".uui-blogsection01_title, h3, h4");
       if (title && title.nextSibling) {
         content.insertBefore(ratingRow, title.nextSibling);
@@ -1202,7 +1143,6 @@ function augmentCardsForListView() {
       }
     }
 
-    // Add location row with icons
     let locationRow = card.querySelector(".pde-card-location");
     if (!locationRow) {
       locationRow = document.createElement("div");
@@ -1212,7 +1152,6 @@ function augmentCardsForListView() {
       ratingRow.after(locationRow);
     }
 
-    // Add price badge (for list view, shown on the right)
     let priceBadge = card.querySelector(".pde-card-price");
     if (!priceBadge && listing.price) {
       priceBadge = document.createElement("div");
@@ -1221,7 +1160,6 @@ function augmentCardsForListView() {
       card.appendChild(priceBadge);
     }
 
-    // Add favorite heart button
     let favBtn = card.querySelector(".pde-card-fav");
     if (!favBtn) {
       favBtn = document.createElement("button");
@@ -1232,7 +1170,6 @@ function augmentCardsForListView() {
         favBtn.classList.toggle("active");
       });
 
-      // Place inside image wrapper
       const imgWrapper = card.querySelector(".uui-blogsection01_image-wrapper");
       if (imgWrapper) {
         imgWrapper.style.position = "relative";
@@ -1277,12 +1214,9 @@ function injectResultsToolbar() {
     </div>
   `;
 
-  // Insert toolbar after the totalresults element
   totalResultsEl.parentNode.insertBefore(toolbar, totalResultsEl.nextSibling);
-  // Move totalresults text into the new toolbar
   const pdeResultsText = document.getElementById("pde-results-text");
   if (pdeResultsText) {
-    // We'll sync text from totalresults into our styled element
     const observer = new MutationObserver(() => {
       pdeResultsText.innerHTML = totalResultsEl.innerHTML;
     });
@@ -1291,12 +1225,10 @@ function injectResultsToolbar() {
     totalResultsEl.style.display = "none";
   }
 
-  // Sort button handlers
   toolbar.querySelectorAll(".pde-sort-btn").forEach((btn) => {
     btn.addEventListener("click", () => sortVisibleCards(btn.dataset.sort));
   });
 
-  // Share button
   document.getElementById("pde-share-btn")?.addEventListener("click", () => {
     if (navigator.share) {
       navigator.share({ title: "Parc des Écrins", url: window.location.href });
@@ -1307,4 +1239,1200 @@ function injectResultsToolbar() {
   });
 }
 
-// ...existing code... (main() function)
+// Main Execution
+async function main() {
+  try {
+    injectCSS();
+
+    const menuTabs = document.querySelector(".menu-tabs.w-form");
+    if (menuTabs) {
+      menuTabs.style.display = "none";
+    }
+
+    DOM.reload.classList.add("hidden");
+
+    const gridViewButton = document.querySelector(".button-with-icon.grid-view");
+    const listViewButton = document.querySelector(".button-with-icon.list-view");
+    const listToggleButton = document.querySelector(".list-toggle");
+    const cardsContainer = document.getElementById("cards");
+
+    if (gridViewButton) {
+      gridViewButton.classList.add("active");
+
+      gridViewButton.addEventListener("click", function () {
+        gridViewButton.classList.add("active");
+        if (listViewButton) {
+          listViewButton.classList.remove("active");
+        }
+        if (listToggleButton) {
+          listToggleButton.style.display = "block";
+        }
+        if (cardsContainer) {
+          cardsContainer.classList.remove("list-layout");
+          cardsContainer.classList.add("grid-layout");
+        }
+        const grid = document.querySelector(".uui-blogsection01_list");
+        if (grid) {
+          grid.classList.add("w-layout-grid");
+          grid.classList.remove("list-mode");
+        }
+        forceGridViewDisplay();
+      });
+    }
+
+    if (listViewButton) {
+      listViewButton.classList.remove("active");
+
+      listViewButton.addEventListener("click", function () {
+        listViewButton.classList.add("active");
+        if (gridViewButton) {
+          gridViewButton.classList.remove("active");
+        }
+        if (listToggleButton) {
+          listToggleButton.style.display = "none";
+        }
+        if (cardsContainer) {
+          cardsContainer.classList.remove("grid-layout");
+          cardsContainer.classList.add("list-layout");
+        }
+        const grid = document.querySelector(".uui-blogsection01_list");
+        if (grid) {
+          grid.classList.remove("w-layout-grid");
+          grid.classList.add("list-mode");
+        }
+        resetListViewGridStyles();
+        forceListViewDisplay();
+      });
+    }
+
+    if (cardsContainer) {
+      cardsContainer.classList.add("grid-layout");
+    }
+
+    await initializeCardsComponent();
+    map = initializeMap();
+    window.listManager = new ListManager();
+    window.listManager.initialize();
+
+    map.on("load", async () => {
+      const imagesLoaded = await loadMapImages();
+      if (imagesLoaded) {
+        getData();
+      }
+
+      map.on("click", "point-layer", handlePointLayerClick);
+      map.on("click", "cluster-layer", handleClusterLayerClick);
+      map.on("mouseenter", "point-layer", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", "point-layer", () => {
+        map.getCanvas().style.cursor = "";
+      });
+      map.on("moveend", handleMapMoveEnd);
+    });
+  } catch (error) {
+    console.error("Error during initialization:", error);
+    cleanup();
+  }
+}
+
+// Function to inject CSS styles
+function injectCSS() {
+  if (document.getElementById("view-toggle-styles")) {
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = "view-toggle-styles";
+  style.textContent = `
+    /* Reset any existing styles */
+    .uui-blogsection01_list {
+      all: initial !important;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    .uui-blogsection01_item {
+      all: initial !important;
+      box-sizing: border-box !important;
+    }
+
+    /* Grid layout - default */
+    #cards.grid-layout .uui-blogsection01_list,
+    .uui-blogsection01_list.w-layout-grid {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    #cards.grid-layout .uui-blogsection01_item {
+      width: 33.333% !important;
+      padding: 10px !important;
+      box-sizing: border-box !important;
+    }
+
+    #cards.grid-layout .uui-blogsection01_item:nth-child(3n+2) {
+      padding-left: 0 !important;
+    }
+
+    #cards.grid-layout .uui-blogsection01_item:nth-child(3n+1) {
+      padding-right: 0 !important;
+    }
+
+    /* List layout - override Webflow grid */
+    #cards.list-layout .uui-blogsection01_list,
+    .uui-blogsection01_list.list-mode {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      gap: 0 !important;
+      padding: 10px !important;
+    }
+
+    #cards.list-layout .uui-blogsection01_item,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_item {
+      flex-direction: row !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      align-items: stretch !important;
+      min-height: auto !important;
+      padding: 16px 0 !important;
+      border-bottom: 1px solid #EAECF0 !important;
+      position: relative !important;
+      cursor: pointer !important;
+      transition: background 0.15s ease !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+    }
+
+    #cards.list-layout .uui-blogsection01_item:hover,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_item:hover {
+      background: #F9FAFB !important;
+    }
+
+    #cards.list-layout .uui-blogsection01_item.selected,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_item.selected {
+      background: #F4F3FF !important;
+    }
+
+    #cards.list-layout .uui-blogsection01_item:first-child,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_item:first-child {
+      padding-left: 0 !important;
+    }
+
+    #cards.list-layout .uui-blogsection01_item:last-child,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_item:last-child {
+      padding-right: 0 !important;
+    }
+
+    #cards.list-layout .uui-blogsection01_image-wrapper,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_image-wrapper {
+      width: 260px !important;
+      min-width: 260px !important;
+      max-width: 260px !important;
+      height: 180px !important;
+      margin-right: 20px !important;
+      flex-shrink: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow: hidden !important;
+      padding-top: 0 !important;
+      border-radius: 12px !important;
+      position: relative !important;
+    }
+
+    #cards.list-layout .uui-blogsection01_image-wrapper img,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_image-wrapper img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      display: block !important;
+      border-radius: 12px !important;
+    }
+
+    #cards.list-layout .uui-blogsection01_content,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_content {
+      width: auto !important;
+      padding: 4px 0 !important;
+      flex-grow: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      gap: 4px !important;
+    }
+
+    /* Media query for responsive grid */
+    @media screen and (max-width: 991px) {
+      #cards.grid-layout .uui-blogsection01_item {
+        width: 50% !important;
+      }
+    }
+
+    @media screen and (max-width: 767px) {
+      #cards.grid-layout .uui-blogsection01_item {
+        width: 100% !important;
+      }
+    }
+
+    #cards.grid-layout .card-wrapper {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+    }
+
+    .uui-blogsection01_item:first-child {
+      display: none !important;
+    }
+
+    .uui-blogsection01_item:not([data-id]) {
+      display: none !important;
+    }
+
+    .uui-blogsection01_list .uui-blogsection01_item:nth-child(1) {
+      display: none !important;
+    }
+
+    /* Results animation */
+    @keyframes resultsUpdate {
+      0% {
+        opacity: 0.5;
+        transform: scale(0.95);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .results-updating {
+      animation: resultsUpdate 0.5s ease-out;
+      display: inline-block;
+    }
+
+    /* ===== Enhanced Toolbar (Untitled UI style) ===== */
+    #pde-toolbar-enhanced {
+      padding: 0 0 12px 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .pde-toolbar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .pde-results-count {
+      font-size: 18px;
+      font-weight: 600;
+      color: #101828;
+    }
+    .pde-results-count b {
+      font-weight: 700;
+    }
+    .pde-toolbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .pde-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: 1px solid #D0D5DD;
+      border-radius: 8px;
+      background: #fff;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pde-action-btn:hover {
+      background: #F9FAFB;
+      border-color: #98A2B3;
+    }
+    .pde-toolbar-bottom {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #EAECF0;
+    }
+    .pde-sort-group {
+      display: flex;
+      gap: 8px;
+    }
+    .pde-sort-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border: 1px solid #D0D5DD;
+      border-radius: 8px;
+      background: #fff;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pde-sort-btn:hover {
+      background: #F9FAFB;
+    }
+    .pde-sort-btn.active {
+      background: #F9FAFB;
+      border-color: #7F56D9;
+      color: #6941C6;
+    }
+    .sort-arrow {
+      font-size: 12px;
+      margin-left: 2px;
+    }
+
+    /* ===== Enhanced List-View Cards (Untitled UI style) ===== */
+    /* Card type label */
+    .pde-card-type {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6941C6;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 2px;
+    }
+
+    /* Card title in list view */
+    #cards.list-layout .uui-blogsection01_title,
+    #cards.list-layout h3,
+    .uui-blogsection01_list.list-mode .uui-blogsection01_title,
+    .uui-blogsection01_list.list-mode h3 {
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      color: #101828 !important;
+      margin: 0 !important;
+      line-height: 1.4 !important;
+    }
+
+    /* Rating row */
+    .pde-card-rating {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #344054;
+    }
+    .pde-stars {
+      color: #F59E0B;
+      letter-spacing: 1px;
+      font-size: 13px;
+    }
+    .pde-review-count {
+      color: #667085;
+      font-size: 13px;
+    }
+
+    /* Location row */
+    .pde-card-location {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: #667085;
+      margin-top: 2px;
+    }
+    .pde-card-location svg {
+      flex-shrink: 0;
+    }
+
+    /* Price badge (positioned right in list view) */
+    .pde-card-price {
+      display: none;
+    }
+    #cards.list-layout .pde-card-price,
+    .uui-blogsection01_list.list-mode .pde-card-price {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: flex-end !important;
+      justify-content: flex-start !important;
+      padding-top: 20px !important;
+      padding-right: 4px !important;
+      min-width: 90px !important;
+      flex-shrink: 0 !important;
+    }
+    .pde-price-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #101828;
+      white-space: nowrap;
+    }
+
+    /* Favorite heart button */
+    .pde-card-fav {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.85);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      transition: all 0.2s ease;
+      color: #667085;
+      padding: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .pde-card-fav:hover {
+      background: #fff;
+      transform: scale(1.1);
+    }
+    .pde-card-fav.active {
+      color: #EF4444;
+    }
+    .pde-card-fav.active svg {
+      fill: #EF4444;
+      stroke: #EF4444;
+    }
+
+    /* Grid view: hide list-only elements */
+    #cards.grid-layout .pde-card-price {
+      display: none !important;
+    }
+    #cards.grid-layout .pde-card-type {
+      display: block;
+    }
+    #cards.grid-layout .pde-card-rating {
+      display: flex;
+    }
+    #cards.grid-layout .pde-card-location {
+      display: none;
+    }
+
+    /* ===== Pagination (Untitled UI style) ===== */
+    #pde-pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-top: 1px solid #EAECF0;
+      margin-top: 4px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .pde-page-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: 1px solid #D0D5DD;
+      border-radius: 8px;
+      background: #fff;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pde-page-btn:hover:not(:disabled) {
+      background: #F9FAFB;
+      border-color: #98A2B3;
+    }
+    .pde-page-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .pde-page-info {
+      font-size: 14px;
+      font-weight: 500;
+      color: #344054;
+    }
+
+    /* Responsive adjustments for list view */
+    @media screen and (max-width: 767px) {
+      #cards.list-layout .uui-blogsection01_image-wrapper,
+      .uui-blogsection01_list.list-mode .uui-blogsection01_image-wrapper {
+        width: 120px !important;
+        min-width: 120px !important;
+        max-width: 120px !important;
+        height: 120px !important;
+        margin-right: 12px !important;
+      }
+      #cards.list-layout .pde-card-price,
+      .uui-blogsection01_list.list-mode .pde-card-price {
+        min-width: 60px !important;
+      }
+      .pde-toolbar-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .pde-sort-group {
+        flex-wrap: wrap;
+      }
+    }
+
+    /* ===== Detail Page Overlay ===== */
+    .detail-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2vh 2vw;
+      overflow-y: auto;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .detail-overlay.visible {
+      opacity: 1;
+    }
+
+    .detail-container {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 820px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative;
+      margin: auto;
+    }
+
+    .detail-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 10;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      line-height: 1;
+      color: #333;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transition: background 0.2s;
+    }
+    .detail-close:hover {
+      background: #fff;
+    }
+
+    /* Gallery */
+    .detail-gallery {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 6px;
+      height: 380px;
+      overflow: hidden;
+    }
+    .detail-gallery-thumbs {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+    .detail-gallery-thumb {
+      width: 100%;
+      flex: 1;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+    .detail-gallery-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.2s;
+    }
+    .detail-gallery-thumb:hover img {
+      opacity: 0.85;
+    }
+    .detail-gallery-thumb .thumb-badge {
+      position: absolute;
+      bottom: 6px;
+      left: 6px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .detail-gallery-main {
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .detail-gallery-main img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Body */
+    .detail-body {
+      padding: 28px 32px 32px;
+    }
+
+    /* Title row */
+    .detail-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+    .detail-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0;
+      line-height: 1.25;
+    }
+    .detail-price {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f56960;
+      white-space: nowrap;
+      margin-left: 16px;
+      margin-top: 4px;
+    }
+
+    /* Location & rating */
+    .detail-location-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      color: #666;
+      font-size: 14px;
+    }
+    .detail-stars {
+      color: #f5a623;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+
+    /* Tags */
+    .detail-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .detail-tag {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1.5px solid;
+      background: transparent;
+    }
+    .detail-tag:nth-child(4n+1) { color: #f56960; border-color: #f56960; }
+    .detail-tag:nth-child(4n+2) { color: #4ecdc4; border-color: #4ecdc4; }
+    .detail-tag:nth-child(4n+3) { color: #5b7ff5; border-color: #5b7ff5; }
+    .detail-tag:nth-child(4n)   { color: #f5a623; border-color: #f5a623; }
+
+    /* Meta row */
+    .detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding: 18px 0;
+      border-top: 1px solid #eee;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 24px;
+    }
+    .detail-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .detail-meta-label {
+      font-size: 12px;
+      color: #999;
+      text-transform: capitalize;
+    }
+    .detail-meta-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .detail-meta-icon {
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    /* Description + map */
+    .detail-content-row {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .detail-description h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0 0 10px;
+    }
+    .detail-description p {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #555;
+      margin: 0;
+    }
+    .detail-read-more {
+      font-weight: 600;
+      color: #1a1a1a;
+      text-decoration: underline;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+      font-size: 14px;
+    }
+
+    .detail-minimap {
+      width: 100%;
+      height: 200px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #e0f0f0;
+    }
+    .detail-minimap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Action row */
+    .detail-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .detail-btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f56960;
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .detail-btn-primary:hover {
+      background: #e05550;
+    }
+    .detail-btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+    .detail-btn-secondary:hover {
+      color: #f56960;
+    }
+
+    /* Responsive detail */
+    @media screen and (max-width: 767px) {
+      .detail-gallery {
+        grid-template-columns: 1fr;
+        height: 260px;
+      }
+      .detail-gallery-thumbs {
+        flex-direction: row;
+        order: 2;
+        height: 70px;
+      }
+      .detail-gallery-main {
+        order: 1;
+      }
+      .detail-body {
+        padding: 20px 18px 24px;
+      }
+      .detail-content-row {
+        grid-template-columns: 1fr;
+      }
+      .detail-title {
+        font-size: 22px;
+      }
+      .detail-meta {
+        gap: 16px;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+  console.log("View toggle styles injected successfully");
+}
+
+// ===== Detail Page =====
+
+/**
+ * Find a listing object from the cached data by its ID
+ */
+function findListingById(id) {
+  if (!window.mapDataManager || !window.mapDataManager.cache) return null;
+  for (const [, data] of window.mapDataManager.cache) {
+    if (Array.isArray(data)) {
+      const found = data.find((item) => String(item.id) === String(id));
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+/**
+ * Generate star HTML from a numeric rating (0-5)
+ */
+function renderStars(rating) {
+  const full = Math.floor(rating || 4);
+  const half = (rating || 4) % 1 >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(empty);
+}
+
+/**
+ * Build and show the detail overlay for a given listing
+ */
+function openDetailPage(listing) {
+  if (!listing) return;
+
+  closeDetailPage();
+
+  const mainImage = listing.main_image || "";
+  const title = listing.name || listing.title || listing.id || "Untitled";
+  const location = listing.location || listing.address || "Parc des Écrins, France";
+  const rating = listing.rating || 4;
+  const tags = listing.tags || listing.categories || [];
+  const tagsArray = Array.isArray(tags)
+    ? tags
+    : typeof tags === "string"
+      ? tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
+  const description = listing.description || listing.summary || "";
+  const price = listing.price || "";
+  const duration = listing.duration || "";
+  const activityLevel = listing.activity_level || listing.difficulty || "";
+  const language = listing.language || "";
+  const includes = listing.includes || "";
+  const link = listing.link || listing.url || "#";
+  const images = listing.images || listing.gallery || [];
+  const imagesArray = Array.isArray(images)
+    ? images
+    : typeof images === "string"
+      ? images
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+  const allImages = [mainImage, ...imagesArray.filter((img) => img !== mainImage)].filter(Boolean);
+  const thumbImages = allImages.slice(0, 3);
+  const extraCount = allImages.length > 3 ? allImages.length - 3 : 0;
+
+  const lat = listing.latitude || CONFIG.map.center[1];
+  const lon = listing.longitude || CONFIG.map.center[0];
+  const minimapUrl = `https://api.maptiler.com/maps/${CONFIG.map.style}/static/${lon},${lat},11/220x200@2x.png?key=fsCLuIQWGPlRskWhImQz`;
+
+  const maxDescLength = 280;
+  const isLong = description.length > maxDescLength;
+  const shortDesc = isLong ? description.substring(0, maxDescLength) + "..." : description;
+
+  const metaItems = [];
+  if (duration) metaItems.push({ icon: "🕐", label: "Duration", value: duration });
+  if (activityLevel) metaItems.push({ icon: "⚡", label: "Activity Level", value: activityLevel });
+  if (language) metaItems.push({ icon: "🏠", label: "Hosted in", value: language });
+  if (includes) metaItems.push({ icon: "📦", label: "Includes", value: includes });
+
+  const overlay = document.createElement("div");
+  overlay.className = "detail-overlay";
+  overlay.id = "detail-overlay";
+
+  overlay.innerHTML = `
+    <div class="detail-container">
+      <button class="detail-close" id="detail-close" aria-label="Close">&times;</button>
+
+      <!-- Gallery -->
+      <div class="detail-gallery">
+        <div class="detail-gallery-thumbs">
+          ${thumbImages
+            .map(
+              (img, i) => `
+            <div class="detail-gallery-thumb" data-img-index="${i}">
+              <img src="${img}" alt="Thumbnail ${i + 1}" loading="lazy">
+              ${i === thumbImages.length - 1 && extraCount > 0 ? `<span class="thumb-badge">🖼 ${extraCount}+</span>` : ""}
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+        <div class="detail-gallery-main">
+          <img src="${allImages[0] || ""}" alt="${title}" id="detail-main-image" loading="lazy">
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="detail-body">
+        <div class="detail-title-row">
+          <h2 class="detail-title">${title}</h2>
+          ${price ? `<span class="detail-price">${price}</span>` : ""}
+        </div>
+
+        <div class="detail-location-row">
+          <span>${location}</span>
+          <span class="detail-stars">${renderStars(rating)}</span>
+        </div>
+
+        ${
+          tagsArray.length > 0
+            ? `
+          <div class="detail-tags">
+            ${tagsArray.map((tag) => `<span class="detail-tag">${tag}</span>`).join("")}
+          </div>
+        `
+            : ""
+        }
+
+        ${
+          metaItems.length > 0
+            ? `
+          <div class="detail-meta">
+            ${metaItems
+              .map(
+                (m) => `
+              <div class="detail-meta-item">
+                <span class="detail-meta-icon">${m.icon}</span>
+                <span class="detail-meta-label">${m.label}</span>
+                <span class="detail-meta-value">${m.value}</span>
+              </div>
+            `,
+              )
+              .join("")}
+          </div>
+        `
+            : ""
+        }
+
+        <div class="detail-content-row">
+          <div class="detail-description">
+            <h3>Description</h3>
+            <p id="detail-desc-text">${shortDesc}</p>
+            ${isLong ? `<button class="detail-read-more" id="detail-read-more">Read More</button>` : ""}
+          </div>
+          <div class="detail-minimap">
+            <img src="${minimapUrl}" alt="Location map">
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          ${link && link !== "#" ? `<a href="${link}" target="_blank" class="detail-btn-primary">🗓 View Details</a>` : `<button class="detail-btn-primary" id="detail-fly-btn">🗺 Show on Map</button>`}
+          <button class="detail-btn-secondary" id="detail-fav-btn">♡ Add to favourite</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.classList.add("visible");
+  });
+
+  document.body.style.overflow = "hidden";
+
+  // === Event Listeners ===
+  document.getElementById("detail-close").addEventListener("click", closeDetailPage);
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeDetailPage();
+  });
+
+  const escHandler = (e) => {
+    if (e.key === "Escape") {
+      closeDetailPage();
+      document.removeEventListener("keydown", escHandler);
+    }
+  };
+  document.addEventListener("keydown", escHandler);
+
+  overlay.querySelectorAll(".detail-gallery-thumb").forEach((thumb) => {
+    thumb.addEventListener("click", () => {
+      const idx = parseInt(thumb.dataset.imgIndex, 10);
+      const mainImg = document.getElementById("detail-main-image");
+      if (mainImg && allImages[idx]) {
+        mainImg.src = allImages[idx];
+      }
+    });
+  });
+
+  const readMoreBtn = document.getElementById("detail-read-more");
+  if (readMoreBtn) {
+    readMoreBtn.addEventListener("click", () => {
+      document.getElementById("detail-desc-text").textContent = description;
+      readMoreBtn.style.display = "none";
+    });
+  }
+
+  const flyBtn = document.getElementById("detail-fly-btn");
+  if (flyBtn) {
+    flyBtn.addEventListener("click", () => {
+      closeDetailPage();
+      if (listing.longitude && listing.latitude) {
+        map.flyTo({
+          center: [parseFloat(listing.longitude), parseFloat(listing.latitude)],
+          zoom: 14,
+        });
+      }
+    });
+  }
+}
+
+/**
+ * Close the detail overlay
+ */
+function closeDetailPage() {
+  const overlay = document.getElementById("detail-overlay");
+  if (overlay) {
+    overlay.classList.remove("visible");
+    setTimeout(() => overlay.remove(), 300);
+    document.body.style.overflow = "";
+  }
+}
+
+/**
+ * Handle card click to open detail page.
+ * Attached via event delegation on the cards container.
+ */
+function handleCardDetailClick(event) {
+  if (event.target.closest(".fly-to-marker")) return;
+  if (event.target.closest(".pde-card-fav")) return;
+
+  const item = event.target.closest(".uui-blogsection01_item");
+  if (!item) return;
+
+  const id = item.getAttribute("data-id");
+  if (!id) return;
+
+  const listing = findListingById(id);
+  if (listing) {
+    openDetailPage(listing);
+  }
+}
+
+// Call main explicitly
+main().catch((error) => {
+  console.error("Error during initialization:", error);
+});
+
+// Add cleanup on page unload
+window.addEventListener("unload", cleanup);
+
+// Add initial hide on page load
+document.addEventListener("DOMContentLoaded", function () {
+  const menuTabs = document.querySelector(".menu-tabs.w-form");
+  if (menuTabs) {
+    menuTabs.style.display = "none";
+  }
+});
+
+// List Selection Functions
+function cleanSelection() {
+  const listSelected = document.querySelector(".uui-blogsection01_item.selected");
+  if (listSelected) {
+    listSelected.classList.remove("selected");
+  }
+}
+
+function selectListToMap(item) {
+  map.setLayoutProperty("point-layer", "icon-image", ["case", ["==", ["get", "id"], item.dataset.id], "restaurant+walk-active", ["get", "icon"]]);
+}
+
+function flyToMarker(item) {
+  map.flyTo({
+    center: item.dataset.lonlat.split(","),
+  });
+}
+
+function selectMapToList(element) {
+  cleanSelection();
+  const listSelected = document.querySelector(`.uui-blogsection01_item[data-id="${element.properties.id}"]`);
+  if (listSelected) {
+    listSelected.classList.add("selected");
+  }
+}
+
+function resetListViewGridStyles() {
+  const list = document.querySelector(".uui-blogsection01_list");
+  if (list) {
+    list.style.display = "flex";
+    list.style.flexDirection = "column";
+    list.style.gridTemplateColumns = "";
+    list.style.gridTemplateRows = "";
+    list.style.justifyItems = "";
+    list.style.alignItems = "";
+    list.style.gridColumnGap = "";
+    list.style.gridRowGap = "";
+    list.style.gridArea = "";
+  }
+}
+
+function forceListViewDisplay() {
+  const list = document.querySelector(".uui-blogsection01_list");
+  if (list) {
+    list.style.display = "flex";
+    list.style.flexDirection = "column";
+    list.style.gridTemplateColumns = "";
+    list.style.gridTemplateRows = "";
+    list.style.justifyItems = "";
+    list.style.alignItems = "";
+    list.style.gridColumnGap = "";
+    list.style.gridRowGap = "";
+    list.style.gridArea = "";
+  }
+}
+
+function forceGridViewDisplay() {
+  const list = document.querySelector(".uui-blogsection01_list");
+  if (list) {
+    list.style.display = "grid";
+    list.style.flexDirection = "";
+    list.style.gridTemplateColumns = "repeat(3, 1fr)";
+    list.style.gridTemplateRows = "";
+  }
+}
