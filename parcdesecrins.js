@@ -269,14 +269,19 @@ function handleSuccessfulDataFetch(data) {
       menuTabs.style.display = "block";
     }
 
-    // Augment cards after a short delay to let framework.js render
+    // Augment cards after a short delay to let framework.js render,
+    // then progressively reveal the UI
     setTimeout(() => {
       augmentCardsForListView();
       injectResultsToolbar();
       listState.currentPage = 1;
+
+      // Reveal the app shell with a smooth fade-in
+      revealAppShell();
     }, 500);
   } else {
     showNoResultsUI();
+    revealAppShell();
   }
   loadingManager.stopLoading();
 }
@@ -1339,8 +1344,49 @@ function injectResultsToolbar() {
 }
 
 // Main Execution
+// Progressive reveal of all hidden UI elements
+function revealAppShell() {
+  // Remove the preload-hide style so it doesn't override
+  const preloadStyle = document.getElementById("pde-preload-hide");
+  if (preloadStyle) preloadStyle.remove();
+
+  const els = window.__pdeAppShellEls || [];
+  // Stagger the reveal for a nice progressive effect
+  els.forEach((el, i) => {
+    setTimeout(() => {
+      el.classList.add("pde-ready");
+    }, i * 60);
+  });
+}
+
 async function main() {
   try {
+    // --- Progressive loading: hide UI immediately ---
+    const appShellSelectors = [
+      "#cards",
+      "#toolbar",
+      ".menu-tabs.w-form",
+      "#filter-group",
+      "#email-form",
+      "#totalresults",
+      ".uui-blogsection01_list",
+      ".button-with-icon.grid-view",
+      ".button-with-icon.list-view",
+      ".list-toggle",
+      "#no-results",
+      "#pde-toolbar-enhanced",
+    ];
+    const appShellEls = [];
+    appShellSelectors.forEach((sel) => {
+      const el = document.querySelector(sel);
+      if (el) {
+        el.classList.add("pde-app-shell");
+        appShellEls.push(el);
+      }
+    });
+    // Store for later reveal
+    window.__pdeAppShellEls = appShellEls;
+
     injectCSS();
 
     const menuTabs = document.querySelector(".menu-tabs.w-form");
@@ -1444,6 +1490,17 @@ function injectCSS() {
   const style = document.createElement("style");
   style.id = "view-toggle-styles";
   style.textContent = `
+    /* === Progressive Loading === */
+    .pde-app-shell {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    .pde-app-shell.pde-ready {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     /* Reset any existing styles */
     .uui-blogsection01_list {
       all: initial !important;
@@ -2462,11 +2519,27 @@ main().catch((error) => {
 // Add cleanup on page unload
 window.addEventListener("unload", cleanup);
 
-// Add initial hide on page load
+// Add initial hide on page load — hide UI immediately to prevent flash
 document.addEventListener("DOMContentLoaded", function () {
   const menuTabs = document.querySelector(".menu-tabs.w-form");
   if (menuTabs) {
     menuTabs.style.display = "none";
+  }
+
+  // Immediately inject a minimal style to hide the shell before main() runs
+  if (!document.getElementById("pde-preload-hide")) {
+    const s = document.createElement("style");
+    s.id = "pde-preload-hide";
+    s.textContent = `
+      #cards, #toolbar, #filter-group, #email-form,
+      #totalresults, #no-results, #pde-toolbar-enhanced,
+      .button-with-icon.grid-view, .button-with-icon.list-view,
+      .list-toggle, .uui-blogsection01_list {
+        opacity: 0 !important;
+        transition: opacity 0.5s ease !important;
+      }
+    `;
+    document.head.appendChild(s);
   }
 });
 
