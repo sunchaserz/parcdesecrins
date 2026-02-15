@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Parc des Ecrins</title>
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  <!-- Webflow CSS (local) -->
+  <link href="css/parcdesecrins.webflow.css" rel="stylesheet" type="text/css" />
+
+  <!-- Custom overrides -->
+  <style>
+    /* Override .uui-text-size-medium (including compound selectors) */
+    .uui-text-size-medium,
+    .uui-text-size-medium.readex,
+    .uui-text-size-medium.jakarta {
+      color: #1a1e1f !important;
+      letter-spacing: normal !important;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Ubuntu, Cantarell, 'Helvetica Neue', Oxygen, 'Fira Sans', 'Droid Sans', sans-serif !important;
+      font-size: 1rem !important;
+      line-height: 1.5 !important;
+    }
+
+    /* Default system font for all elements that rely on Inter, Readex Pro, Sora, DM Sans, Plus Jakarta Sans */
+    .uui-text-size-medium-2,
+    .uui-text-size-medium-3,
+    .uui-text-size-medium-4,
+    .uui-text-size-small-2,
+    .uui-text-size-xlarge-2,
+    .uui-text-size-xlarge-3,
+    .uui-heading-xsmall,
+    .uui-heading-xlarge-2,
+    .uui-heading-xlarge-3,
+    .uui-banner17_text,
+    .uui-banner23_text,
+    .uui-footer07_legal-link,
+    .uui-text-style-link,
+    .uui-form_input,
+    .uui-button-2,
+    .uui-button-secondary-gray-2,
+    .c-nav-link,
+    .button-label,
+    .tag,
+    .warning-updated,
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Ubuntu, Cantarell, 'Helvetica Neue', Oxygen, 'Fira Sans', 'Droid Sans', sans-serif;
+    }
+  </style>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin="anonymous" />
+  <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    WebFont.load({
+      google: {
+        families: [
+          "Readex Pro:200,300,regular,500,600,700",
+          "Inter:100,200,300,regular,500,600,700,800,900",
+          "Roboto:300,regular,500,700",
+          "Sora:300,regular,500,600",
+          "DM Sans:regular,600",
+          "Plus Jakarta Sans:regular,700"
+        ]
+      }
+    });
+  </script>
+
+  <script type="text/javascript">
+    !function (o, c) { var n = c.documentElement, t = " w-mod-"; n.className += t + "js", ("ontouchstart" in o || o.DocumentTouch && c instanceof DocumentTouch) && (n.className += t + "touch") }(window, document);
+  </script>
+
+  <!-- Favicon & Touch Icons (local) -->
+  <link href="assets/favicon.png" rel="shortcut icon" type="image/x-icon" />
+  <link href="assets/webclip.png" rel="apple-touch-icon" />
+
+  <!-- Font smoothing -->
+  <style>
+    * {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+
+  <!-- Framework JS (from GitHub via jsdelivr) -->
+  <script>
+    fetch('https://api.github.com/repos/sunchaserz/parcdesecrins/commits/main')
+      .then(response => response.json())
+      .then(data => {
+        const latestCommitHash = data.sha;
+        const scriptUrl = `https://cdn.jsdelivr.net/gh/sunchaserz/parcdesecrins@${latestCommitHash}/framework.js`;
+        const scriptElement = document.createElement('script');
+        scriptElement.src = scriptUrl;
+        document.head.appendChild(scriptElement);
+        console.log("Inserted framework.js with commit hash:", latestCommitHash);
+      })
+      .catch(error => console.error('Error fetching commit:', error));
+  </script>
+
+  <!-- Webflow JS (kept for interactions) -->
+  <script src="https://cdn.jsdelivr.net/npm/@webflow/js@1.0.0/webflow.js"></script>
+
+  <!-- Maptiler SDK -->
+  <script src="https://cdn.maptiler.com/maptiler-sdk-js/v1.1.1/maptiler-sdk.umd.js"></script>
+  <link href="https://cdn.maptiler.com/maptiler-sdk-js/v1.1.1/maptiler-sdk.css" rel="stylesheet" />
+
+  <!-- Maptiler Geocoding -->
+  <script src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.3.3/maptilersdk.umd.js"></script>
+  <link href="https://cdn.maptiler.com/maptiler-geocoding-control/v1.3.3/style.css" rel="stylesheet" />
+
+  <!-- Custom CSS: General -->
+  <style>
+    .grey {
+      opacity: .4;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* initially hidden until google maps api loaded for autosuggest */
+    #email-form {
+      visibility: hidden;
+    }
+
+    /* Autosuggest styling */
+    .autosuggest {
+      background-color: #fff;
+      border-bottom-right-radius: .5rem;
+      border-bottom-left-radius: .5rem;
+      width: 79%;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+      border-top: none;
+      top: 65px;
+      max-height: 240px;
+    }
+
+    .autosuggest::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      box-shadow: 0px 10px 31px 10px #00000014;
+      pointer-events: none;
+      mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
+      z-index: -1;
+    }
+
+    .autosuggest ul {
+      list-style-type: none;
+      padding-left: 1rem;
+      overflow: auto;
+    }
+
+    .autosuggest .powered-by-google {
+      margin-left: .5rem;
+      margin-top: 1rem;
+    }
+
+    /* has--value is being set by js */
+    #search.has--value+.input__suggestions {
+      display: none !important;
+    }
+
+    #search:focus+.input__suggestions {
+      transition: opacity 0.05s 0.05s ease !important;
+      opacity: 0.35;
+    }
+
+    /* fade search box placeholder on focus */
+    input#search:focus::-webkit-input-placeholder {
+      transition: opacity 0.05s 0.05s ease !important;
+      opacity: 0.35;
+    }
+
+    /* hoverfade class */
+    .hoverfade {
+      opacity: 1;
+      transition: all .5s ease-out;
+    }
+
+    .hoverfade:hover {
+      opacity: .6;
+    }
+
+    /* make sure users can click through the suggestion animation */
+    .input__suggestions {
+      pointer-events: none;
+    }
+
+    .tags>.tag-wrapper:last-child>.tag-separator {
+      visibility: hidden;
+    }
+
+    /* fade / pulse for warning messages */
+    .fade-in-out {
+      -webkit-animation: fadeinout 2s linear forwards;
+      animation: fadeinout 2s linear forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeinout {
+      50% {
+        opacity: 1;
+      }
+    }
+
+    /* loading dots */
+    .dot-pulse {
+      position: relative;
+      left: -9999px;
+      width: 10px;
+      height: 10px;
+      border-radius: 5px;
+      background-color: #222;
+      color: #222;
+      box-shadow: 9999px 0 0 -5px;
+      animation: dot-pulse 1.5s infinite linear;
+      animation-delay: 0.25s;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .dot-pulse::before,
+    .dot-pulse::after {
+      content: "";
+      display: inline-block;
+      position: absolute;
+      top: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 5px;
+      background-color: #222;
+      color: #000;
+    }
+
+    .dot-pulse::before {
+      box-shadow: 9984px 0 0 -5px;
+      animation: dot-pulse-before 1.5s infinite linear;
+      animation-delay: 0s;
+    }
+
+    .dot-pulse::after {
+      box-shadow: 10014px 0 0 -5px;
+      animation: dot-pulse-after 1.5s infinite linear;
+      animation-delay: 0.5s;
+    }
+
+    @keyframes dot-pulse-before {
+      0% {
+        box-shadow: 9984px 0 0 -5px;
+      }
+
+      30% {
+        box-shadow: 9984px 0 0 2px;
+      }
+
+      60%,
+      100% {
+        box-shadow: 9984px 0 0 -5px;
+      }
+    }
+
+    @keyframes dot-pulse {
+      0% {
+        box-shadow: 9999px 0 0 -5px;
+      }
+
+      30% {
+        box-shadow: 9999px 0 0 2px;
+      }
+
+      60%,
+      100% {
+        box-shadow: 9999px 0 0 -5px;
+      }
+    }
+
+    @keyframes dot-pulse-after {
+      0% {
+        box-shadow: 10014px 0 0 -5px;
+      }
+
+      30% {
+        box-shadow: 10014px 0 0 2px;
+      }
+
+      60%,
+      100% {
+        box-shadow: 10014px 0 0 -5px;
+      }
+    }
+  </style>
+
+  <!-- Custom CSS: Map -->
+  <style>
+    #map {
+      width: 100%;
+      position: sticky;
+    }
+
+    .map-overlay {
+      font: 16px/20px 'Inter', sans-serif;
+      position: absolute;
+      width: 10%;
+      top: 0;
+      left: 0;
+      padding: 10px;
+    }
+
+    /* Legend / Filter */
+    .filter-group {
+      font: 12px/20px 'Inter', sans-serif;
+      font-weight: 600;
+      position: absolute;
+      z-index: 900;
+      border-radius: 3px;
+      width: 120px;
+      color: #fff;
+    }
+
+    .filter-group input[type='checkbox']:first-child+label {
+      border-radius: 3px 3px 0 0;
+    }
+
+    .filter-group label:last-child {
+      border-radius: 0 0 3px 3px;
+      border: none;
+    }
+
+    .filter-group input[type='checkbox'] {
+      display: none;
+    }
+
+    .filter-group input[type='checkbox']+label {
+      background-color: white;
+      display: block;
+      cursor: pointer;
+      padding: 10px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+      text-transform: capitalize;
+    }
+
+    .filter-group input[type='checkbox']+label:hover,
+    .filter-group input[type='checkbox']:checked+label {
+      background-color: transparent;
+    }
+
+    .filter-group input[type='checkbox']:checked+label:before {
+      content: '✔';
+      margin-right: 5px;
+    }
+
+    /* Map controls styling */
+    .maplibregl-ctrl-group {
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .maplibregl-ctrl-top-right {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .maplibregl-ctrl-top-right .maplibregl-ctrl.maplibregl-ctrl-group:nth-of-type(3) {
+      order: -1;
+    }
+
+    .maplibregl-ctrl-top-right .maplibregl-ctrl {
+      margin-top: 24px;
+      margin-right: 24px;
+    }
+
+    .maplibregl-ctrl-group button.maplibregl-ctrl-compass {
+      display: none;
+    }
+
+    .maplibregl-ctrl-group button.maplibregl-ctrl-geolocate {
+      display: none;
+    }
+
+    .mapboxgl-ctrl-group button,
+    .maplibregl-ctrl-group button {
+      height: 40px;
+      width: 40px;
+    }
+
+    .maplibregl-popup-content {
+      font-family: Inter, sans-serif;
+      color: var(--gray700);
+      font-size: 1rem;
+      line-height: 1.5;
+      background: none;
+    }
+
+    .maplibregl-popup-tip {
+      display: none;
+    }
+
+    /* Hide List toggle button */
+    .list-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 5px;
+    }
+
+    .list-toggle .list-toggle-arrow {
+      transition: transform 0.3s ease;
+      margin-right: 8px;
+    }
+
+    .list-toggle.active .list-toggle-arrow {
+      transform: scaleX(-1);
+    }
+  </style>
+</head>
+
+<body x-fetch="get_todos" class="body">
+
+  <!-- Banner -->
+  <section class="uui-banner23_component">
+    <div class="uui-page-padding-2">
+      <div class="uui-banner23_content-wrapper">
+        <div class="uui-banner23_content">
+          <div class="uui-banner23_text-wrapper">
+            <div class="uui-banner23_text">We are building this website.</div>
+            <div class="uui-text-size-medium-2"><a href="#" class="uui-text-style-link">Please be patient.</a></div>
+          </div>
+        </div>
+        <a data-w-id="93fed2fc-f4a0-a6e7-5af3-34f21730777f" href="#" class="uui-banner23_close-button w-inline-block">
+          <div class="uui-icon-1x1-xxsmall w-embed">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="1.66667" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Navigation -->
+  <nav class="c-nav-search">
+    <div data-animation="default" data-collapse="medium" data-duration="400" data-easing="ease" data-easing2="ease"
+      role="banner" class="navbar w-nav">
+      <div class="f-section-regular">
+        <div class="uui-container-large">
+          <div class="uui-page-padding">
+            <div class="w-nav-button">
+              <div class="icon w-icon-nav-menu"></div>
+            </div>
+            <nav role="navigation" class="w-nav-menu">
+              <a href="#" class="c-nav-link w-nav-link">About us</a>
+              <a href="#" class="c-nav-link w-nav-link">Contact</a>
+              <a href="#" class="c-nav-link w-nav-link">Home</a>
+            </nav>
+            <a id="brand" href="#" class="brand hoverfade w-clearfix w-nav-brand">
+              <img width="30" loading="lazy" alt="Parc des Ecrins" src="assets/parcdesecrins-logo.svg"
+                class="image-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="f-section-regular no-padding-right">
+    <div class="uui-page-padding-6">
+      <div class="uui-container-large-3">
+        <div class="uui-padding-vertical-xhuge">
+          <div class="uui-cta06_component">
+            <div>
+              <div class="uui-max-width-xlarge">
+                <div class="uui-space-small"></div>
+
+                <!-- Search Form -->
+                <div class="uui-heroheader12_form w-form">
+                  <form id="email-form" name="email-form" data-name="Email Form" method="get" x-fetch="get_todos"
+                    class="uui-form_component">
+                    <div class="uui-signup-form_wrapper">
+                      <div class="f-field-icon-wrapper">
+                        <input class="uui-form_input w-input" autofocus="true" maxlength="256" name="Email-3"
+                          data-name="Email 3" placeholder="Search for" type="text" id="search" />
+                        <div class="input__suggestions">
+                          <div class="input__suggestions-wrapper">
+                            <div class="suggestion">olifant</div>
+                            <div class="suggestion">grijs</div>
+                            <div class="suggestion">bloemen</div>
+                            <div class="suggestion">beer</div>
+                            <div class="suggestion">olifant</div>
+                          </div>
+                        </div>
+                        <div id="spyglass" class="f-field-icon-r w-embed">
+                          <svg width="420" height="420" viewBox="0 0 24 24" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                              d="M11 2C15.968 2 20 6.032 20 11C20 15.968 15.968 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2ZM11 18C14.867 18 18 14.867 18 11C18 7.132 14.867 4 11 4C7.132 4 4 7.132 4 11C4 14.867 7.132 18 11 18ZM19.485 18.071L22.314 20.899L20.899 22.314L18.071 19.485L19.485 18.071V18.071Z"
+                              fill="currentColor" />
+                          </svg>
+                        </div>
+                        <div id="clearsearch" class="f-field-icon-r w-embed">
+                          <svg width="420" height="420" viewBox="0 0 24 24" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                              d="M12.0002 10.586L16.9502 5.63599L18.3642 7.04999L13.4142 12L18.3642 16.95L16.9502 18.364L12.0002 13.414L7.05023 18.364L5.63623 16.95L10.5862 12L5.63623 7.04999L7.05023 5.63599L12.0002 10.586Z"
+                              fill="currentColor" />
+                          </svg>
+                        </div>
+                      </div>
+                      <input type="submit" data-wait="Searching ..." id="btnSearch" data-default="Zoeken"
+                        class="uui-button-2 w-button" value="Search" />
+                    </div>
+
+                    <div id="autosuggest" class="autosuggest hidden"></div>
+                    <div class="uui-space-xsmall"></div>
+                    <div class="uui-text-size-small-2 text-align-left">Popular: <a href="#"
+                        class="uui-text-style-link tag">Dier</a>, <a href="#"
+                        class="tag uui-text-style-link">Dolfijn</a>, <a href="#" class="uui-text-style-link tag">
+                        Strak</a>, ...</div>
+                    <div class="uui-space-medium"></div>
+                  </form>
+                </div>
+                <div id="loading-animation" class="loading-animation" data-w-id="d760d167-e2fc-19d6-e4ac-570d2a838c1c"
+                  data-animation-type="lottie"
+                  data-src="https://cdn.prod.website-files.com/62b8cd8660a360888316fc0f/644d368e95c6aa2d019b912b_96226-loading.json"
+                  data-loop="1" data-direction="1" data-autoplay="1" data-is-ix2-target="0" data-renderer="svg"
+                  data-duration="3"></div>
+
+                <!-- Customize Bar -->
+                <div id="customizebar" class="div-block-2">
+                  <div id="resultbar">
+                    <div id="totalresults" class="text-block-18"></div>
+                    <div id="warning-updated" class="warning-updated">Updating ...</div>
+                  </div>
+                  <div id="displaybar" class="displaybar">
+                    <a href="#" class="button-with-icon list-view w-inline-block">
+                      <div class="button-icon w-embed">
+                        <svg width="24" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <line x1="4" y1="6" x2="20" y2="6" stroke="#7f7f7f" stroke-width="2" />
+                          <line x1="4" y1="10" x2="20" y2="10" stroke="#7f7f7f" stroke-width="2" />
+                          <line x1="4" y1="14" x2="20" y2="14" stroke="#7f7f7f" stroke-width="2" />
+                        </svg>
+                      </div>
+                      <div class="button-label">List</div>
+                    </a>
+                    <a href="#" class="button-with-icon grid-view w-inline-block">
+                      <div class="button-icon w-embed">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="4" y="4" width="3" height="3" stroke="#7f7f7f" stroke-width="1.5" fill="none" />
+                          <rect x="10" y="4" width="3" height="3" stroke="#7f7f7f" stroke-width="1.5" fill="none" />
+                          <rect x="4" y="10" width="3" height="3" stroke="#7f7f7f" stroke-width="1.5" fill="none" />
+                          <rect x="10" y="10" width="3" height="3" stroke="#7f7f7f" stroke-width="1.5" fill="none" />
+                        </svg>
+                      </div>
+                      <div class="button-label">Grid</div>
+                    </a>
+                  </div>
+                </div>
+
+                <div class="uui-space-xsmall"></div>
+              </div>
+
+              <!-- No Results -->
+              <header id="no-results" class="no-results-wrapper">
+                <div class="uui-container-large">
+                  <div class="uui-text-align-center-2">
+                    <div class="uui-max-width-xlarge align-center">
+                      <h3 class="uui-heading-xlarge-3">Oops, no exact matches found.</h3>
+                      <div class="uui-space-small"></div>
+                      <div class="uui-text-size-xlarge-3">Feel free to try that again.</div>
+                    </div>
+                  </div>
+                </div>
+              </header>
+
+              <!-- Results -->
+              <div id="results" class="ec-results-container">
+                <div id="cards" class="ec-results-wrapper">
+                  <div class="w-layout-grid uui-blogsection01_list">
+                    <div x-for="card in listings" class="uui-blogsection01_item">
+                      <div class="fly-to-marker">
+                        <img src="assets/center-on-map.png" loading="lazy" width="Auto" alt="" />
+                      </div>
+                      <a x-bind:href="cardLoaded(card)" href="#" class="card-wrapper w-inline-block">
+                        <div class="uui-blogsection01_image-wrapper">
+                          <div class="text-block-17">Guest favorite</div>
+                          <img x-bind:src="card.main_image" loading="lazy" alt=""
+                            src="https://cdn.prod.website-files.com/plugins/Basic/assets/placeholder.60f9b1840c.svg"
+                            class="uui-blogsection01_image" />
+                        </div>
+                        <div class="uui-blogsection01_content">
+                          <h3 x-text="card.name" class="uui-heading-xsmall">Kaartje titel</h3>
+                          <div class="uui-text-size-medium">Ontdek dit prachtige kaartje met gouden ...</div>
+                          <div x-for="tag in card.tags" class="tag-wrapper">
+                            <div x-text="tag" class="tag">This is some text inside of a div block.</div>
+                            <div class="text-block-14 tag-separator">,</div>
+                          </div>
+                          <div class="uui-blogsection01_author-wrapper">
+                            <div class="uui-blogsection01_author-image-wrapper">
+                              <img loading="lazy" src="assets/avatar.png" alt=""
+                                class="uui-blogsection01_author-image" />
+                            </div>
+                            <div class="uui-blogsection01_author-text">
+                              <div x-text="card.author">This is some text inside of a div block.</div>
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Category Tabs -->
+              <div class="resultbar">
+                <div class="menu-tabs w-form">
+                  <form id="email-form-2" name="email-form-2" data-name="Email Form 2" method="get" class="form-2">
+                    <input type="submit" data-wait="Please wait..."
+                      class="uui-button-secondary-gray-2 is-button-small w-button" value="All" />
+                    <input type="submit" data-wait="Please wait..."
+                      class="uui-button-secondary-gray-2 is-button-small w-button" value="Walks" />
+                    <input type="submit" data-wait="Please wait..."
+                      class="uui-button-secondary-gray-2 is-button-small w-button" value="Stays" />
+                    <input type="submit" data-wait="Please wait..."
+                      class="uui-button-secondary-gray-2 is-button-small w-button" value="Villages" />
+                  </form>
+                </div>
+              </div>
+
+              <div class="uui-space-small"></div>
+
+              <!-- Announcement Banner -->
+              <section class="uui-banner17_component">
+                <div class="uui-page-padding-9">
+                  <div class="uui-container-large-6">
+                    <div class="uui-banner17_content-wrapper">
+                      <div class="uui-banner17_content">
+                        <div class="uui-banner17_icon-wrapper">
+                          <div class="icon-featured-modern-large-2">
+                            <div class="uui-icon-1x1-xsmall-2 w-embed">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                  d="M4.5 22V17M4.5 7V2M2 4.5H7M2 19.5H7M13 3L11.2658 7.50886C10.9838 8.24209 10.8428 8.60871 10.6235 8.91709C10.4292 9.1904 10.1904 9.42919 9.91709 9.62353C9.60871 9.8428 9.24209 9.98381 8.50886 10.2658L4 12L8.50886 13.7342C9.24209 14.0162 9.60871 14.1572 9.91709 14.3765C10.1904 14.5708 10.4292 14.8096 10.6235 15.0829C10.8428 15.3913 10.9838 15.7579 11.2658 16.4911L13 21L14.7342 16.4911C15.0162 15.7579 15.1572 15.3913 15.3765 15.0829C15.5708 14.8096 15.8096 14.5708 16.0829 14.3765C16.3913 14.1572 16.7579 14.0162 17.4911 13.7342L22 12L17.4911 10.2658C16.7579 9.98381 16.3913 9.8428 16.0829 9.62353C15.8096 9.42919 15.5708 9.1904 15.3765 8.91709C15.1572 8.60871 15.0162 8.24209 14.7342 7.50886L13 3Z"
+                                  stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                  stroke-linejoin="round" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="uui-banner17_text-wrapper">
+                          <div class="uui-banner17_text">We've just announced our Series A!</div>
+                          <div class="uui-text-size-medium-4">Read about it from our CEO.</div>
+                        </div>
+                      </div>
+                      <div class="uui-banner17_button-wrapper">
+                        <a href="#" class="button-with-icon w-inline-block">
+                          <div>Read update</div>
+                        </a>
+                      </div>
+                      <a data-w-id="b3bfc485-0692-1e7a-bc3b-96e2bc32c243" href="#"
+                        class="uui-banner17_close-button w-inline-block">
+                        <div class="uui-icon-1x1-xxsmall-3 w-embed">
+                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="1.66667"
+                              stroke-linecap="round" stroke-linejoin="round" />
+                          </svg>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <div id="intro" class="uui-text-size-medium jakarta">Some well-known examples of sans serifs are Arial,
+                Helvetica, and Franklin Gothic. But using run-of-the-mill sans serif fonts (such as the ones mentioned)
+                collection of <strong>free sans serif fonts</strong> are awesome to have on hand.</div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="w-layout-blockcontainer map-wrapper w-container">
+              <div id="reload" class="reload hidden">
+                <div class="dot-pulse"></div>
+              </div>
+              <div id="list-toggle" class="list-toggle">
+                <img src="assets/toggle-list.svg" loading="lazy" alt="" class="list-toggle-arrow" />
+              </div>
+              <div id="filter-group" class="filter-group"></div>
+              <div id="map"
+                class="w-layout-blockcontainer map-container w-node-_26650c67-ac18-16cf-ed98-0df46e57ceed-4cbfe0a6 w-container">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer / Toolbar -->
+  <div id="toolbar" class="f-section-regular">
+    <section id="error" class="error">
+      <div class="w-container">
+        <div class="uui-padding-vertical-xhuge-3">
+          <div class="uui-text-align-center-2">
+            <div class="uui-max-width-xlarge align-center">
+              <h1 class="uui-heading-xlarge-2">Sorry, er ging iets mis</h1>
+              <div class="uui-space-small"></div>
+              <div class="uui-text-size-xlarge-2">Probeer later opnieuw.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="uui-section_blogsection01">
+      <div class="uui-page-padding-5">
+        <div class="uui-container-large">
+          <div class="uui-footer07_bottom-wrapper">
+            <div class="uui-text-size-small-2 text-color-gray500">© 2025 ParcDesEcrins.com. All rights reserved.</div>
+            <div class="w-layout-grid uui-footer07_legal-list">
+              <a href="#" class="uui-footer07_legal-link">Terms</a>
+              <a href="#" class="uui-footer07_legal-link">Privacy</a>
+              <a href="#" class="uui-footer07_legal-link">Cookies</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="uui-space-large"></div>
+  </div>
+
+  <!-- jQuery (kept for compatibility) -->
+  <script src="https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=64dcbbd60156e8d54cbfe057"
+    type="text/javascript" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+    crossorigin="anonymous"></script>
+
+  <!-- Replaces Webflow JS runtime — only handles banner close buttons -->
+  <script>
+    document.querySelectorAll('.uui-banner23_close-button, .uui-banner17_close-button').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var banner = btn.closest('.uui-banner23_component, .uui-banner17_component');
+        if (banner) {
+          banner.style.transition = 'opacity 0.3s ease, height 0.3s ease';
+          banner.style.opacity = '0';
+          banner.style.overflow = 'hidden';
+          setTimeout(function () { banner.style.height = '0'; banner.style.padding = '0'; }, 300);
+        }
+      });
+    });
+  </script>
+
+  <!-- Fetch.js -->
+  <script src="https://cdn.jsdelivr.net/gh/sunchaserz/parcdesecrins@main/fetch.js"></script>
+
+  <!-- Main App (parcdesecrins.js via jsdelivr - cache-busted) -->
+  <script>
+    fetch('https://api.github.com/repos/sunchaserz/parcdesecrins/commits/main')
+      .then(response => response.json())
+      .then(data => {
+        const latestCommitHash = data.sha;
+        const scriptUrl = `https://cdn.jsdelivr.net/gh/sunchaserz/parcdesecrins@${latestCommitHash}/parcdesecrins.js`;
+        const scriptElement = document.createElement('script');
+        scriptElement.src = scriptUrl;
+        document.head.appendChild(scriptElement);
+        console.log("Inserted parcdesecrins.js with commit hash:", latestCommitHash);
+      })
+      .catch(error => console.error('Error fetching commit:', error));
+  </script>
+
+</body>
+
+</html>

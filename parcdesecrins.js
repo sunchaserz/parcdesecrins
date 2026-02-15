@@ -1276,14 +1276,32 @@ function augmentCardsForListView() {
     const content = card.querySelector(".uui-blogsection01_content");
     if (!content) return;
 
-    const type = listing.type || "Experience";
-    let typeLabel = card.querySelector(".pde-card-type");
-    if (!typeLabel) {
-      typeLabel = document.createElement("div");
-      typeLabel.className = "pde-card-type";
-      typeLabel.textContent = type.charAt(0).toUpperCase() + type.slice(1);
-      content.insertBefore(typeLabel, content.firstChild);
+    // Build tag pills from listing tags (e.g. "village")
+    let tagRow = card.querySelector(".pde-card-tags");
+    if (!tagRow) {
+      const rawTags = listing.tags || listing.categories || [];
+      const tagsArray = Array.isArray(rawTags)
+        ? rawTags
+        : typeof rawTags === "string"
+          ? rawTags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : [];
+      if (tagsArray.length) {
+        tagRow = document.createElement("div");
+        tagRow.className = "pde-card-tags";
+        tagsArray.forEach((t) => {
+          const pill = document.createElement("span");
+          pill.className = "pde-tag-pill";
+          pill.textContent = t;
+          tagRow.appendChild(pill);
+        });
+        content.insertBefore(tagRow, content.firstChild);
+      }
     }
+    // Hide original Alpine tag-wrappers to avoid duplication
+    card.querySelectorAll(".tag-wrapper").forEach((tw) => (tw.style.display = "none"));
 
     let ratingRow = card.querySelector(".pde-card-rating");
     if (!ratingRow) {
@@ -1292,9 +1310,11 @@ function augmentCardsForListView() {
       const rating = listing.rating || 4;
       const reviewCount = listing.reviews || Math.floor(Math.random() * 40 + 10);
       ratingRow.innerHTML = `<span class="pde-stars">${renderStars(rating)}</span><span class="pde-review-count">${rating.toFixed(1)} (${reviewCount} reviews)</span>`;
-      const title = content.querySelector(".uui-blogsection01_title, h3, h4");
-      if (title && title.nextSibling) {
-        content.insertBefore(ratingRow, title.nextSibling);
+      const desc = content.querySelector(".uui-text-size-medium");
+      if (desc && desc.nextSibling) {
+        content.insertBefore(ratingRow, desc.nextSibling);
+      } else if (desc) {
+        desc.after(ratingRow);
       } else {
         content.appendChild(ratingRow);
       }
@@ -1811,14 +1831,23 @@ function injectCSS() {
     }
 
     /* ===== Enhanced List-View Cards (Untitled UI style) ===== */
-    /* Card type label */
-    .pde-card-type {
+    /* Card tag pills (rounded buttons at top of card) */
+    .pde-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .pde-tag-pill {
+      display: inline-block;
+      padding: 3px 10px;
       font-size: 12px;
-      font-weight: 600;
-      color: #6941C6;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 2px;
+      font-weight: 500;
+      color: #344054;
+      background: #F2F4F7;
+      border-radius: 16px;
+      line-height: 1.4;
+      white-space: nowrap;
     }
 
     /* Card title in list view */
@@ -1922,8 +1951,8 @@ function injectCSS() {
     #cards.grid-layout .pde-card-price {
       display: none !important;
     }
-    #cards.grid-layout .pde-card-type {
-      display: block;
+    #cards.grid-layout .pde-card-tags {
+      display: flex;
     }
     #cards.grid-layout .pde-card-rating {
       display: flex;

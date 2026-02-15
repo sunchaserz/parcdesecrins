@@ -1,0 +1,15 @@
+[
+  {
+    "origin": [
+      "http://localhost:8899",
+      "http://localhost:8080",
+      "http://localhost:8888",
+      "https://parcdesecrins.webflow.io",
+      "https://parcdesecrins.com",
+      "https://www.parcdesecrins.com"
+    ],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type"]
+  }
+]
