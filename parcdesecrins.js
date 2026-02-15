@@ -35,6 +35,26 @@ const CONFIG = {
   },
 };
 
+// === IMMEDIATE PRELOAD HIDE ===
+// Injected synchronously before DOM is ready, so nothing flashes.
+(function () {
+  const s = document.createElement("style");
+  s.id = "pde-preload-hide";
+  s.textContent = `
+    #cards, #toolbar, #filter-group, #email-form,
+    #totalresults, #no-results, #pde-toolbar-enhanced,
+    .button-with-icon.grid-view, .button-with-icon.list-view,
+    .list-toggle, .uui-blogsection01_list,
+    .menu-tabs.w-form,
+    .uui-blogsection01_item {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transition: opacity 0.5s ease !important;
+    }
+  `;
+  (document.head || document.documentElement).appendChild(s);
+})();
+
 // DOM Elements Cache
 const DOM = {
   search: document.getElementById("search"),
@@ -2519,27 +2539,11 @@ main().catch((error) => {
 // Add cleanup on page unload
 window.addEventListener("unload", cleanup);
 
-// Add initial hide on page load — hide UI immediately to prevent flash
+// Add initial hide on page load
 document.addEventListener("DOMContentLoaded", function () {
   const menuTabs = document.querySelector(".menu-tabs.w-form");
   if (menuTabs) {
     menuTabs.style.display = "none";
-  }
-
-  // Immediately inject a minimal style to hide the shell before main() runs
-  if (!document.getElementById("pde-preload-hide")) {
-    const s = document.createElement("style");
-    s.id = "pde-preload-hide";
-    s.textContent = `
-      #cards, #toolbar, #filter-group, #email-form,
-      #totalresults, #no-results, #pde-toolbar-enhanced,
-      .button-with-icon.grid-view, .button-with-icon.list-view,
-      .list-toggle, .uui-blogsection01_list {
-        opacity: 0 !important;
-        transition: opacity 0.5s ease !important;
-      }
-    `;
-    document.head.appendChild(s);
   }
 });
 
