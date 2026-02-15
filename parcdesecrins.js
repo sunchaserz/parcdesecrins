@@ -1494,6 +1494,9 @@ async function main() {
         map.getCanvas().style.cursor = "";
       });
       map.on("moveend", handleMapMoveEnd);
+
+      // Add 3D terrain toggle button
+      setup3DToggle();
     });
   } catch (error) {
     console.error("Error during initialization:", error);
@@ -2269,9 +2272,120 @@ function injectCSS() {
         gap: 16px;
       }
     }
+
+    /* === 3D Toggle Button === */
+    .pde-3d-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 29px;
+      height: 29px;
+      padding: 0;
+      border: none;
+      background: #fff;
+      cursor: pointer;
+      border-top: 1px solid #ddd;
+      transition: background 0.2s ease;
+    }
+    .pde-3d-btn:hover {
+      background: #f0f0f0;
+    }
+    .pde-3d-btn.active {
+      background: #e8e0ff;
+    }
+    .pde-3d-btn svg {
+      width: 17px;
+      height: 17px;
+      stroke: #333;
+      fill: none;
+      transition: stroke 0.2s ease;
+    }
+    .pde-3d-btn.active svg {
+      stroke: #6941C6;
+    }
   `;
   document.head.appendChild(style);
   console.log("View toggle styles injected successfully");
+}
+
+// ===== 3D Terrain Toggle =====
+let is3DActive = false;
+
+function setup3DToggle() {
+  // Find the MapTiler navigation control container (the +/- buttons)
+  const navControlGroup = document.querySelector(".maplibregl-ctrl-group:has(.maplibregl-ctrl-zoom-in)");
+  if (!navControlGroup) {
+    console.warn("3D toggle: navigation control group not found");
+    return;
+  }
+
+  // Create the 3D toggle button
+  const btn = document.createElement("button");
+  btn.className = "pde-3d-btn";
+  btn.type = "button";
+  btn.title = "Toggle 3D terrain view";
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Mountain peaks -->
+      <polyline points="3 20 8 10 13 17 16 13 21 20"/>
+      <!-- Small peak accent -->
+      <polyline points="10 14 13 10 16 13"/>
+      <!-- 3D depth line -->
+      <line x1="3" y1="20" x2="5" y2="22"/>
+      <line x1="21" y1="20" x2="23" y2="22"/>
+      <line x1="5" y1="22" x2="23" y2="22"/>
+    </svg>
+  `;
+
+  // Append after the zoom-out button
+  navControlGroup.appendChild(btn);
+
+  btn.addEventListener("click", () => {
+    is3DActive = !is3DActive;
+    btn.classList.toggle("active", is3DActive);
+    btn.title = is3DActive ? "Switch back to 2D view" : "Toggle 3D terrain view";
+
+    if (is3DActive) {
+      enable3DTerrain();
+    } else {
+      disable3DTerrain();
+    }
+  });
+}
+
+function enable3DTerrain() {
+  // Enable terrain with exaggeration for dramatic mountain effect
+  map.enableTerrain({
+    exaggeration: 1.5,
+  });
+
+  // Enable rotation/pitch controls in 3D mode
+  map.dragRotate.enable();
+  map.touchZoomRotate.enableRotation();
+
+  // Animate to a nice 3D viewing angle
+  map.easeTo({
+    pitch: 60,
+    bearing: -20,
+    duration: 1500,
+  });
+}
+
+function disable3DTerrain() {
+  // Animate back to flat view first
+  map.easeTo({
+    pitch: 0,
+    bearing: 0,
+    duration: 1000,
+  });
+
+  // Disable terrain after animation completes
+  setTimeout(() => {
+    map.disableTerrain();
+    // Re-disable rotation controls in 2D mode
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
+  }, 1050);
 }
 
 // ===== Detail Page =====
