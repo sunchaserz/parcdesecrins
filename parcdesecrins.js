@@ -2341,51 +2341,91 @@ function setup3DToggle() {
   navControlGroup.appendChild(btn);
 
   btn.addEventListener("click", () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+
     is3DActive = !is3DActive;
     btn.classList.toggle("active", is3DActive);
     btn.title = is3DActive ? "Switch back to 2D view" : "Toggle 3D terrain view";
 
     if (is3DActive) {
-      enable3DTerrain();
+      enable3DTerrain().finally(() => {
+        btn.disabled = false;
+      });
     } else {
-      disable3DTerrain();
+      disable3DTerrain().finally(() => {
+        btn.disabled = false;
+      });
     }
   });
 }
 
 function enable3DTerrain() {
-  // Enable terrain with exaggeration for dramatic mountain effect
-  map.enableTerrain({
-    exaggeration: 1.5,
-  });
+  return new Promise((resolve) => {
+    try {
+      // Add terrain source if it doesn't exist
+      if (!map.getSource("terrain-source")) {
+        map.addSource("terrain-source", {
+          type: "raster-dem",
+          url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${maptilersdk.config.apiKey}`,
+          tileSize: 256,
+        });
+      }
 
-  // Enable rotation/pitch controls in 3D mode
-  map.dragRotate.enable();
-  map.touchZoomRotate.enableRotation();
+      // Set terrain
+      map.setTerrain({
+        source: "terrain-source",
+        exaggeration: 1.5,
+      });
 
-  // Animate to a nice 3D viewing angle
-  map.easeTo({
-    pitch: 60,
-    bearing: -20,
-    duration: 1500,
+      // Enable rotation/pitch controls in 3D mode
+      map.dragRotate.enable();
+      map.touchZoomRotate.enableRotation();
+
+      // Wait a frame for terrain to initialize, then animate
+      requestAnimationFrame(() => {
+        map.easeTo({
+          pitch: 55,
+          bearing: -15,
+          duration: 1500,
+        });
+
+        setTimeout(resolve, 1600);
+      });
+    } catch (e) {
+      console.warn("3D terrain error:", e);
+      resolve();
+    }
   });
 }
 
 function disable3DTerrain() {
-  // Animate back to flat view first
-  map.easeTo({
-    pitch: 0,
-    bearing: 0,
-    duration: 1000,
-  });
+  return new Promise((resolve) => {
+    try {
+      // Animate back to flat view first
+      map.easeTo({
+        pitch: 0,
+        bearing: 0,
+        duration: 1000,
+      });
 
-  // Disable terrain after animation completes
-  setTimeout(() => {
-    map.disableTerrain();
-    // Re-disable rotation controls in 2D mode
-    map.dragRotate.disable();
-    map.touchZoomRotate.disableRotation();
-  }, 1050);
+      // Remove terrain after animation completes
+      setTimeout(() => {
+        try {
+          map.setTerrain(null);
+        } catch (e) {
+          console.warn("Error removing terrain:", e);
+        }
+        // Re-disable rotation controls in 2D mode
+        map.dragRotate.disable();
+        map.touchZoomRotate.disableRotation();
+        resolve();
+      }, 1100);
+    } catch (e) {
+      console.warn("3D disable error:", e);
+      resolve();
+    }
+  });
 }
 
 // ===== Detail Page =====
