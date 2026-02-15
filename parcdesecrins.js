@@ -28,7 +28,7 @@ const CONFIG = {
     iconSize: 0.6,
   },
   ui: {
-    btnDefaultValue: "Searcher",
+    btnDefaultValue: "Search",
     debounceTime: 300,
     fadeTimeout: 2000,
     updateTimeout: 1000,
@@ -440,6 +440,12 @@ class ListManager {
     if (DOM.listContainer) {
       DOM.listContainer.addEventListener("mouseenter", this.handleListHover.bind(this), true);
       DOM.listContainer.addEventListener("click", this.handleListClick.bind(this), true);
+    }
+
+    // Also listen for card clicks to open detail page
+    const cardsContainer = document.getElementById("cards");
+    if (cardsContainer) {
+      cardsContainer.addEventListener("click", handleCardDetailClick, false);
     }
   }
 
@@ -1267,9 +1273,592 @@ function injectCSS() {
       animation: resultsUpdate 0.5s ease-out;
       display: inline-block;
     }
+
+    /* ===== Detail Page Overlay ===== */
+    .detail-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2vh 2vw;
+      overflow-y: auto;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .detail-overlay.visible {
+      opacity: 1;
+    }
+
+    .detail-container {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 820px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative;
+      margin: auto;
+    }
+
+    .detail-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 10;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      line-height: 1;
+      color: #333;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transition: background 0.2s;
+    }
+    .detail-close:hover {
+      background: #fff;
+    }
+
+    /* Gallery */
+    .detail-gallery {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 6px;
+      height: 380px;
+      overflow: hidden;
+    }
+    .detail-gallery-thumbs {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+    .detail-gallery-thumb {
+      width: 100%;
+      flex: 1;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+    .detail-gallery-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.2s;
+    }
+    .detail-gallery-thumb:hover img {
+      opacity: 0.85;
+    }
+    .detail-gallery-thumb .thumb-badge {
+      position: absolute;
+      bottom: 6px;
+      left: 6px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .detail-gallery-main {
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .detail-gallery-main img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Body */
+    .detail-body {
+      padding: 28px 32px 32px;
+    }
+
+    /* Title row */
+    .detail-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+    .detail-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0;
+      line-height: 1.25;
+    }
+    .detail-price {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f56960;
+      white-space: nowrap;
+      margin-left: 16px;
+      margin-top: 4px;
+    }
+
+    /* Location & rating */
+    .detail-location-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      color: #666;
+      font-size: 14px;
+    }
+    .detail-stars {
+      color: #f5a623;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+
+    /* Tags */
+    .detail-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .detail-tag {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1.5px solid;
+      background: transparent;
+    }
+    .detail-tag:nth-child(4n+1) { color: #f56960; border-color: #f56960; }
+    .detail-tag:nth-child(4n+2) { color: #4ecdc4; border-color: #4ecdc4; }
+    .detail-tag:nth-child(4n+3) { color: #5b7ff5; border-color: #5b7ff5; }
+    .detail-tag:nth-child(4n)   { color: #f5a623; border-color: #f5a623; }
+
+    /* Meta row */
+    .detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding: 18px 0;
+      border-top: 1px solid #eee;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 24px;
+    }
+    .detail-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .detail-meta-label {
+      font-size: 12px;
+      color: #999;
+      text-transform: capitalize;
+    }
+    .detail-meta-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .detail-meta-icon {
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    /* Description + map */
+    .detail-content-row {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .detail-description h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0 0 10px;
+    }
+    .detail-description p {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #555;
+      margin: 0;
+    }
+    .detail-read-more {
+      font-weight: 600;
+      color: #1a1a1a;
+      text-decoration: underline;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+      font-size: 14px;
+    }
+
+    .detail-minimap {
+      width: 100%;
+      height: 200px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #e0f0f0;
+    }
+    .detail-minimap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Action row */
+    .detail-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .detail-btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f56960;
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .detail-btn-primary:hover {
+      background: #e05550;
+    }
+    .detail-btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+    .detail-btn-secondary:hover {
+      color: #f56960;
+    }
+
+    /* Responsive detail */
+    @media screen and (max-width: 767px) {
+      .detail-gallery {
+        grid-template-columns: 1fr;
+        height: 260px;
+      }
+      .detail-gallery-thumbs {
+        flex-direction: row;
+        order: 2;
+        height: 70px;
+      }
+      .detail-gallery-main {
+        order: 1;
+      }
+      .detail-body {
+        padding: 20px 18px 24px;
+      }
+      .detail-content-row {
+        grid-template-columns: 1fr;
+      }
+      .detail-title {
+        font-size: 22px;
+      }
+      .detail-meta {
+        gap: 16px;
+      }
+    }
   `;
   document.head.appendChild(style);
   console.log("View toggle styles injected successfully");
+}
+
+// ===== Detail Page =====
+
+/**
+ * Find a listing object from the cached data by its ID
+ */
+function findListingById(id) {
+  if (!window.mapDataManager || !window.mapDataManager.cache) return null;
+  for (const [, data] of window.mapDataManager.cache) {
+    if (Array.isArray(data)) {
+      const found = data.find((item) => String(item.id) === String(id));
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+/**
+ * Generate star HTML from a numeric rating (0-5)
+ */
+function renderStars(rating) {
+  const full = Math.floor(rating || 4);
+  const half = (rating || 4) % 1 >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(empty);
+}
+
+/**
+ * Build and show the detail overlay for a given listing
+ */
+function openDetailPage(listing) {
+  if (!listing) return;
+
+  // Close any existing detail overlay
+  closeDetailPage();
+
+  const mainImage = listing.main_image || "";
+  const title = listing.name || listing.title || listing.id || "Untitled";
+  const location = listing.location || listing.address || "Parc des Écrins, France";
+  const rating = listing.rating || 4;
+  const tags = listing.tags || listing.categories || [];
+  const tagsArray = Array.isArray(tags)
+    ? tags
+    : typeof tags === "string"
+      ? tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
+  const description = listing.description || listing.summary || "";
+  const price = listing.price || "";
+  const duration = listing.duration || "";
+  const activityLevel = listing.activity_level || listing.difficulty || "";
+  const language = listing.language || "";
+  const includes = listing.includes || "";
+  const link = listing.link || listing.url || "#";
+  const images = listing.images || listing.gallery || [];
+  const imagesArray = Array.isArray(images)
+    ? images
+    : typeof images === "string"
+      ? images
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+  // Ensure main image is first in gallery
+  const allImages = [mainImage, ...imagesArray.filter((img) => img !== mainImage)].filter(Boolean);
+  const thumbImages = allImages.slice(0, 3);
+  const extraCount = allImages.length > 3 ? allImages.length - 3 : 0;
+
+  // Build the Maptiler static map URL for the minimap
+  const lat = listing.latitude || CONFIG.map.center[1];
+  const lon = listing.longitude || CONFIG.map.center[0];
+  const minimapUrl = `https://api.maptiler.com/maps/${CONFIG.map.style}/static/${lon},${lat},11/220x200@2x.png?key=fsCLuIQWGPlRskWhImQz`;
+
+  // Truncate description
+  const maxDescLength = 280;
+  const isLong = description.length > maxDescLength;
+  const shortDesc = isLong ? description.substring(0, maxDescLength) + "..." : description;
+
+  // Build meta items (only show if data exists)
+  const metaItems = [];
+  if (duration) metaItems.push({ icon: "🕐", label: "Duration", value: duration });
+  if (activityLevel) metaItems.push({ icon: "⚡", label: "Activity Level", value: activityLevel });
+  if (language) metaItems.push({ icon: "🏠", label: "Hosted in", value: language });
+  if (includes) metaItems.push({ icon: "📦", label: "Includes", value: includes });
+
+  const overlay = document.createElement("div");
+  overlay.className = "detail-overlay";
+  overlay.id = "detail-overlay";
+
+  overlay.innerHTML = `
+    <div class="detail-container">
+      <button class="detail-close" id="detail-close" aria-label="Close">&times;</button>
+
+      <!-- Gallery -->
+      <div class="detail-gallery">
+        <div class="detail-gallery-thumbs">
+          ${thumbImages
+            .map(
+              (img, i) => `
+            <div class="detail-gallery-thumb" data-img-index="${i}">
+              <img src="${img}" alt="Thumbnail ${i + 1}" loading="lazy">
+              ${i === thumbImages.length - 1 && extraCount > 0 ? `<span class="thumb-badge">🖼 ${extraCount}+</span>` : ""}
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+        <div class="detail-gallery-main">
+          <img src="${allImages[0] || ""}" alt="${title}" id="detail-main-image" loading="lazy">
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="detail-body">
+        <div class="detail-title-row">
+          <h2 class="detail-title">${title}</h2>
+          ${price ? `<span class="detail-price">${price}</span>` : ""}
+        </div>
+
+        <div class="detail-location-row">
+          <span>${location}</span>
+          <span class="detail-stars">${renderStars(rating)}</span>
+        </div>
+
+        ${
+          tagsArray.length > 0
+            ? `
+          <div class="detail-tags">
+            ${tagsArray.map((tag) => `<span class="detail-tag">${tag}</span>`).join("")}
+          </div>
+        `
+            : ""
+        }
+
+        ${
+          metaItems.length > 0
+            ? `
+          <div class="detail-meta">
+            ${metaItems
+              .map(
+                (m) => `
+              <div class="detail-meta-item">
+                <span class="detail-meta-icon">${m.icon}</span>
+                <span class="detail-meta-label">${m.label}</span>
+                <span class="detail-meta-value">${m.value}</span>
+              </div>
+            `,
+              )
+              .join("")}
+          </div>
+        `
+            : ""
+        }
+
+        <div class="detail-content-row">
+          <div class="detail-description">
+            <h3>Description</h3>
+            <p id="detail-desc-text">${shortDesc}</p>
+            ${isLong ? `<button class="detail-read-more" id="detail-read-more">Read More</button>` : ""}
+          </div>
+          <div class="detail-minimap">
+            <img src="${minimapUrl}" alt="Location map">
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          ${link && link !== "#" ? `<a href="${link}" target="_blank" class="detail-btn-primary">🗓 View Details</a>` : `<button class="detail-btn-primary" id="detail-fly-btn">🗺 Show on Map</button>`}
+          <button class="detail-btn-secondary" id="detail-fav-btn">♡ Add to favourite</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Animate in
+  requestAnimationFrame(() => {
+    overlay.classList.add("visible");
+  });
+
+  // Prevent body scroll
+  document.body.style.overflow = "hidden";
+
+  // === Event Listeners ===
+
+  // Close button
+  document.getElementById("detail-close").addEventListener("click", closeDetailPage);
+
+  // Click outside to close
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeDetailPage();
+  });
+
+  // Escape key to close
+  const escHandler = (e) => {
+    if (e.key === "Escape") {
+      closeDetailPage();
+      document.removeEventListener("keydown", escHandler);
+    }
+  };
+  document.addEventListener("keydown", escHandler);
+
+  // Thumbnail clicks swap main image
+  overlay.querySelectorAll(".detail-gallery-thumb").forEach((thumb) => {
+    thumb.addEventListener("click", () => {
+      const idx = parseInt(thumb.dataset.imgIndex, 10);
+      const mainImg = document.getElementById("detail-main-image");
+      if (mainImg && allImages[idx]) {
+        mainImg.src = allImages[idx];
+      }
+    });
+  });
+
+  // Read More
+  const readMoreBtn = document.getElementById("detail-read-more");
+  if (readMoreBtn) {
+    readMoreBtn.addEventListener("click", () => {
+      document.getElementById("detail-desc-text").textContent = description;
+      readMoreBtn.style.display = "none";
+    });
+  }
+
+  // Fly to map button
+  const flyBtn = document.getElementById("detail-fly-btn");
+  if (flyBtn) {
+    flyBtn.addEventListener("click", () => {
+      closeDetailPage();
+      if (listing.longitude && listing.latitude) {
+        map.flyTo({
+          center: [parseFloat(listing.longitude), parseFloat(listing.latitude)],
+          zoom: 14,
+        });
+      }
+    });
+  }
+}
+
+/**
+ * Close the detail overlay
+ */
+function closeDetailPage() {
+  const overlay = document.getElementById("detail-overlay");
+  if (overlay) {
+    overlay.classList.remove("visible");
+    setTimeout(() => overlay.remove(), 300);
+    document.body.style.overflow = "";
+  }
+}
+
+/**
+ * Handle card click to open detail page.
+ * Attached via event delegation on the cards container.
+ */
+function handleCardDetailClick(event) {
+  // Don't open detail if clicking the fly-to-marker button
+  if (event.target.closest(".fly-to-marker")) return;
+
+  const item = event.target.closest(".uui-blogsection01_item");
+  if (!item) return;
+
+  const id = item.getAttribute("data-id");
+  if (!id) return;
+
+  const listing = findListingById(id);
+  if (listing) {
+    openDetailPage(listing);
+  }
 }
 
 // Call main explicitly
@@ -1326,7 +1915,6 @@ function resetListViewGridStyles() {
     list.style.gridColumnGap = "";
     list.style.gridRowGap = "";
     list.style.gridArea = "";
-    // Remove any other grid-related inline styles if present
   }
 }
 
