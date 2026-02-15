@@ -29,7 +29,7 @@ const CONFIG = {
   },
   ui: {
     btnDefaultValue: "Search",
-    debounceTime: 300,
+    debounceTime: 150,
     fadeTimeout: 2000,
     updateTimeout: 1000,
   },
@@ -636,7 +636,13 @@ function enableSearch() {
   DOM.search.addEventListener("input", function () {
     console.log("input", DOM.search.value);
     updateSearchUI();
-    if (DOM.search.value === "") return;
+    if (DOM.search.value.trim() === "") {
+      DOM.autosuggest.innerHTML = "";
+      DOM.autosuggest.classList.add("hidden");
+      return;
+    }
+    // Show typing indicator immediately — no waiting for debounce
+    showSearchLoadingIndicator();
     debouncedHandleUserInput();
   });
 
@@ -758,74 +764,82 @@ document.querySelectorAll("#brand, .brand, .navbar-brand, a.brand").forEach((el)
   });
 });
 
+// Cached session token — reuse within a session, refresh on selection
+let _autoSessionToken = null;
+let _placesLibPromise = null;
+
+function getPlacesLib() {
+  if (!_placesLibPromise) {
+    _placesLibPromise = google.maps.importLibrary("places");
+  }
+  return _placesLibPromise;
+}
+
+function showSearchLoadingIndicator() {
+  DOM.autosuggest.innerHTML = `
+    <ul><li class="pde-autosuggest-loading">
+      <span class="pde-typing-dots"><span>.</span><span>.</span><span>.</span></span>
+      Searching
+    </li></ul>
+  `;
+  DOM.autosuggest.classList.remove("hidden");
+}
+
 async function handleUserInput() {
-  const { AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary("places");
+  const { AutocompleteSessionToken, AutocompleteSuggestion } = await getPlacesLib();
   const query = DOM.search.value;
 
   if (!query.trim()) {
     console.warn("No input provided for Geocoding");
+    DOM.autosuggest.innerHTML = "";
+    DOM.autosuggest.classList.add("hidden");
     return;
   }
 
-  let request = {
+  if (!_autoSessionToken) {
+    _autoSessionToken = new AutocompleteSessionToken();
+  }
+
+  const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
     input: query,
     language: "en-US",
     region: "fr",
-  };
+    sessionToken: _autoSessionToken,
+  });
 
-  const token = new AutocompleteSessionToken();
-  request.sessionToken = token;
-
-  const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
-
-  let predictions = [];
-
-  for (let suggestion of suggestions) {
-    const placePrediction = suggestion.placePrediction;
-    let place = await placePrediction.toPlace();
-    place.route = "";
-    await place.fetchFields({
-      fields: ["displayName", "addressComponents", "location"],
-    });
-
-    const addressComponents = place.addressComponents;
-
-    if (!addressComponents) {
-      console.log("No address components available.");
-      return null;
-    }
-
-    const getAddressComponent = (type) => {
-      const component = addressComponents.find((comp) => comp.types.includes(type));
-      return component ? component.longText : "";
+  // Build predictions from the suggestion text — no extra API calls
+  const predictions = suggestions.map((suggestion) => {
+    const p = suggestion.placePrediction;
+    return {
+      mainText: p.mainText?.text || p.text?.text || query,
+      secondaryText: p.secondaryText?.text || "",
+      placePrediction: p, // keep reference for resolving on click
     };
-
-    predictions.push({
-      displayName: place.displayName,
-      location: {
-        lat: place.location?.lat(),
-        lng: place.location?.lng(),
-      },
-      formattedAddress: [getAddressComponent("route"), getAddressComponent("locality"), getAddressComponent("country")]
-        .filter((component) => component && component.trim() !== "")
-        .join(", "),
-    });
-  }
+  });
 
   populateAutoSuggest(predictions);
 }
 
 // Autosuggest Functions
+// Store predictions for click resolution
+let _currentPredictions = [];
+
 function populateAutoSuggest(predictions) {
+  _currentPredictions = predictions;
   DOM.autosuggest.innerHTML = "";
+
+  if (!predictions.length) {
+    DOM.autosuggest.innerHTML = `<ul><li class="pde-autosuggest-empty">No places found</li></ul>`;
+    DOM.autosuggest.classList.remove("hidden");
+    return;
+  }
 
   const ul = document.createElement("ul");
 
-  predictions.forEach((prediction) => {
+  predictions.forEach((prediction, index) => {
     const li = document.createElement("li");
-    li.innerHTML = `${prediction.displayName} <span class="grey">${prediction.formattedAddress}</span>`;
-    li.setAttribute("data-center", `${prediction.location.lat},${prediction.location.lng}`);
-    li.setAttribute("data-displayname", `${prediction.displayName}`);
+    li.innerHTML = `${prediction.mainText} <span class="grey">${prediction.secondaryText}</span>`;
+    li.setAttribute("data-index", index);
     ul.appendChild(li);
   });
 
@@ -841,16 +855,35 @@ function populateAutoSuggest(predictions) {
   DOM.autosuggest.classList.remove("hidden");
 }
 
-function handleAutosuggestClick(event) {
-  let clickedItem = event.target.closest("li");
-  if (clickedItem) {
-    const [lat, lng] = clickedItem.dataset.center.split(",");
-    DOM.search.value = clickedItem.dataset.displayname;
-    map.flyTo({
-      center: [parseFloat(lng), parseFloat(lat)],
-      zoom: 12,
-    });
-    DOM.autosuggest.innerHTML = "";
+async function handleAutosuggestClick(event) {
+  const clickedItem = event.target.closest("li");
+  if (!clickedItem || !clickedItem.dataset.index) return;
+
+  const index = parseInt(clickedItem.dataset.index, 10);
+  const prediction = _currentPredictions[index];
+  if (!prediction) return;
+
+  // Show the name immediately
+  DOM.search.value = prediction.mainText;
+  DOM.autosuggest.innerHTML = "";
+  DOM.autosuggest.classList.add("hidden");
+
+  // Resolve the Place location on click (single API call)
+  try {
+    const place = await prediction.placePrediction.toPlace();
+    await place.fetchFields({ fields: ["location"] });
+
+    // Reset session token after a selection
+    _autoSessionToken = null;
+
+    if (place.location) {
+      map.flyTo({
+        center: [place.location.lng(), place.location.lat()],
+        zoom: 12,
+      });
+    }
+  } catch (e) {
+    console.warn("Error resolving place:", e);
   }
 }
 
@@ -2271,6 +2304,47 @@ function injectCSS() {
       .detail-meta {
         gap: 16px;
       }
+    }
+
+    /* === Search Typing Indicator === */
+    .pde-autosuggest-loading {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      color: #667085;
+      font-size: 13px;
+      font-style: italic;
+      cursor: default;
+    }
+    .pde-autosuggest-loading:hover {
+      background: transparent;
+    }
+    .pde-autosuggest-empty {
+      padding: 10px 14px;
+      color: #98A2B3;
+      font-size: 13px;
+      cursor: default;
+    }
+    .pde-typing-dots {
+      display: inline-flex;
+      gap: 1px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #6941C6;
+    }
+    .pde-typing-dots span {
+      animation: pdeDotBounce 1.2s infinite;
+    }
+    .pde-typing-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .pde-typing-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes pdeDotBounce {
+      0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-3px); }
     }
 
     /* === 3D Toggle Button === */
