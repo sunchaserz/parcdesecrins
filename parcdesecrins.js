@@ -340,7 +340,8 @@ function loadCustomMarkersAndLayers(dataGeoJson) {
   let loadedImages = 0;
   const totalImages = customMarkers.length;
 
-  ["cluster-layer", "point-layer", "cluster-count", "unclustered-point"].forEach((layer) => {
+  // Clear existing layers and sources
+  ["cluster-bg", "cluster-layer", "point-layer", "cluster-count", "unclustered-point"].forEach((layer) => {
     if (map.getLayer(layer)) map.removeLayer(layer);
   });
   if (map.getSource("earthquakes")) map.removeSource("earthquakes");
@@ -382,6 +383,30 @@ function loadCustomMarkersAndLayers(dataGeoJson) {
 }
 
 function addMapLayers() {
+  // Add a circle background behind cluster counts
+  map.addLayer({
+    id: "cluster-bg",
+    type: "circle",
+    source: "earthquakes",
+    filter: ["has", "point_count"],
+    paint: {
+      "circle-color": ["case", ["all", ["get", "has_restaurant"], ["get", "has_walk"]], "#6941C6", ["get", "only_restaurant"], "#F56960", "#4ecdc4"],
+      "circle-radius": [
+        "step",
+        ["get", "point_count"],
+        18, // radius for count < 10
+        10,
+        22, // radius for count 10-99
+        100,
+        28, // radius for count 100+
+      ],
+      "circle-opacity": 0.9,
+      "circle-stroke-width": 3,
+      "circle-stroke-color": "#ffffff",
+      "circle-stroke-opacity": 0.6,
+    },
+  });
+
   map.addLayer({
     id: "cluster-layer",
     type: "symbol",
@@ -596,6 +621,9 @@ function enableSearch() {
       e.preventDefault();
       DOM.search.value = "";
       DOM.search.dispatchEvent(new Event("input"));
+      // Hide autosuggest dropdown
+      DOM.autosuggest.innerHTML = "";
+      DOM.autosuggest.classList.add("hidden");
       if (window.$fetch && window.$fetch.triggerAction) {
         window.$fetch.triggerAction("get_todos");
       }
@@ -603,11 +631,14 @@ function enableSearch() {
   }
 }
 
-// Update clear search button click handler
-document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
+// Clear search button click handler (clearsearch only)
+document.querySelectorAll("#clearsearch").forEach((element) => {
   element.addEventListener("click", function () {
     DOM.search.value = "";
     DOM.search.dispatchEvent(new Event("input"));
+    // Hide autosuggest dropdown
+    DOM.autosuggest.innerHTML = "";
+    DOM.autosuggest.classList.add("hidden");
     if (window.$fetch && window.$fetch.triggerAction) {
       window.$fetch.triggerAction("get_todos");
     }
@@ -631,6 +662,74 @@ document.querySelectorAll("#clearsearch, #brand").forEach((element) => {
       spyglassSvg.style.width = "100%";
       spyglassSvg.style.height = "100%";
     }
+  });
+});
+
+// ===== Site Reset =====
+function resetSite() {
+  // Clear search input
+  DOM.search.value = "";
+  DOM.search.dispatchEvent(new Event("input"));
+
+  // Hide autosuggest
+  DOM.autosuggest.innerHTML = "";
+  DOM.autosuggest.classList.add("hidden");
+
+  // Reset search UI icons
+  const spyglassIcon = document.querySelector("#spyglass");
+  const clearSearch = document.querySelector("#clearsearch");
+  if (spyglassIcon) spyglassIcon.style.display = "block";
+  if (clearSearch) clearSearch.style.display = "none";
+
+  // Reset sort state
+  listState.sortBy = null;
+  listState.sortDir = "asc";
+  listState.currentPage = 1;
+  updateSortButtonStates();
+
+  // Reset to grid view
+  const gridViewButton = document.querySelector(".button-with-icon.grid-view");
+  const listViewButton = document.querySelector(".button-with-icon.list-view");
+  const listToggleButton = document.querySelector(".list-toggle");
+  const cardsContainer = document.getElementById("cards");
+
+  if (gridViewButton) gridViewButton.classList.add("active");
+  if (listViewButton) listViewButton.classList.remove("active");
+  if (listToggleButton) listToggleButton.style.display = "block";
+  if (cardsContainer) {
+    cardsContainer.classList.remove("list-layout");
+    cardsContainer.classList.add("grid-layout");
+  }
+  const grid = document.querySelector(".uui-blogsection01_list");
+  if (grid) {
+    grid.classList.add("w-layout-grid");
+    grid.classList.remove("list-mode");
+  }
+  forceGridViewDisplay();
+
+  // Close any open detail page
+  closeDetailPage();
+
+  // Fly map back to default position
+  if (map) {
+    map.flyTo({
+      center: CONFIG.map.center,
+      zoom: CONFIG.map.zoom,
+    });
+  }
+
+  // Re-fetch default data (no search term)
+  if (window.mapDataManager) {
+    window.mapDataManager.clearCache();
+  }
+  getData();
+}
+
+// Brand/logo click — full site reset
+document.querySelectorAll("#brand, .brand, .navbar-brand, a.brand").forEach((el) => {
+  el.addEventListener("click", function (e) {
+    e.preventDefault();
+    resetSite();
   });
 });
 
