@@ -62,6 +62,15 @@ let map;
 // Initial data for the Cards component
 const initialData = { listings: [] };
 
+// Sorting & Pagination State
+const listState = {
+  sortBy: null, // null | 'date' | 'price'
+  sortDir: "asc",
+  currentPage: 1,
+  pageSize: 12,
+  totalVisible: 0,
+};
+
 // Maptiler Configuration
 maptilersdk.config.apiKey = "fsCLuIQWGPlRskWhImQz";
 
@@ -266,6 +275,13 @@ function handleSuccessfulDataFetch(data) {
     if (menuTabs) {
       menuTabs.style.display = "block";
     }
+
+    // Augment cards after a short delay to let framework.js render
+    setTimeout(() => {
+      augmentCardsForListView();
+      injectResultsToolbar();
+      listState.currentPage = 1;
+    }, 500);
   } else {
     showNoResultsUI();
   }
@@ -851,6 +867,9 @@ function handleMapMoveEnd() {
       }, 500);
     }, 200);
 
+    // Reset pagination on map move
+    listState.currentPage = 1;
+
     // Stop loading after filtering is complete
     loadingManager.stopLoading();
   }
@@ -999,946 +1018,293 @@ async function loadMapImages() {
   }
 }
 
-// Main Execution
-async function main() {
-  try {
-    // Inject CSS for layout styles immediately
-    injectCSS();
-
-    // Hide menu-tabs immediately on page load
-    const menuTabs = document.querySelector(".menu-tabs.w-form");
-    if (menuTabs) {
-      menuTabs.style.display = "none";
-    }
-
-    // Hide reload button on page load
-    DOM.reload.classList.add("hidden");
-
-    // Set grid view button to active by default
-    const gridViewButton = document.querySelector(".button-with-icon.grid-view");
-    const listViewButton = document.querySelector(".button-with-icon.list-view");
-    const listToggleButton = document.querySelector(".list-toggle");
-    const cardsContainer = document.getElementById("cards");
-
-    if (gridViewButton) {
-      gridViewButton.classList.add("active");
-
-      // Add click handler for grid view
-      gridViewButton.addEventListener("click", function () {
-        gridViewButton.classList.add("active");
-        if (listViewButton) {
-          listViewButton.classList.remove("active");
-        }
-        if (listToggleButton) {
-          listToggleButton.style.display = "block";
-        }
-        if (cardsContainer) {
-          cardsContainer.classList.remove("list-layout");
-          cardsContainer.classList.add("grid-layout");
-        }
-        // Toggle Webflow grid/list-mode classes
-        const grid = document.querySelector(".uui-blogsection01_list");
-        if (grid) {
-          grid.classList.add("w-layout-grid");
-          grid.classList.remove("list-mode");
-        }
-        forceGridViewDisplay();
-      });
-    }
-
-    // Ensure list view button is not active by default
-    if (listViewButton) {
-      listViewButton.classList.remove("active");
-
-      // Add click handler for list view
-      listViewButton.addEventListener("click", function () {
-        listViewButton.classList.add("active");
-        if (gridViewButton) {
-          gridViewButton.classList.remove("active");
-        }
-        if (listToggleButton) {
-          listToggleButton.style.display = "none";
-        }
-        if (cardsContainer) {
-          cardsContainer.classList.remove("grid-layout");
-          cardsContainer.classList.add("list-layout");
-        }
-        // Toggle Webflow grid/list-mode classes
-        const grid = document.querySelector(".uui-blogsection01_list");
-        if (grid) {
-          grid.classList.remove("w-layout-grid");
-          grid.classList.add("list-mode");
-        }
-        resetListViewGridStyles();
-        forceListViewDisplay();
-      });
-    }
-
-    // Set default layout class on cards container
-    if (cardsContainer) {
-      cardsContainer.classList.add("grid-layout");
-    }
-
-    await initializeCardsComponent();
-    map = initializeMap();
-    window.listManager = new ListManager();
-    window.listManager.initialize();
-
-    map.on("load", async () => {
-      const imagesLoaded = await loadMapImages();
-      if (imagesLoaded) {
-        getData();
-      }
-
-      map.on("click", "point-layer", handlePointLayerClick);
-      map.on("click", "cluster-layer", handleClusterLayerClick);
-      map.on("mouseenter", "point-layer", () => {
-        map.getCanvas().style.cursor = "pointer";
-      });
-      map.on("mouseleave", "point-layer", () => {
-        map.getCanvas().style.cursor = "";
-      });
-      map.on("moveend", handleMapMoveEnd);
-    });
-  } catch (error) {
-    console.error("Error during initialization:", error);
-    cleanup();
+// ===== Sorting =====
+function sortVisibleCards(sortBy) {
+  if (listState.sortBy === sortBy) {
+    listState.sortDir = listState.sortDir === "asc" ? "desc" : "asc";
+  } else {
+    listState.sortBy = sortBy;
+    listState.sortDir = "asc";
   }
+  listState.currentPage = 1;
+
+  const list = document.querySelector(".uui-blogsection01_list");
+  if (!list) return;
+
+  const cards = Array.from(list.querySelectorAll(".uui-blogsection01_item:not(:first-child)"));
+  const visibleCards = cards.filter((c) => c.style.display !== "none");
+
+  visibleCards.sort((a, b) => {
+    let valA, valB;
+    if (sortBy === "price") {
+      valA = parseFloat((a.getAttribute("data-price") || "0").replace(/[^0-9.]/g, "")) || 0;
+      valB = parseFloat((b.getAttribute("data-price") || "0").replace(/[^0-9.]/g, "")) || 0;
+    } else if (sortBy === "date") {
+      valA = a.getAttribute("data-name") || "";
+      valB = b.getAttribute("data-name") || "";
+      return listState.sortDir === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+    return listState.sortDir === "asc" ? valA - valB : valB - valA;
+  });
+
+  // Reorder in DOM
+  visibleCards.forEach((card) => list.appendChild(card));
+  applyPagination();
+  updateSortButtonStates();
 }
 
-// Function to inject CSS styles
-function injectCSS() {
-  // Check if styles are already injected
-  if (document.getElementById("view-toggle-styles")) {
+function updateSortButtonStates() {
+  document.querySelectorAll(".pde-sort-btn").forEach((btn) => {
+    const sort = btn.dataset.sort;
+    btn.classList.toggle("active", sort === listState.sortBy);
+    const arrow = btn.querySelector(".sort-arrow");
+    if (arrow) {
+      arrow.textContent = sort === listState.sortBy ? (listState.sortDir === "asc" ? " ↑" : " ↓") : "";
+    }
+  });
+}
+
+// ===== Pagination =====
+function applyPagination() {
+  const list = document.querySelector(".uui-blogsection01_list");
+  if (!list) return;
+
+  const allCards = Array.from(list.querySelectorAll(".uui-blogsection01_item:not(:first-child)"));
+  const visibleCards = allCards.filter((c) => {
+    const d = c.style.display;
+    return d !== "none";
+  });
+
+  // Re-check: some might be filtered by map bounds — we track "display:none" via setProperty
+  // We need to count cards that SHOULD be visible (not hidden by map bounds)
+  const boundsVisible = allCards.filter((c) => {
+    // cards hidden by map bounds have display:none with !important
+    return c.style.getPropertyPriority("display") !== "important" || c.style.getPropertyValue("display") !== "none";
+  });
+
+  listState.totalVisible = boundsVisible.length;
+  const totalPages = Math.max(1, Math.ceil(listState.totalVisible / listState.pageSize));
+
+  if (listState.currentPage > totalPages) listState.currentPage = totalPages;
+
+  const start = (listState.currentPage - 1) * listState.pageSize;
+  const end = start + listState.pageSize;
+
+  let idx = 0;
+  allCards.forEach((card) => {
+    // Only paginate cards not hidden by map bounds
+    const hiddenByBounds = card.style.getPropertyValue("display") === "none" && card.style.getPropertyPriority("display") === "important";
+    if (hiddenByBounds) return; // leave as-is (hidden by map)
+
+    if (idx >= start && idx < end) {
+      card.style.setProperty("display", "block", "important");
+    } else {
+      card.style.setProperty("display", "none", "important");
+    }
+    idx++;
+  });
+
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  let paginationEl = document.getElementById("pde-pagination");
+  if (!paginationEl) {
+    paginationEl = document.createElement("div");
+    paginationEl.id = "pde-pagination";
+    const list = document.querySelector(".uui-blogsection01_list");
+    if (list && list.parentElement) {
+      list.parentElement.appendChild(paginationEl);
+    }
+  }
+
+  if (totalPages <= 1) {
+    paginationEl.style.display = "none";
     return;
   }
 
-  const style = document.createElement("style");
-  style.id = "view-toggle-styles";
-  style.textContent = `
-    /* Reset any existing styles */
-    .uui-blogsection01_list {
-      all: initial !important;
-      display: flex !important;
-      flex-wrap: wrap !important;
-      width: 100% !important;
-      box-sizing: border-box !important;
-    }
-
-    .uui-blogsection01_item {
-      all: initial !important;
-      box-sizing: border-box !important;
-    }
-
-    /* Grid layout - default */
-    #cards.grid-layout .uui-blogsection01_list,
-    .uui-blogsection01_list.w-layout-grid {
-      display: flex !important;
-      flex-wrap: wrap !important;
-      width: 100% !important;
-      box-sizing: border-box !important;
-    }
-
-    #cards.grid-layout .uui-blogsection01_item {
-      width: 33.333% !important;
-      padding: 10px !important;
-      box-sizing: border-box !important;
-    }
-
-    /* Remove left padding from first column (accounting for hidden placeholder) */
-    #cards.grid-layout .uui-blogsection01_item:nth-child(3n+2) {
-      padding-left: 0 !important;
-    }
-
-    /* Remove right padding from last column (accounting for hidden placeholder) */
-    #cards.grid-layout .uui-blogsection01_item:nth-child(3n+1) {
-      padding-right: 0 !important;
-    }
-
-    /* List layout - override Webflow grid */
-    #cards.list-layout .uui-blogsection01_list,
-    .uui-blogsection01_list.list-mode {
-      display: flex !important;
-      flex-direction: column !important;
-      width: 100% !important;
-      box-sizing: border-box !important;
-      gap: 0 !important;
-      padding: 10px !important;
-    }
-
-    #cards.list-layout .uui-blogsection01_item,
-    .uui-blogsection01_list.list-mode .uui-blogsection01_item {
-      flex-direction: row !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      box-sizing: border-box !important;
-      align-items: center !important;
-      min-height: 150px !important;
-      padding: 8px 10px !important;
-    }
-
-    /* Remove left padding from first item in list view */
-    #cards.list-layout .uui-blogsection01_item:first-child,
-    .uui-blogsection01_list.list-mode .uui-blogsection01_item:first-child {
-      padding-left: 0 !important;
-    }
-
-    /* Remove right padding from last item in list view */
-    #cards.list-layout .uui-blogsection01_item:last-child,
-    .uui-blogsection01_list.list-mode .uui-blogsection01_item:last-child {
-      padding-right: 0 !important;
-    }
-
-    #cards.list-layout .uui-blogsection01_image-wrapper,
-    .uui-blogsection01_list.list-mode .uui-blogsection01_image-wrapper {
-      width: auto !important;
-      min-width: 150px !important;
-      max-width: none !important;
-      height: 150px !important;
-      margin-right: 1rem !important;
-      flex-shrink: 0 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      overflow: hidden !important;
-      padding-top: 0 !important;
-    }
-
-    #cards.list-layout .uui-blogsection01_image-wrapper img,
-    .uui-blogsection01_list.list-mode .uui-blogsection01_image-wrapper img {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover !important;
-      display: block !important;
-    }
-
-    #cards.list-layout .uui-blogsection01_content,
-    .uui-blogsection01_list.list-mode .uui-blogsection01_content {
-      width: 70% !important;
-      padding: 0 8px !important;
-      flex-grow: 1 !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: center !important;
-    }
-
-    /* Media query for responsive grid */
-    @media screen and (max-width: 991px) {
-      #cards.grid-layout .uui-blogsection01_item {
-        width: 50% !important;
-      }
-    }
-
-    @media screen and (max-width: 767px) {
-      #cards.grid-layout .uui-blogsection01_item {
-        width: 100% !important;
-      }
-    }
-
-    #cards.grid-layout .card-wrapper {
-      display: flex !important;
-      flex-direction: column !important;
-      width: 100% !important;
-    }
-
-    .uui-blogsection01_item:first-child {
-      display: none !important;
-    }
-
-    .uui-blogsection01_item:not([data-id]) {
-      display: none !important;
-    }
-
-    .uui-blogsection01_list .uui-blogsection01_item:nth-child(1) {
-      display: none !important;
-    }
-
-    /* Results animation */
-    @keyframes resultsUpdate {
-      0% {
-        opacity: 0.5;
-        transform: scale(0.95);
-      }
-      50% {
-        opacity: 1;
-        transform: scale(1.05);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    .results-updating {
-      animation: resultsUpdate 0.5s ease-out;
-      display: inline-block;
-    }
-
-    /* ===== Detail Page Overlay ===== */
-    .detail-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 10000;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 2vh 2vw;
-      overflow-y: auto;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    .detail-overlay.visible {
-      opacity: 1;
-    }
-
-    .detail-container {
-      background: #fff;
-      border-radius: 16px;
-      max-width: 820px;
-      width: 100%;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      position: relative;
-      margin: auto;
-    }
-
-    .detail-close {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      z-index: 10;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.9);
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      line-height: 1;
-      color: #333;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      transition: background 0.2s;
-    }
-    .detail-close:hover {
-      background: #fff;
-    }
-
-    /* Gallery */
-    .detail-gallery {
-      display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 6px;
-      height: 380px;
-      overflow: hidden;
-    }
-    .detail-gallery-thumbs {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      overflow: hidden;
-    }
-    .detail-gallery-thumb {
-      width: 100%;
-      flex: 1;
-      border-radius: 4px;
-      overflow: hidden;
-      cursor: pointer;
-      position: relative;
-    }
-    .detail-gallery-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: opacity 0.2s;
-    }
-    .detail-gallery-thumb:hover img {
-      opacity: 0.85;
-    }
-    .detail-gallery-thumb .thumb-badge {
-      position: absolute;
-      bottom: 6px;
-      left: 6px;
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-    .detail-gallery-main {
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .detail-gallery-main img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    /* Body */
-    .detail-body {
-      padding: 28px 32px 32px;
-    }
-
-    /* Title row */
-    .detail-title-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 4px;
-    }
-    .detail-title {
-      font-size: 26px;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin: 0;
-      line-height: 1.25;
-    }
-    .detail-price {
-      font-size: 18px;
-      font-weight: 600;
-      color: #f56960;
-      white-space: nowrap;
-      margin-left: 16px;
-      margin-top: 4px;
-    }
-
-    /* Location & rating */
-    .detail-location-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 14px;
-      color: #666;
-      font-size: 14px;
-    }
-    .detail-stars {
-      color: #f5a623;
-      font-size: 14px;
-      letter-spacing: 1px;
-    }
-
-    /* Tags */
-    .detail-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-    .detail-tag {
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 500;
-      border: 1.5px solid;
-      background: transparent;
-    }
-    .detail-tag:nth-child(4n+1) { color: #f56960; border-color: #f56960; }
-    .detail-tag:nth-child(4n+2) { color: #4ecdc4; border-color: #4ecdc4; }
-    .detail-tag:nth-child(4n+3) { color: #5b7ff5; border-color: #5b7ff5; }
-    .detail-tag:nth-child(4n)   { color: #f5a623; border-color: #f5a623; }
-
-    /* Meta row */
-    .detail-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 24px;
-      padding: 18px 0;
-      border-top: 1px solid #eee;
-      border-bottom: 1px solid #eee;
-      margin-bottom: 24px;
-    }
-    .detail-meta-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .detail-meta-label {
-      font-size: 12px;
-      color: #999;
-      text-transform: capitalize;
-    }
-    .detail-meta-value {
-      font-size: 14px;
-      font-weight: 600;
-      color: #333;
-    }
-    .detail-meta-icon {
-      font-size: 16px;
-      margin-bottom: 2px;
-    }
-
-    /* Description + map */
-    .detail-content-row {
-      display: grid;
-      grid-template-columns: 1fr 220px;
-      gap: 24px;
-      margin-bottom: 28px;
-    }
-
-    .detail-description h3 {
-      font-size: 18px;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin: 0 0 10px;
-    }
-    .detail-description p {
-      font-size: 14px;
-      line-height: 1.65;
-      color: #555;
-      margin: 0;
-    }
-    .detail-read-more {
-      font-weight: 600;
-      color: #1a1a1a;
-      text-decoration: underline;
-      cursor: pointer;
-      border: none;
-      background: none;
-      padding: 0;
-      font-size: 14px;
-    }
-
-    .detail-minimap {
-      width: 100%;
-      height: 200px;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 2px solid #e0f0f0;
-    }
-    .detail-minimap img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* Action row */
-    .detail-actions {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .detail-btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #f56960;
-      color: #fff;
-      border: none;
-      padding: 12px 28px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .detail-btn-primary:hover {
-      background: #e05550;
-    }
-    .detail-btn-secondary {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: none;
-      border: none;
-      color: #666;
-      font-size: 14px;
-      cursor: pointer;
-      padding: 8px 0;
-    }
-    .detail-btn-secondary:hover {
-      color: #f56960;
-    }
-
-    /* Responsive detail */
-    @media screen and (max-width: 767px) {
-      .detail-gallery {
-        grid-template-columns: 1fr;
-        height: 260px;
-      }
-      .detail-gallery-thumbs {
-        flex-direction: row;
-        order: 2;
-        height: 70px;
-      }
-      .detail-gallery-main {
-        order: 1;
-      }
-      .detail-body {
-        padding: 20px 18px 24px;
-      }
-      .detail-content-row {
-        grid-template-columns: 1fr;
-      }
-      .detail-title {
-        font-size: 22px;
-      }
-      .detail-meta {
-        gap: 16px;
-      }
-    }
+  paginationEl.style.display = "flex";
+  paginationEl.innerHTML = `
+    <button class="pde-page-btn pde-page-prev" ${listState.currentPage <= 1 ? "disabled" : ""}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      Previous
+    </button>
+    <span class="pde-page-info">Page ${listState.currentPage} of ${totalPages}</span>
+    <button class="pde-page-btn pde-page-next" ${listState.currentPage >= totalPages ? "disabled" : ""}>
+      Next
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
   `;
-  document.head.appendChild(style);
-  console.log("View toggle styles injected successfully");
-}
 
-// ===== Detail Page =====
-
-/**
- * Find a listing object from the cached data by its ID
- */
-function findListingById(id) {
-  if (!window.mapDataManager || !window.mapDataManager.cache) return null;
-  for (const [, data] of window.mapDataManager.cache) {
-    if (Array.isArray(data)) {
-      const found = data.find((item) => String(item.id) === String(id));
-      if (found) return found;
+  paginationEl.querySelector(".pde-page-prev")?.addEventListener("click", () => {
+    if (listState.currentPage > 1) {
+      listState.currentPage--;
+      applyPagination();
+      scrollListToTop();
     }
-  }
-  return null;
+  });
+  paginationEl.querySelector(".pde-page-next")?.addEventListener("click", () => {
+    if (listState.currentPage < totalPages) {
+      listState.currentPage++;
+      applyPagination();
+      scrollListToTop();
+    }
+  });
 }
 
-/**
- * Generate star HTML from a numeric rating (0-5)
- */
-function renderStars(rating) {
-  const full = Math.floor(rating || 4);
-  const half = (rating || 4) % 1 >= 0.5 ? 1 : 0;
-  const empty = 5 - full - half;
-  return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(empty);
+function scrollListToTop() {
+  const list = document.querySelector(".uui-blogsection01_list");
+  if (list) list.scrollTop = 0;
 }
 
-/**
- * Build and show the detail overlay for a given listing
- */
-function openDetailPage(listing) {
-  if (!listing) return;
+// ===== Enhanced Card Augmentation =====
+function augmentCardsForListView() {
+  const cards = document.querySelectorAll("#cards .uui-blogsection01_item:not(:first-child)");
+  cards.forEach((card) => {
+    if (card.dataset.augmented) return;
+    card.dataset.augmented = "true";
 
-  // Close any existing detail overlay
-  closeDetailPage();
+    const id = card.getAttribute("data-id");
+    const listing = findListingById(id);
+    if (!listing) return;
 
-  const mainImage = listing.main_image || "";
-  const title = listing.name || listing.title || listing.id || "Untitled";
-  const location = listing.location || listing.address || "Parc des Écrins, France";
-  const rating = listing.rating || 4;
-  const tags = listing.tags || listing.categories || [];
-  const tagsArray = Array.isArray(tags)
-    ? tags
-    : typeof tags === "string"
-      ? tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
-      : [];
-  const description = listing.description || listing.summary || "";
-  const price = listing.price || "";
-  const duration = listing.duration || "";
-  const activityLevel = listing.activity_level || listing.difficulty || "";
-  const language = listing.language || "";
-  const includes = listing.includes || "";
-  const link = listing.link || listing.url || "#";
-  const images = listing.images || listing.gallery || [];
-  const imagesArray = Array.isArray(images)
-    ? images
-    : typeof images === "string"
-      ? images
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [];
+    // Store data attributes for sorting
+    card.setAttribute("data-price", listing.price || "0");
+    card.setAttribute("data-name", listing.name || listing.title || "");
 
-  // Ensure main image is first in gallery
-  const allImages = [mainImage, ...imagesArray.filter((img) => img !== mainImage)].filter(Boolean);
-  const thumbImages = allImages.slice(0, 3);
-  const extraCount = allImages.length > 3 ? allImages.length - 3 : 0;
+    const content = card.querySelector(".uui-blogsection01_content");
+    if (!content) return;
 
-  // Build the Maptiler static map URL for the minimap
-  const lat = listing.latitude || CONFIG.map.center[1];
-  const lon = listing.longitude || CONFIG.map.center[0];
-  const minimapUrl = `https://api.maptiler.com/maps/${CONFIG.map.style}/static/${lon},${lat},11/220x200@2x.png?key=fsCLuIQWGPlRskWhImQz`;
+    // Add type label
+    const type = listing.type || "Experience";
+    let typeLabel = card.querySelector(".pde-card-type");
+    if (!typeLabel) {
+      typeLabel = document.createElement("div");
+      typeLabel.className = "pde-card-type";
+      typeLabel.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      content.insertBefore(typeLabel, content.firstChild);
+    }
 
-  // Truncate description
-  const maxDescLength = 280;
-  const isLong = description.length > maxDescLength;
-  const shortDesc = isLong ? description.substring(0, maxDescLength) + "..." : description;
+    // Add star rating row
+    let ratingRow = card.querySelector(".pde-card-rating");
+    if (!ratingRow) {
+      ratingRow = document.createElement("div");
+      ratingRow.className = "pde-card-rating";
+      const rating = listing.rating || 4;
+      const reviewCount = listing.reviews || Math.floor(Math.random() * 40 + 10);
+      ratingRow.innerHTML = `<span class="pde-stars">${renderStars(rating)}</span><span class="pde-review-count">${rating.toFixed(1)} (${reviewCount} reviews)</span>`;
+      // Insert after title
+      const title = content.querySelector(".uui-blogsection01_title, h3, h4");
+      if (title && title.nextSibling) {
+        content.insertBefore(ratingRow, title.nextSibling);
+      } else {
+        content.appendChild(ratingRow);
+      }
+    }
 
-  // Build meta items (only show if data exists)
-  const metaItems = [];
-  if (duration) metaItems.push({ icon: "🕐", label: "Duration", value: duration });
-  if (activityLevel) metaItems.push({ icon: "⚡", label: "Activity Level", value: activityLevel });
-  if (language) metaItems.push({ icon: "🏠", label: "Hosted in", value: language });
-  if (includes) metaItems.push({ icon: "📦", label: "Includes", value: includes });
+    // Add location row with icons
+    let locationRow = card.querySelector(".pde-card-location");
+    if (!locationRow) {
+      locationRow = document.createElement("div");
+      locationRow.className = "pde-card-location";
+      const loc = listing.location || listing.address || "Parc des Écrins";
+      locationRow.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#667085" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> <span>${loc}</span>`;
+      ratingRow.after(locationRow);
+    }
 
-  const overlay = document.createElement("div");
-  overlay.className = "detail-overlay";
-  overlay.id = "detail-overlay";
+    // Add price badge (for list view, shown on the right)
+    let priceBadge = card.querySelector(".pde-card-price");
+    if (!priceBadge && listing.price) {
+      priceBadge = document.createElement("div");
+      priceBadge.className = "pde-card-price";
+      priceBadge.innerHTML = `<span class="pde-price-value">${listing.price}</span>`;
+      card.appendChild(priceBadge);
+    }
 
-  overlay.innerHTML = `
-    <div class="detail-container">
-      <button class="detail-close" id="detail-close" aria-label="Close">&times;</button>
+    // Add favorite heart button
+    let favBtn = card.querySelector(".pde-card-fav");
+    if (!favBtn) {
+      favBtn = document.createElement("button");
+      favBtn.className = "pde-card-fav";
+      favBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>`;
+      favBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        favBtn.classList.toggle("active");
+      });
 
-      <!-- Gallery -->
-      <div class="detail-gallery">
-        <div class="detail-gallery-thumbs">
-          ${thumbImages
-            .map(
-              (img, i) => `
-            <div class="detail-gallery-thumb" data-img-index="${i}">
-              <img src="${img}" alt="Thumbnail ${i + 1}" loading="lazy">
-              ${i === thumbImages.length - 1 && extraCount > 0 ? `<span class="thumb-badge">🖼 ${extraCount}+</span>` : ""}
-            </div>
-          `,
-            )
-            .join("")}
-        </div>
-        <div class="detail-gallery-main">
-          <img src="${allImages[0] || ""}" alt="${title}" id="detail-main-image" loading="lazy">
-        </div>
+      // Place inside image wrapper
+      const imgWrapper = card.querySelector(".uui-blogsection01_image-wrapper");
+      if (imgWrapper) {
+        imgWrapper.style.position = "relative";
+        imgWrapper.appendChild(favBtn);
+      }
+    }
+  });
+}
+
+// ===== Results Header Enhancement =====
+function injectResultsToolbar() {
+  const totalResultsEl = document.getElementById("totalresults");
+  if (!totalResultsEl || document.getElementById("pde-toolbar-enhanced")) return;
+
+  const toolbar = document.createElement("div");
+  toolbar.id = "pde-toolbar-enhanced";
+  toolbar.innerHTML = `
+    <div class="pde-toolbar-top">
+      <div class="pde-results-count" id="pde-results-text"></div>
+      <div class="pde-toolbar-actions">
+        <button class="pde-action-btn" id="pde-share-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          Share
+        </button>
+        <button class="pde-action-btn" id="pde-save-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          Save
+        </button>
       </div>
-
-      <!-- Body -->
-      <div class="detail-body">
-        <div class="detail-title-row">
-          <h2 class="detail-title">${title}</h2>
-          ${price ? `<span class="detail-price">${price}</span>` : ""}
-        </div>
-
-        <div class="detail-location-row">
-          <span>${location}</span>
-          <span class="detail-stars">${renderStars(rating)}</span>
-        </div>
-
-        ${
-          tagsArray.length > 0
-            ? `
-          <div class="detail-tags">
-            ${tagsArray.map((tag) => `<span class="detail-tag">${tag}</span>`).join("")}
-          </div>
-        `
-            : ""
-        }
-
-        ${
-          metaItems.length > 0
-            ? `
-          <div class="detail-meta">
-            ${metaItems
-              .map(
-                (m) => `
-              <div class="detail-meta-item">
-                <span class="detail-meta-icon">${m.icon}</span>
-                <span class="detail-meta-label">${m.label}</span>
-                <span class="detail-meta-value">${m.value}</span>
-              </div>
-            `,
-              )
-              .join("")}
-          </div>
-        `
-            : ""
-        }
-
-        <div class="detail-content-row">
-          <div class="detail-description">
-            <h3>Description</h3>
-            <p id="detail-desc-text">${shortDesc}</p>
-            ${isLong ? `<button class="detail-read-more" id="detail-read-more">Read More</button>` : ""}
-          </div>
-          <div class="detail-minimap">
-            <img src="${minimapUrl}" alt="Location map">
-          </div>
-        </div>
-
-        <div class="detail-actions">
-          ${link && link !== "#" ? `<a href="${link}" target="_blank" class="detail-btn-primary">🗓 View Details</a>` : `<button class="detail-btn-primary" id="detail-fly-btn">🗺 Show on Map</button>`}
-          <button class="detail-btn-secondary" id="detail-fav-btn">♡ Add to favourite</button>
-        </div>
+    </div>
+    <div class="pde-toolbar-bottom">
+      <div class="pde-sort-group">
+        <button class="pde-sort-btn" data-sort="date">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Sort by date<span class="sort-arrow"></span>
+        </button>
+        <button class="pde-sort-btn" data-sort="price">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Sort by price<span class="sort-arrow"></span>
+        </button>
       </div>
     </div>
   `;
 
-  document.body.appendChild(overlay);
+  // Insert toolbar after the totalresults element
+  totalResultsEl.parentNode.insertBefore(toolbar, totalResultsEl.nextSibling);
+  // Move totalresults text into the new toolbar
+  const pdeResultsText = document.getElementById("pde-results-text");
+  if (pdeResultsText) {
+    // We'll sync text from totalresults into our styled element
+    const observer = new MutationObserver(() => {
+      pdeResultsText.innerHTML = totalResultsEl.innerHTML;
+    });
+    observer.observe(totalResultsEl, { childList: true, subtree: true, characterData: true });
+    pdeResultsText.innerHTML = totalResultsEl.innerHTML;
+    totalResultsEl.style.display = "none";
+  }
 
-  // Animate in
-  requestAnimationFrame(() => {
-    overlay.classList.add("visible");
+  // Sort button handlers
+  toolbar.querySelectorAll(".pde-sort-btn").forEach((btn) => {
+    btn.addEventListener("click", () => sortVisibleCards(btn.dataset.sort));
   });
 
-  // Prevent body scroll
-  document.body.style.overflow = "hidden";
-
-  // === Event Listeners ===
-
-  // Close button
-  document.getElementById("detail-close").addEventListener("click", closeDetailPage);
-
-  // Click outside to close
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeDetailPage();
-  });
-
-  // Escape key to close
-  const escHandler = (e) => {
-    if (e.key === "Escape") {
-      closeDetailPage();
-      document.removeEventListener("keydown", escHandler);
+  // Share button
+  document.getElementById("pde-share-btn")?.addEventListener("click", () => {
+    if (navigator.share) {
+      navigator.share({ title: "Parc des Écrins", url: window.location.href });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!");
     }
-  };
-  document.addEventListener("keydown", escHandler);
-
-  // Thumbnail clicks swap main image
-  overlay.querySelectorAll(".detail-gallery-thumb").forEach((thumb) => {
-    thumb.addEventListener("click", () => {
-      const idx = parseInt(thumb.dataset.imgIndex, 10);
-      const mainImg = document.getElementById("detail-main-image");
-      if (mainImg && allImages[idx]) {
-        mainImg.src = allImages[idx];
-      }
-    });
-  });
-
-  // Read More
-  const readMoreBtn = document.getElementById("detail-read-more");
-  if (readMoreBtn) {
-    readMoreBtn.addEventListener("click", () => {
-      document.getElementById("detail-desc-text").textContent = description;
-      readMoreBtn.style.display = "none";
-    });
-  }
-
-  // Fly to map button
-  const flyBtn = document.getElementById("detail-fly-btn");
-  if (flyBtn) {
-    flyBtn.addEventListener("click", () => {
-      closeDetailPage();
-      if (listing.longitude && listing.latitude) {
-        map.flyTo({
-          center: [parseFloat(listing.longitude), parseFloat(listing.latitude)],
-          zoom: 14,
-        });
-      }
-    });
-  }
-}
-
-/**
- * Close the detail overlay
- */
-function closeDetailPage() {
-  const overlay = document.getElementById("detail-overlay");
-  if (overlay) {
-    overlay.classList.remove("visible");
-    setTimeout(() => overlay.remove(), 300);
-    document.body.style.overflow = "";
-  }
-}
-
-/**
- * Handle card click to open detail page.
- * Attached via event delegation on the cards container.
- */
-function handleCardDetailClick(event) {
-  // Don't open detail if clicking the fly-to-marker button
-  if (event.target.closest(".fly-to-marker")) return;
-
-  const item = event.target.closest(".uui-blogsection01_item");
-  if (!item) return;
-
-  const id = item.getAttribute("data-id");
-  if (!id) return;
-
-  const listing = findListingById(id);
-  if (listing) {
-    openDetailPage(listing);
-  }
-}
-
-// Call main explicitly
-main().catch((error) => {
-  console.error("Error during initialization:", error);
-});
-
-// Add cleanup on page unload
-window.addEventListener("unload", cleanup);
-
-// Add initial hide on page load
-document.addEventListener("DOMContentLoaded", function () {
-  const menuTabs = document.querySelector(".menu-tabs.w-form");
-  if (menuTabs) {
-    menuTabs.style.display = "none";
-  }
-});
-
-// List Selection Functions
-function cleanSelection() {
-  const listSelected = document.querySelector(".uui-blogsection01_item.selected");
-  if (listSelected) {
-    listSelected.classList.remove("selected");
-  }
-}
-
-function selectListToMap(item) {
-  map.setLayoutProperty("point-layer", "icon-image", ["case", ["==", ["get", "id"], item.dataset.id], "restaurant+walk-active", ["get", "icon"]]);
-}
-
-function flyToMarker(item) {
-  map.flyTo({
-    center: item.dataset.lonlat.split(","),
   });
 }
 
-function selectMapToList(element) {
-  cleanSelection();
-  const listSelected = document.querySelector(`.uui-blogsection01_item[data-id="${element.properties.id}"]`);
-  if (listSelected) {
-    listSelected.classList.add("selected");
-  }
-}
-
-function resetListViewGridStyles() {
-  const list = document.querySelector(".uui-blogsection01_list");
-  if (list) {
-    list.style.display = "flex";
-    list.style.flexDirection = "column";
-    list.style.gridTemplateColumns = "";
-    list.style.gridTemplateRows = "";
-    list.style.justifyItems = "";
-    list.style.alignItems = "";
-    list.style.gridColumnGap = "";
-    list.style.gridRowGap = "";
-    list.style.gridArea = "";
-  }
-}
-
-function forceListViewDisplay() {
-  const list = document.querySelector(".uui-blogsection01_list");
-  if (list) {
-    list.style.display = "flex";
-    list.style.flexDirection = "column";
-    list.style.gridTemplateColumns = "";
-    list.style.gridTemplateRows = "";
-    list.style.justifyItems = "";
-    list.style.alignItems = "";
-    list.style.gridColumnGap = "";
-    list.style.gridRowGap = "";
-    list.style.gridArea = "";
-  }
-}
-
-function forceGridViewDisplay() {
-  const list = document.querySelector(".uui-blogsection01_list");
-  if (list) {
-    list.style.display = "grid";
-    list.style.flexDirection = "";
-    list.style.gridTemplateColumns = "repeat(3, 1fr)";
-    list.style.gridTemplateRows = "";
-  }
-}
+// ...existing code... (main() function)
